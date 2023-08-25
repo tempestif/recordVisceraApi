@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  recordVisceraApi:
+    build: .
+    environment:
+      TZ: Asia/Tokyo
+    image: node:18
+    tty: true
+    ports:
+      - "3001:3000"
+    volumes:
+      - .:/project
+    working_dir: /project
+    restart: always
+    # command: npm start
+  mysql:
+    image: mysql:8.0
+    volumes:
+      - ./mysql/seed:/docker-entrypoint-initdb.d # 初回データ実行
+      - ./mysql/db:/var/lib/mysql # データ永続化
+    environment:
+      MYSQL_DATABASE: record-viscera-api
+      MYSQL_ROOT_PASSWORD: password # パスワード設定
+      TZ: "Asia/Tokyo"
+    ports:
+      - "3333:3306"
+    restart: always
