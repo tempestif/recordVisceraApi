@@ -1,5 +1,6 @@
 import express from "express";
 import { PrismaClient } from '@prisma/client'
+import { hashedPassHookprisma } from "../services/hashedPassHookService"
 
 const prisma = new PrismaClient()
 const router = express.Router();
@@ -17,26 +18,62 @@ router.get("/test", function (req, res, next) {
   });
 });
 
-router.post("/testpost", async (req, res, next) => {
-  const { email, name } = req.body
+// router.post("/testpost", async (req, res, next) => {
+//   const { email, name } = req.body
 
-  console.log(email, name)
+//   console.log(email, name)
+
+//   try {
+//     // emailが被ってるか確認
+//     // const result = await prisma.user.findUnique({
+//     //   where: {
+//     //     email: email
+//     //   }
+//     // })
+//     // console.log(result)
+
+//     // // 追加
+//     const user = await prisma.user.create({
+//       data: {
+//         name: name,
+//         email: email,
+//       },
+//     })
+
+// レスポンス
+// res.status(200).json({
+//   "status": true,
+//   "message": "post dekitayo",
+//   // "result": result
+// });
+//   }
+//   catch (e) {
+//     // 怒りのレスポンス
+//     res.status(500).json({
+//       "status": false,
+//       "message": e,
+//     });
+//   }
+// });
+
+// アカウント作成
+/**
+ * アカウント作成に必要なもの
+ * email, password, name
+ */
+router.post("/register", async (req, res, next) => {
+  const { email, password, name } = req.body
 
   try {
-    // emailが被ってるか確認
-    // const result = await prisma.user.findUnique({
-    //   where: {
-    //     email: email
-    //   }
-    // })
-    // console.log(result)
-
-    // // 追加
-    const user = await prisma.user.create({
+    await hashedPassHookprisma.user.create({
       data: {
-        name: name,
         email: email,
-      },
+        password: password,
+        name: name,
+        authCode: 'hoge', // TODO: 仮
+        createdAt: new Date(), // TODO: 仮
+        updatedAt: new Date() // TODO: 仮
+      }
     })
 
     // レスポンス
@@ -45,14 +82,13 @@ router.post("/testpost", async (req, res, next) => {
       "message": "post dekitayo",
       // "result": result
     });
-  }
-  catch (e) {
+  } catch (e) {
     // 怒りのレスポンス
     res.status(500).json({
       "status": false,
       "message": e,
     });
   }
-});
+})
 
 export { router };
