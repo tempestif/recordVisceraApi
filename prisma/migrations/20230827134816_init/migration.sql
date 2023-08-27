@@ -1,19 +1,3 @@
-/*
-  Warnings:
-
-  - You are about to drop the `Post` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `User` table. If the table is not empty, all the data it contains will be lost.
-
-*/
--- DropForeignKey
-ALTER TABLE `Post` DROP FOREIGN KEY `Post_authorId_fkey`;
-
--- DropTable
-DROP TABLE `Post`;
-
--- DropTable
-DROP TABLE `User`;
-
 -- CreateTable
 CREATE TABLE `users` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
@@ -36,8 +20,8 @@ CREATE TABLE `profiles` (
     `height` DOUBLE NULL,
     `birthday` DATETIME(3) NULL,
     `userId` INTEGER NOT NULL,
-    `createdAt` DATETIME(3) NOT NULL,
-    `updatedAt` DATETIME(3) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT NOW(3),
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT NOW(3) ON UPDATE NOW(3),
 
     UNIQUE INDEX `profiles_userId_key`(`userId`),
     PRIMARY KEY (`id`)
@@ -49,8 +33,8 @@ CREATE TABLE `user_temps` (
     `date` DATETIME(3) NOT NULL,
     `temp` DOUBLE NOT NULL,
     `userId` INTEGER NOT NULL,
-    `createdAt` DATETIME(3) NOT NULL,
-    `updatedAt` DATETIME(3) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT NOW(3),
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT NOW(3) ON UPDATE NOW(3),
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -64,8 +48,8 @@ CREATE TABLE `bowel_movements` (
     `note` VARCHAR(191) NULL,
     `userId` INTEGER NOT NULL,
     `scaleId` INTEGER NOT NULL,
-    `createdAt` DATETIME(3) NOT NULL,
-    `updatedAt` DATETIME(3) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT NOW(3),
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT NOW(3) ON UPDATE NOW(3),
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
