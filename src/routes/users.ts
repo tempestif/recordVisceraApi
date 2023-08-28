@@ -1,6 +1,10 @@
 import { verifyMailadress } from "../controllers/verifyController";
-import { registUser, sendMailTest } from "../controllers/userController";
+import { login, registUser, sendMailTest } from "../controllers/userController";
 import express from "express";
+import { auth } from "../services/authService";
+
+// TODO: 消せ。
+import type { Request, Response, NextFunction } from "express"
 
 const router = express.Router();
 
@@ -18,7 +22,25 @@ router.post("/mailtest", sendMailTest)
 // メールアドレス認証
 router.get("/:id/verify/:token", verifyMailadress)
 
-// ログイン
-// router.post('/login', )
+// ログイン認証
+router.post("/login", login)
+
+// TODO: 本番前に消す
+// 認証テスト
+router.get("/validTest", auth, (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // レスポンス
+    res.status(200).json({
+      "status": true,
+      "message": "認証できたよ",
+    });
+  } catch (e) {
+    // エラーの時のレスポンス
+    res.status(500).json({
+      "status": false,
+      "message": e,
+    });
+  }
+})
 
 export { router };
