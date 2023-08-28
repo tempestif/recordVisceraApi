@@ -5,11 +5,12 @@ import { sendMail } from "../services/nodemailerService"
 import { randomBytes } from "crypto"
 import { compare } from "bcrypt"
 import { generateAuthToken } from "../services/jwtService"
+import { internalServerErr } from "../services/utilResponseService"
 const prisma = new PrismaClient()
 
 /**
  * アカウント作成
- * @param req
+ * @param req email, password, name
  * @param res
  * @param next
  * @returns
@@ -33,15 +34,21 @@ export const registUser = async (req: Request, res: Response, next: NextFunction
         }
 
         // 認証トークン作成
-        const authToken = randomBytes(32).toString("hex")
+        const authCode = randomBytes(32).toString("hex")
 
         // ユーザー作成
         const newUser = await hashedPassHookprisma.user.create({
             data: {
-                email: email,
-                password: password,
-                name: name,
-                authCode: authToken,
+                email,
+                password,
+                name,
+                authCode,
+            }
+        })
+        // プロフィール作成
+        await offsetTimePrisma.profile.create({
+            data: {
+                userId: newUser.id
             }
         })
 
@@ -56,10 +63,7 @@ export const registUser = async (req: Request, res: Response, next: NextFunction
         });
     } catch (e) {
         // エラーの時のレスポンス
-        res.status(500).json({
-            "status": false,
-            "message": e, // TODO: 本番環境では固定文言に変更
-        });
+        internalServerErr(res, e)
     }
 }
 
@@ -80,15 +84,16 @@ export const sendMailTest = async (req: Request, res: Response, next: NextFuncti
         });
     } catch (e) {
         // エラーの時のレスポンス
-        res.status(500).json({
-            "status": false,
-            "message": e, // TODO: 本番環境では固定文言に変更
-        });
+        internalServerErr(res, e)
     }
 }
 
 /**
  * ログイン認証
+ * @param req email, password
+ * @param res
+ * @param next
+ * @returns
  */
 export const login = async (req: Request, res: Response, next: NextFunction) => {
     // TODO: バリデーション
@@ -163,10 +168,53 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         });
     } catch (e) {
         // エラーの時のレスポンス
-        res.status(500).json({
-            "status": false,
-            "message": e, // TODO: 本番環境では固定文言に変更
+        internalServerErr(res, e)
+    }
+}
+
+/**
+ * プロフィール編集
+ * @param req userId, sex, height, birthday
+ * @param res
+ * @param next
+ */
+export const editProfile = async (req: Request, res: Response, next: NextFunction) => {
+    const { userId, sex, height, birthday } = req.body
+
+    // TODO: バリデーション
+
+    try {
+        // userIdでユーザーを検索
+        const whereByUserId = { userId: userId }
+
+        // ユーザー取得
+        const user = await offsetTimePrisma.profile.findUnique({ where: whereByUserId })
+        // ユーザーが見つからなかったら401エラー
+        if (!user) {
+            return res.status(401).json({
+                "status": false,
+                "message": "ユーザーが見つかりません。", // NOTE: 固定文言
+            });
+        }
+
+        // DBに記録
+        await offsetTimePrisma.profile.update({
+            where: whereByUserId,
+            data: {
+                sex,
+                height,
+                birthday
+            }
+        })
+
+        // レスポンス
+        res.status(200).json({
+            "status": true,
+            "message": "プロフィールを更新しました。", // NOTE: 固定文言
         });
+
+    } catch (e) {
+        internalServerErr(res, e)
     }
 }
 
@@ -175,7 +223,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
  * @param email 送信先メールアドレス
  * @param url 認証用URL
  */
-const sendVerifyMail = async(email:string, url: string) => {
+const sendVerifyMail = async (email: string, url: string) => {
     // 件名
     const mailSubject = "[recordViscera]メールアドレス認証" // NOTE: 固定文言
     // 本文

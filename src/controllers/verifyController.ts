@@ -1,3 +1,4 @@
+import { internalServerErr } from "../services/utilResponseService";
 import { offsetTimePrisma } from "../services/prismaMiddleware";
 import { Request, Response, NextFunction } from "express";
 
@@ -52,9 +53,6 @@ export const verifyMailadress = async (req: Request, res: Response, next: NextFu
         });
     } catch (e) {
         // エラーの時のレスポンス
-        res.status(500).json({
-            "status": false,
-            "message": e, // TODO: 本番環境では固定文言に変更
-        });
+        internalServerErr(res, e)
     }
 }

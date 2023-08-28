@@ -1,5 +1,5 @@
 import { verifyMailadress } from "../controllers/verifyController";
-import { login, registUser, sendMailTest } from "../controllers/userController";
+import { editProfile, login, registUser, sendMailTest } from "../controllers/userController";
 import express from "express";
 import { auth } from "../services/authService";
 
@@ -13,17 +13,20 @@ router.get("/", function (req, res, next) {
   res.send("respond with a resource");
 });
 
-// アカウント作成
+/** アカウント作成 */
 router.post("/register", registUser)
-
-// メール送信テスト
-router.post("/mailtest", sendMailTest)
-
-// メールアドレス認証
+/** メールアドレス認証 */
 router.get("/:id/verify/:token", verifyMailadress)
 
-// ログイン認証
+/** ログイン */
 router.post("/login", login)
+
+/** プロフィール編集 */
+router.post("/profile", auth, editProfile)
+
+// TODO: 本番前に消す
+// メール送信テスト
+router.post("/mailtest", sendMailTest)
 
 // TODO: 本番前に消す
 // 認証テスト

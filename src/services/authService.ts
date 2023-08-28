@@ -1,10 +1,12 @@
 import type { Request, Response, NextFunction } from "express"
-import { verify } from "jsonwebtoken";
+import { verify } from "jsonwebtoken"
+import type { JwtPayload } from "jsonwebtoken"
 
 /**
  * トークン認証
  * ログイン済のユーザーのみにしかみれないページにミドルウェアとして使う
  * x-auth-tokenという名前でheaderからtokenを取得する。
+ * tokenより、userIdをbodyに追加する
  * @param req
  * @param res
  * @param next
@@ -21,12 +23,16 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
 
     // PrivateKeyがないときはエラー
     const privateKey = process.env.JWTPRIVATEKEY
-    if(!privateKey) {
+    if (!privateKey) {
         throw new Error("auth: 環境変数が足りません");
     }
 
     try {
-        await verify(token, privateKey);
+        // tokenをデコード
+        const decoded = await verify(token, privateKey) as JwtPayload
+
+        // reqのbodyにuserIdを追加
+        req.body.userId = decoded.id
         next();
     } catch {
         return res.status(400).json({
