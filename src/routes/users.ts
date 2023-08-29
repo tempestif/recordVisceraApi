@@ -1,5 +1,5 @@
 import { verifyMailadress } from "../controllers/verifyController";
-import { editProfile, login, registUser, sendMailTest } from "../controllers/userController";
+import { editProfile, login, readPrifile, readUser, registUser, sendMailTest } from "../controllers/userController";
 import express from "express";
 import { auth } from "../services/authService";
 
@@ -21,6 +21,11 @@ router.get("/:id/verify/:token", verifyMailadress)
 /** ログイン */
 router.post("/login", login)
 
+/** ユーザー情報参照 */
+// TODO: URLは何が最適かよく考える
+router.get("/readUser", auth, readUser)
+/** プロフィール参照 */
+router.get("/profile", auth, readPrifile)
 /** プロフィール編集 */
 router.post("/profile", auth, editProfile)
 
