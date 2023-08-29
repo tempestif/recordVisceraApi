@@ -1,11 +1,11 @@
 import type { Request, Response, NextFunction } from "express"
-import { hashedPassHookprisma, offsetTimePrisma } from "../services/prismaMiddleware/index"
+import { hashedPassHookprisma, offsetTimePrisma } from "@/services/prismaMiddleware/index"
 import { PrismaClient } from '@prisma/client'
-import { sendMail } from "../services/nodemailerService"
+import { sendMail } from "@/services/nodemailerService"
 import { randomBytes } from "crypto"
 import { compare } from "bcrypt"
-import { generateAuthToken } from "../services/jwtService"
-import { internalServerErr } from "../services/utilResponseService"
+import { generateAuthToken } from "@/services/jwtService"
+import { internalServerErr } from "@/services/utilResponseService"
 const prisma = new PrismaClient()
 
 /**

@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { createHashedPass } from "../bcryptService";
+import { createHashedPass } from "@/services/bcryptService";
 import { offsetTimePrisma } from "./index"
 
 const prisma = new PrismaClient()

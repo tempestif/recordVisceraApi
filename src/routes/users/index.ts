@@ -1,8 +1,8 @@
-import { verifyMailadress } from "../controllers/verifyController";
-import { editProfile, login, readPrifile, readUser, registUser, sendMailTest } from "../controllers/userController";
+import { verifyMailadress } from "@/controllers/verifyController";
+import { editProfile, login, readPrifile, readUser, registUser, sendMailTest } from "@/controllers/userController";
 import express from "express";
-import { auth } from "../services/authService";
-import { readTemp, registTemp } from "../controllers/tempController";
+import { auth } from "@/services/authService";
+import { readTemp, registTemp } from "@/controllers/tempController";
 
 // TODO: 消せ。
 import type { Request, Response, NextFunction } from "express"
@@ -24,11 +24,6 @@ router.post("/login", login)
 router.get("/profiles", auth, readPrifile)
 /** プロフィール編集 */
 router.post("/profiles", auth, editProfile)
-
-/** 体温を記録 */
-router.post("/temps", auth, registTemp)
-/** 体温を参照 */
-router.get("/temps", auth, readTemp)
 
 // TODO: 本番前に消す
 // メール送信テスト

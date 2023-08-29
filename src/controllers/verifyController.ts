@@ -1,5 +1,5 @@
-import { internalServerErr } from "../services/utilResponseService";
-import { offsetTimePrisma } from "../services/prismaMiddleware";
+import { internalServerErr } from "@/services/utilResponseService";
+import { offsetTimePrisma } from "@/services/prismaMiddleware";
 import type { Request, Response, NextFunction } from "express";
 
 /**

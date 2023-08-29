@@ -4,7 +4,7 @@
  * Module dependencies.
  */
 
-import app from "../app";
+import app from "@/app";
 import * as http from "http";
 import * as debugModule from "debug";
 var debug = debugModule.debug("quick-start-express-typescript:server");

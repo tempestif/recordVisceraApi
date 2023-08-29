@@ -1,5 +1,5 @@
-import { offsetTimePrisma } from "../services/prismaMiddleware";
-import { internalServerErr } from "../services/utilResponseService";
+import { offsetTimePrisma } from "@/services/prismaMiddleware";
+import { internalServerErr } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
 /**
  * 体温を記録
@@ -55,6 +55,7 @@ export const registTemp = async (req: Request, res: Response, next: NextFunction
 
 /**
  * 体温を参照
+ * TODO: ソート、フィルタをつける。req.queryで。
  * @param req
  * @param res
  * @param next
