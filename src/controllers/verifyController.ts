@@ -1,6 +1,7 @@
 import { internalServerErr } from "@/services/utilResponseService";
 import { offsetTimePrisma } from "@/services/prismaMiddleware";
 import type { Request, Response, NextFunction } from "express";
+import { COMPLETE_VALID_MAILADDRESS, NOT_FOUND_USER, TOKEN_NOT_FOUND } from "@/consts/responseConsts";
 
 /**
  * メールアドレス認証
@@ -21,7 +22,7 @@ export const verifyMailadress = async (req: Request, res: Response, next: NextFu
         if (!user) {
             return res.status(400).json({
                 "status": false,
-                "message": "ユーザーが見つかりませんでした。", // NOTE: 固定文言
+                "message": NOT_FOUND_USER.message,
             });
         }
 
@@ -29,7 +30,7 @@ export const verifyMailadress = async (req: Request, res: Response, next: NextFu
         if (!user.authCode) {
             return res.status(400).json({
                 "status": false,
-                "message": "tokenが見つかりませんでした。", // NOTE: 固定文言
+                "message": TOKEN_NOT_FOUND.message,
             });
         }
 
@@ -49,7 +50,7 @@ export const verifyMailadress = async (req: Request, res: Response, next: NextFu
         // レスポンス
         res.status(200).json({
             "status": true,
-            "message": "メールアドレスの認証が完了しました。", // NOTE: 固定文言
+            "message": COMPLETE_VALID_MAILADDRESS.message,
         });
     } catch (e) {
         // エラーの時のレスポンス

@@ -6,6 +6,8 @@ import { randomBytes } from "crypto"
 import { compare } from "bcrypt"
 import { generateAuthToken } from "@/services/jwtService"
 import { internalServerErr } from "@/services/utilResponseService"
+import { ALREADY_USED_MAILADDLESS, COMPLETE_GET_PROFILE, COMPLETE_LOGIN, COMPLETE_UPDATE_PROFILE, PROFILE_NOT_FOUND, SEND_MAIL_FOR_USER_VALID, USER_NOT_FOUND, WRONG_LOGIN_INFO } from "@/consts/responseConsts"
+import { TEXT_VALID_MAIL, TITLE_VALID_MAIL } from "@/consts/meilConsts"
 const prisma = new PrismaClient()
 
 /**
@@ -30,7 +32,7 @@ export const registUser = async (req: Request, res: Response, next: NextFunction
 
         // 被っていたら400エラー
         if (result) {
-            return res.status(400).json({ msg: 'すでにそのメールアドレスは使用されています。' }) // NOTE: 固定文言
+            return res.status(400).json({ msg: ALREADY_USED_MAILADDLESS.message })
         }
 
         // 認証トークン作成
@@ -59,7 +61,7 @@ export const registUser = async (req: Request, res: Response, next: NextFunction
         // レスポンス
         res.status(201).json({
             "status": true,
-            "message": "ユーザー認証のためのメールが送信されました。", // NOTE: 固定文言
+            "message": SEND_MAIL_FOR_USER_VALID.message,
         });
     } catch (e) {
         // エラーの時のレスポンス
@@ -110,7 +112,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         if (!user) {
             return res.status(401).json({
                 "status": false,
-                "message": "メールアドレス、またはパスワードが違います。", // NOTE: 固定文言
+                "message": WRONG_LOGIN_INFO.message,
             });
         }
 
@@ -120,7 +122,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         if (!isValidPassword) {
             return res.status(401).json({
                 "status": false,
-                "message": "メールアドレス、またはパスワードが違います。", // NOTE: 固定文言
+                "message": WRONG_LOGIN_INFO.message,
             });
         }
 
@@ -154,7 +156,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             // レスポンス
             return res.status(201).json({
                 "status": true,
-                "message": "ユーザー認証のためのメールが送信されました。", // NOTE: 固定文言
+                "message": SEND_MAIL_FOR_USER_VALID.message,
             });
         }
 
@@ -164,7 +166,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         res.status(200).json({
             "status": true,
             "token": token,
-            "message": "ログインが完了しました。", // NOTE: 固定文言
+            "message": COMPLETE_LOGIN.message,
         });
     } catch (e) {
         // エラーの時のレスポンス
@@ -192,7 +194,7 @@ export const readUser = async (req: Request, res: Response, next: NextFunction) 
         if (!user) {
             return res.status(401).json({
                 "status": false,
-                "message": "ユーザーが見つかりません。", // NOTE: 固定文言
+                "message": USER_NOT_FOUND.message,
             })
         }
 
@@ -201,7 +203,7 @@ export const readUser = async (req: Request, res: Response, next: NextFunction) 
         // レスポンス
         res.status(200).json({
             "status": true,
-            "message": "プロフィールを取得しました。", // NOTE: 固定文言
+            "message": COMPLETE_GET_PROFILE.message,
             "data": {
                 id,
                 email,
@@ -235,14 +237,14 @@ export const readPrifile = async (req: Request, res: Response, next: NextFunctio
         if (!profile) {
             return res.status(401).json({
                 "status": false,
-                "message": "プロフィールが見つかりません。", // NOTE: 固定文言
+                "message": PROFILE_NOT_FOUND.message,
             })
         }
 
         // レスポンス
         res.status(200).json({
             "status": true,
-            "message": "プロフィールを取得しました。", // NOTE: 固定文言
+            "message": COMPLETE_GET_PROFILE.message,
             "data": profile
         });
     } catch (e) {
@@ -271,7 +273,7 @@ export const editProfile = async (req: Request, res: Response, next: NextFunctio
         if (!user) {
             return res.status(401).json({
                 "status": false,
-                "message": "ユーザーが見つかりません。", // NOTE: 固定文言
+                "message": USER_NOT_FOUND.message,
             });
         }
 
@@ -288,7 +290,7 @@ export const editProfile = async (req: Request, res: Response, next: NextFunctio
         // レスポンス
         res.status(200).json({
             "status": true,
-            "message": "プロフィールを更新しました。", // NOTE: 固定文言
+            "message": COMPLETE_UPDATE_PROFILE.message,
             "data": profile
         });
 
@@ -304,8 +306,8 @@ export const editProfile = async (req: Request, res: Response, next: NextFunctio
  */
 const sendVerifyMail = async (email: string, url: string) => {
     // 件名
-    const mailSubject = "[recordViscera]メールアドレス認証" // NOTE: 固定文言
+    const mailSubject = TITLE_VALID_MAIL.message
     // 本文
-    const text = `以下のURLをクリックしてください\n登録されたメールアドレスを確認します。\n${url}` // NOTE: 固定文言
+    const text = TEXT_VALID_MAIL.message(url)
     await sendMail(email, mailSubject, text)
 }

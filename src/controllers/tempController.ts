@@ -1,3 +1,4 @@
+import { NOT_FOUND_USER, RECORD_TEMP } from "@/consts/responseConsts";
 import { offsetTimePrisma } from "@/services/prismaMiddleware";
 import { internalServerErr } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
@@ -23,7 +24,7 @@ export const registTemp = async (req: Request, res: Response, next: NextFunction
         if (!user) {
             return res.status(401).json({
                 "status": false,
-                "message": "ユーザーが見つかりません。", // NOTE: 固定文言
+                "message": NOT_FOUND_USER.message,
             })
         }
 
@@ -45,7 +46,7 @@ export const registTemp = async (req: Request, res: Response, next: NextFunction
         // レスポンス
         res.status(200).json({
             "status": true,
-            "message": "体温を記録しました。", // NOTE: 固定文言
+            "message": RECORD_TEMP.message,
             "data": tempData
         });
     } catch (e) {
