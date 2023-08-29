@@ -16,7 +16,7 @@ model User {
   name          String
   password      String
   authCode      String
-  verified      Int              @default(1)
+  verified      Int              @default(0)
   bowelMovement Bowel_Movement[]
   userTemp      User_Temp[]
   userWeight    User_Weight[]

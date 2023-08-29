@@ -2,6 +2,7 @@ import { internalServerErr } from "@/services/utilResponseService";
 import { offsetTimePrisma } from "@/services/prismaMiddleware";
 import type { Request, Response, NextFunction } from "express";
 import { COMPLETE_VALID_MAILADDRESS, NOT_FOUND_USER, TOKEN_NOT_FOUND } from "@/consts/responseConsts";
+import { USER_VARIFIED } from "@/consts/db";
 
 /**
  * メールアドレス認証
@@ -34,7 +35,7 @@ export const verifyMailadress = async (req: Request, res: Response, next: NextFu
             });
         }
 
-        // tokenが一致していたらuserのverifiedを2にする
+        // tokenが一致していたらuserのverifiedをtrueにする
         if (user.authCode === token) {
             await offsetTimePrisma.user.update({
                 where: {
@@ -42,7 +43,7 @@ export const verifyMailadress = async (req: Request, res: Response, next: NextFu
                 },
                 data: {
                     authCode: "",
-                    verified: 2 // NOTE: これもどっかに変数として置いときたいな。
+                    verified: USER_VARIFIED.true
                 }
             })
         }
