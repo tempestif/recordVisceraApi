@@ -1,6 +1,6 @@
 import { internalServerErr } from "../services/utilResponseService";
 import { offsetTimePrisma } from "../services/prismaMiddleware";
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 
 /**
  * メールアドレス認証

@@ -276,7 +276,7 @@ export const editProfile = async (req: Request, res: Response, next: NextFunctio
         }
 
         // DBに記録
-        await offsetTimePrisma.profile.update({
+        const profile = await offsetTimePrisma.profile.update({
             where: whereByUserId,
             data: {
                 sex,
@@ -289,6 +289,7 @@ export const editProfile = async (req: Request, res: Response, next: NextFunctio
         res.status(200).json({
             "status": true,
             "message": "プロフィールを更新しました。", // NOTE: 固定文言
+            "data": profile
         });
 
     } catch (e) {

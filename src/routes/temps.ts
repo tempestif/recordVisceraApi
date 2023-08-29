@@ -1,3 +1,5 @@
+import { auth } from "../services/authService";
+import { readTemp, registTemp } from "../controllers/tempController";
 import express from "express";
 const router = express.Router();
 
@@ -5,5 +7,8 @@ const router = express.Router();
 router.get("/", function (req, res, next) {
   res.render("index", { title: "Express" });
 });
+
+/** 体温を記録 */
+router.post("/registTemp", auth, registTemp)
 
 export { router };

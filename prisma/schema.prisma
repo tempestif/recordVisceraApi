@@ -19,7 +19,7 @@ model User {
   verified      Int              @default(1)
   bowelMovement Bowel_Movement[]
   userTemp      User_Temp[]
-  weight        Weights[]
+  userWeight    User_Weight[]
   profile       Profile?
   createdAt     DateTime         @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt     DateTime         @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
@@ -52,6 +52,18 @@ model User_Temp {
   @@map("user_temps")
 }
 
+model User_Weight {
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  weight    Float
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  createdAt DateTime @default(dbgenerated("NOW()")) @db.DateTime
+  updatedAt DateTime @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
+
+  @@map("user_weights")
+}
+
 model Bowel_Movement {
   id                 Int                 @id @default(autoincrement())
   date               DateTime
@@ -74,16 +86,4 @@ model Bristol_Stool_Scale {
   bowelMovement Bowel_Movement[]
 
   @@map("bristol_stool_scales")
-}
-
-model Weights {
-  id        Int      @id @default(autoincrement())
-  date      DateTime
-  weight    Float
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
-  createdAt DateTime @default(dbgenerated("NOW()")) @db.DateTime
-  updatedAt DateTime @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
-
-  @@map("weights")
 }
