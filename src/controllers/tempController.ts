@@ -52,3 +52,12 @@ export const registTemp = async (req: Request, res: Response, next: NextFunction
         internalServerErr(res, e)
     }
 }
+
+/**
+ * 体温を参照
+ * @param req
+ * @param res
+ * @param next
+ */
+export const readTemp = async (req: Request, res: Response, next: NextFunction) => {
+}

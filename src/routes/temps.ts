@@ -8,7 +8,4 @@ router.get("/", function (req, res, next) {
   res.render("index", { title: "Express" });
 });
 
-/** 体温を記録 */
-router.post("/registTemp", auth, registTemp)
-
 export { router };
