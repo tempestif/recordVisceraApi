@@ -173,6 +173,84 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 }
 
 /**
+ * ユーザー情報参照
+ * @param req userId
+ * @param res id, email, name, createdAt, updatedAt
+ * @param next
+ * @returns
+ */
+export const readUser = async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.body
+
+    try {
+        // userIdで検索
+        const whereByUserId = { id: userId }
+
+        // ユーザー検索
+        const user = await offsetTimePrisma.user.findUnique({ where: whereByUserId })
+        // ユーザーが見つからなかったら401エラー
+        if (!user) {
+            return res.status(401).json({
+                "status": false,
+                "message": "ユーザーが見つかりません。", // NOTE: 固定文言
+            })
+        }
+
+        // 返却するDBのデータ
+        const { id, email, name, createdAt, updatedAt } = user
+        // レスポンス
+        res.status(200).json({
+            "status": true,
+            "message": "プロフィールを取得しました。", // NOTE: 固定文言
+            "data": {
+                id,
+                email,
+                name,
+                createdAt,
+                updatedAt
+            }
+        });
+    } catch (e) {
+        internalServerErr(res, e)
+    }
+}
+
+/**
+ * プロフィール参照
+ * @param req userId
+ * @param res id, createdAt, updatedAt, sex, weight, height, birthday, userId
+ * @param next
+ * @returns
+ */
+export const readPrifile = async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.body
+
+    try {
+        // userIdで検索
+        const whereByUserId = { userId: userId }
+
+        // プロフィール検索
+        const profile = await offsetTimePrisma.profile.findUnique({ where: whereByUserId })
+        // プロフィールが見つからなかったら401エラー
+        if (!profile) {
+            return res.status(401).json({
+                "status": false,
+                "message": "プロフィールが見つかりません。", // NOTE: 固定文言
+            })
+        }
+
+        // レスポンス
+        res.status(200).json({
+            "status": true,
+            "message": "プロフィールを取得しました。", // NOTE: 固定文言
+            "data": profile
+        });
+    } catch (e) {
+        internalServerErr(res, e)
+    }
+}
+
+/**
  * プロフィール編集
  * @param req userId, sex, height, birthday
  * @param res
