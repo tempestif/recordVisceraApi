@@ -1,5 +1,5 @@
 import { DEFAULT_DATA_INFO } from "@/consts/db";
-import { RECORD_TEMP, USER_NOT_FOUND } from "@/consts/responseConsts";
+import { EDIT_TEMP, RECORD_TEMP, TEMP_ACCESS_FORBIDDEN, TEMP_NOT_FOUND, USER_NOT_FOUND } from "@/consts/responseConsts";
 import { offsetTimePrisma } from "@/services/prismaMiddleware";
 import { basicResponce, internalServerErr } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
@@ -13,7 +13,7 @@ import type { Request, Response, NextFunction } from "express";
  */
 export const registTemp = async (req: Request, res: Response, next: NextFunction) => {
     const { userId, temp, date } = req.body
-    // TODO: バリデーション
+    // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
         // userIdからユーザーを取得
@@ -27,6 +27,7 @@ export const registTemp = async (req: Request, res: Response, next: NextFunction
             return basicResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
+        // dateをDate型に変換
         let dateForDb
         if (!date) {
             // dateが指定なしの場合、現在日時を入力
@@ -173,6 +174,73 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
             "status": true,
             "message": "[readTemp]response",
             "temps": filteredTemps
+        });
+    } catch (e) {
+        internalServerErr(res, e)
+    }
+}
+
+/**
+ * 指定した体温の記録を編集する
+ * jwtのuserIdと指定した体温記録のuserIdが合致するときのみ編集可能
+ * 体温記録は、user_Tempのidをパラメータに挿入し指定する
+ * BaseUrl/temps/edit/:id
+ * 編集内容はbodyで送る
+ * @param req
+ * @param res
+ * @param next
+ */
+export const editTemps = async (req: Request, res: Response, next: NextFunction) => {
+    const id = req.params.id
+    const { userId, date, temp } = req.body
+
+    // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
+
+    try {
+        // idから体温記録を取得
+        const whereByTempId = { id: Number(id) }
+        const tempData = await offsetTimePrisma.user_Temp.findUnique({ where: whereByTempId })
+        // 体温記録が無かったら401エラー
+        if (!tempData) {
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = TEMP_NOT_FOUND.message
+            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+        }
+
+        // 指定した体温記録がユーザー本人のものか確認
+        const isSelfUser = (tempData.userId === userId)
+        // ユーザー本人のものではない場合、403を返す
+        if (!isSelfUser) {
+            const HttpStatus = 403
+            const responseStatus = false
+            const responseMsg = TEMP_ACCESS_FORBIDDEN.message
+            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+        }
+
+        // 編集するdataを成型
+        type TempData = {
+            temp: number,
+            date?: Date
+        }
+        const data: TempData = {
+            temp
+        }
+        // dateが設定されているときのみdataに追加
+        if (date) {
+            data.date = new Date(date)
+        }
+
+        // 体温記録を編集
+        const newTemp = await offsetTimePrisma.user_Temp.update({
+            where: whereByTempId,
+            data: data
+        })
+
+        res.status(200).json({
+            "status": true,
+            "message": EDIT_TEMP.message,
+            "data": newTemp
         });
     } catch (e) {
         internalServerErr(res, e)

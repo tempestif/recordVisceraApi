@@ -21,7 +21,7 @@ const prisma = new PrismaClient()
 export const registUser = async (req: Request, res: Response, next: NextFunction) => {
     const { email, password, name } = req.body
 
-    // TODO: バリデーション
+    // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
         // emailでユーザーを取得
@@ -101,7 +101,7 @@ export const sendMailTest = async (req: Request, res: Response, next: NextFuncti
  * @returns
  */
 export const login = async (req: Request, res: Response, next: NextFunction) => {
-    // TODO: バリデーション
+    // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
     const { email, password } = req.body
 
     try {
@@ -263,7 +263,7 @@ export const readPrifile = async (req: Request, res: Response, next: NextFunctio
 export const editProfile = async (req: Request, res: Response, next: NextFunction) => {
     const { userId, sex, height, birthday } = req.body
 
-    // TODO: バリデーション
+    // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
         // userIdからプロフィール取得
