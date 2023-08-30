@@ -11,7 +11,7 @@ import { TEXT_VALID_MAIL, TITLE_VALID_MAIL } from "@/consts/meilConsts"
 const prisma = new PrismaClient()
 
 /**
- * アカウント作成
+ * 認証前アカウントを作成し、認証メールを送信する
  * @param req email, password, name
  * @param res
  * @param next
@@ -91,7 +91,7 @@ export const sendMailTest = async (req: Request, res: Response, next: NextFuncti
 }
 
 /**
- * ログイン認証
+ * メールアドレス、パスワードでログイン認証
  * @param req email, password
  * @param res
  * @param next
@@ -102,7 +102,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const { email, password } = req.body
 
     try {
-        // emailからユーザーの存在確認
+        // emailが一致するユーザーを取得
         const user = await offsetTimePrisma.user.findUnique({
             where: {
                 email: email
@@ -126,13 +126,13 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             });
         }
 
-        // メールアドレス認証が行われていない場合、認証メールを送信
+        // メールアドレス認証が行われていない場合、認証メールを送信し処理終了
         if (!user.verified) {
-            // 現在のユーザーの認証トークン
-            let token = user.authCode
+            // 認証トークン
+            let token
 
             // tokenが無かったら新たに発行してDBに記録
-            if (!token) {
+            if (!user.authCode) {
                 const newToken = randomBytes(32).toString("hex");
 
                 // DBに記録
@@ -147,25 +147,26 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
                 // tokenを新たに生成したものに。
                 token = newToken
+            } else {
+                token = user.authCode
             }
 
             // メール送信
             const verifyUrl = `${process.env.BASE_URL}/users/${user.id}/verify/${token}`
             await sendVerifyMail(email, verifyUrl)
 
-            // レスポンス
             return res.status(201).json({
                 "status": true,
                 "message": SEND_MAIL_FOR_USER_VALID.message,
             });
         }
 
-        // token発行
-        const token = generateAuthToken(user.id);
+        // jwt発行
+        const jwt = generateAuthToken(user.id);
         // レスポンス
         res.status(200).json({
             "status": true,
-            "token": token,
+            "token": jwt,
             "message": COMPLETE_LOGIN.message,
         });
     } catch (e) {
@@ -175,7 +176,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 }
 
 /**
- * ユーザー情報参照
+ * tokenのuserIdからユーザー情報を取得
  * @param req userId
  * @param res id, email, name, createdAt, updatedAt
  * @param next
@@ -185,10 +186,8 @@ export const readUser = async (req: Request, res: Response, next: NextFunction) 
     const { userId } = req.body
 
     try {
-        // userIdで検索
+        // userIdでユーザーを取得
         const whereByUserId = { id: userId }
-
-        // ユーザー検索
         const user = await offsetTimePrisma.user.findUnique({ where: whereByUserId })
         // ユーザーが見つからなかったら401エラー
         if (!user) {
@@ -198,9 +197,8 @@ export const readUser = async (req: Request, res: Response, next: NextFunction) 
             })
         }
 
-        // 返却するDBのデータ
+        // password, authCode, verified以外を返却する。
         const { id, email, name, createdAt, updatedAt } = user
-        // レスポンス
         res.status(200).json({
             "status": true,
             "message": COMPLETE_GET_PROFILE.message,
@@ -218,7 +216,8 @@ export const readUser = async (req: Request, res: Response, next: NextFunction) 
 }
 
 /**
- * プロフィール参照
+ * ユーザーのプロフィールを取得
+ * tokenのuserIdからユーザーから取得
  * @param req userId
  * @param res id, createdAt, updatedAt, sex, weight, height, birthday, userId
  * @param next
@@ -228,10 +227,8 @@ export const readPrifile = async (req: Request, res: Response, next: NextFunctio
     const { userId } = req.body
 
     try {
-        // userIdで検索
+        // userIdでプロフィールを取得
         const whereByUserId = { userId: userId }
-
-        // プロフィール検索
         const profile = await offsetTimePrisma.profile.findUnique({ where: whereByUserId })
         // プロフィールが見つからなかったら401エラー
         if (!profile) {
@@ -241,7 +238,6 @@ export const readPrifile = async (req: Request, res: Response, next: NextFunctio
             })
         }
 
-        // レスポンス
         res.status(200).json({
             "status": true,
             "message": COMPLETE_GET_PROFILE.message,
@@ -253,7 +249,8 @@ export const readPrifile = async (req: Request, res: Response, next: NextFunctio
 }
 
 /**
- * プロフィール編集
+ * ユーザーのプロフィール編集
+ * tokenのuserIdからユーザーのプロフィールを編集
  * @param req userId, sex, height, birthday
  * @param res
  * @param next
@@ -264,21 +261,19 @@ export const editProfile = async (req: Request, res: Response, next: NextFunctio
     // TODO: バリデーション
 
     try {
-        // userIdでユーザーを検索
+        // userIdからプロフィール取得
         const whereByUserId = { userId: userId }
-
-        // ユーザー取得
-        const user = await offsetTimePrisma.profile.findUnique({ where: whereByUserId })
-        // ユーザーが見つからなかったら401エラー
-        if (!user) {
+        const profile = await offsetTimePrisma.profile.findUnique({ where: whereByUserId })
+        // プロフィールが見つからなかったら401エラー
+        if (!profile) {
             return res.status(401).json({
                 "status": false,
                 "message": USER_NOT_FOUND.message,
             });
         }
 
-        // DBに記録
-        const profile = await offsetTimePrisma.profile.update({
+        // プロフィールを更新
+        const updatedProfile = await offsetTimePrisma.profile.update({
             where: whereByUserId,
             data: {
                 sex,
@@ -287,11 +282,10 @@ export const editProfile = async (req: Request, res: Response, next: NextFunctio
             }
         })
 
-        // レスポンス
         res.status(200).json({
             "status": true,
             "message": COMPLETE_UPDATE_PROFILE.message,
-            "data": profile
+            "data": updatedProfile
         });
 
     } catch (e) {

@@ -5,7 +5,13 @@ import { COMPLETE_VALID_MAILADDRESS, NOT_FOUND_USER, TOKEN_NOT_FOUND } from "@/c
 import { USER_VARIFIED } from "@/consts/db";
 
 /**
- * メールアドレス認証
+ * id, tokenより、メールアドレスがユーザーの利用可能なものかを確認する
+ * id, tokenはパラメータから取得
+ * BaseUrl/:id/verify/:token
+ * @param req id, token
+ * @param res
+ * @param next
+ * @returns
  */
 export const verifyMailadress = async (req: Request, res: Response, next: NextFunction) => {
     const id = Number(req.params.id)
