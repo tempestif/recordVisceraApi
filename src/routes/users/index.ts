@@ -2,9 +2,6 @@ import { verifyMailadress } from "@/controllers/verifyController";
 import { editProfile, login, readPrifile, readUser, registUser, sendMailTest } from "@/controllers/userController";
 import express from "express";
 import { auth } from "@/services/authService";
-import { readTemp, registTemp } from "@/controllers/tempController";
-
-// TODO: 消せ。
 import type { Request, Response, NextFunction } from "express"
 
 const router = express.Router();
