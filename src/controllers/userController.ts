@@ -5,13 +5,14 @@ import { sendMail } from "@/services/nodemailerService"
 import { randomBytes } from "crypto"
 import { compare } from "bcrypt"
 import { generateAuthToken } from "@/services/jwtService"
-import { internalServerErr } from "@/services/utilResponseService"
+import { basicResponce, internalServerErr } from "@/services/utilResponseService"
 import { ALREADY_USED_MAILADDLESS, COMPLETE_GET_PROFILE, COMPLETE_LOGIN, COMPLETE_UPDATE_PROFILE, PROFILE_NOT_FOUND, SEND_MAIL_FOR_USER_VALID, USER_NOT_FOUND, WRONG_LOGIN_INFO } from "@/consts/responseConsts"
-import { TEXT_VALID_MAIL, TITLE_VALID_MAIL } from "@/consts/meilConsts"
+import { TEXT_VALID_MAIL, TITLE_VALID_MAIL } from "@/consts/mailConsts"
 const prisma = new PrismaClient()
 
 /**
  * 認証前アカウントを作成し、認証メールを送信する
+ * emailは各ユーザーでユニークになる
  * @param req email, password, name
  * @param res
  * @param next
@@ -23,16 +24,18 @@ export const registUser = async (req: Request, res: Response, next: NextFunction
     // TODO: バリデーション
 
     try {
-        // emailが被ってるか確認
+        // emailでユーザーを取得
         const result = await prisma.user.findUnique({
             where: {
                 email: email
             }
         })
-
-        // 被っていたら400エラー
+        // ユーザーが存在していたら400エラー
         if (result) {
-            return res.status(400).json({ msg: ALREADY_USED_MAILADDLESS.message })
+            const HttpStatus = 400
+            const responseStatus = false
+            const responseMsg = ALREADY_USED_MAILADDLESS.message
+            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
         // 認証トークン作成
@@ -58,11 +61,11 @@ export const registUser = async (req: Request, res: Response, next: NextFunction
         const verifyUrl = `${process.env.BASE_URL}/users/${newUser.id}/verify/${newUser.authCode}`
         await sendVerifyMail(email, verifyUrl)
 
-        // レスポンス
-        res.status(201).json({
-            "status": true,
-            "message": SEND_MAIL_FOR_USER_VALID.message,
-        });
+        // レスポンスを返却
+        const HttpStatus = 201
+        const responseStatus = true
+        const responseMsg = SEND_MAIL_FOR_USER_VALID.message
+        basicResponce(res, HttpStatus, responseStatus, responseMsg)
     } catch (e) {
         // エラーの時のレスポンス
         internalServerErr(res, e)
@@ -110,20 +113,20 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         })
         // ユーザーが見つからなかったら401エラー
         if (!user) {
-            return res.status(401).json({
-                "status": false,
-                "message": WRONG_LOGIN_INFO.message,
-            });
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = WRONG_LOGIN_INFO.message
+            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
         // パスワードを比較
         const isValidPassword = await compare(password, user.password)
         // 合致しなかったら401エラー
         if (!isValidPassword) {
-            return res.status(401).json({
-                "status": false,
-                "message": WRONG_LOGIN_INFO.message,
-            });
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = WRONG_LOGIN_INFO.message
+            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
         // メールアドレス認証が行われていない場合、認証メールを送信し処理終了
@@ -155,15 +158,16 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             const verifyUrl = `${process.env.BASE_URL}/users/${user.id}/verify/${token}`
             await sendVerifyMail(email, verifyUrl)
 
-            return res.status(201).json({
-                "status": true,
-                "message": SEND_MAIL_FOR_USER_VALID.message,
-            });
+            // レスポンスを返却
+            const HttpStatus = 201
+            const responseStatus = true
+            const responseMsg = SEND_MAIL_FOR_USER_VALID.message
+            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
         // jwt発行
         const jwt = generateAuthToken(user.id);
-        // レスポンス
+        // レスポンスを返却
         res.status(200).json({
             "status": true,
             "token": jwt,
@@ -191,10 +195,10 @@ export const readUser = async (req: Request, res: Response, next: NextFunction) 
         const user = await offsetTimePrisma.user.findUnique({ where: whereByUserId })
         // ユーザーが見つからなかったら401エラー
         if (!user) {
-            return res.status(401).json({
-                "status": false,
-                "message": USER_NOT_FOUND.message,
-            })
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = USER_NOT_FOUND.message
+            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
         // password, authCode, verified以外を返却する。
@@ -232,12 +236,13 @@ export const readPrifile = async (req: Request, res: Response, next: NextFunctio
         const profile = await offsetTimePrisma.profile.findUnique({ where: whereByUserId })
         // プロフィールが見つからなかったら401エラー
         if (!profile) {
-            return res.status(401).json({
-                "status": false,
-                "message": PROFILE_NOT_FOUND.message,
-            })
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = PROFILE_NOT_FOUND.message
+            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
+        // レスポンスを返却
         res.status(200).json({
             "status": true,
             "message": COMPLETE_GET_PROFILE.message,
@@ -266,10 +271,10 @@ export const editProfile = async (req: Request, res: Response, next: NextFunctio
         const profile = await offsetTimePrisma.profile.findUnique({ where: whereByUserId })
         // プロフィールが見つからなかったら401エラー
         if (!profile) {
-            return res.status(401).json({
-                "status": false,
-                "message": USER_NOT_FOUND.message,
-            });
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = USER_NOT_FOUND.message
+            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
         // プロフィールを更新

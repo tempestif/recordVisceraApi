@@ -1,7 +1,7 @@
 import { internalServerErr } from "@/services/utilResponseService";
 import { offsetTimePrisma } from "@/services/prismaMiddleware";
 import type { Request, Response, NextFunction } from "express";
-import { COMPLETE_VALID_MAILADDRESS, NOT_FOUND_USER, TOKEN_NOT_FOUND } from "@/consts/responseConsts";
+import { COMPLETE_VALID_MAILADDRESS, USER_NOT_FOUND, TOKEN_NOT_FOUND } from "@/consts/responseConsts";
 import { USER_VARIFIED } from "@/consts/db";
 
 /**
@@ -29,7 +29,7 @@ export const verifyMailadress = async (req: Request, res: Response, next: NextFu
         if (!user) {
             return res.status(400).json({
                 "status": false,
-                "message": NOT_FOUND_USER.message,
+                "message": USER_NOT_FOUND.message,
             });
         }
 

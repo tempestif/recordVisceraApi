@@ -8,5 +8,9 @@ export const COMPLETE_LOGIN = {
 } as const
 
 export const TOKEN_NOT_FOUND = {
-    message: "tokenが見つかりません。"
+    message: "トークンが見つかりません。"
+} as const
+
+export const TOKEN_NOT_DISCREPANCY = {
+    message: "トークンが一致しません。"
 } as const

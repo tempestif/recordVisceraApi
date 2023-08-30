@@ -1,12 +1,14 @@
+import { TOKEN_NOT_DISCREPANCY, TOKEN_NOT_FOUND } from "@/consts/responseConsts";
 import type { Request, Response, NextFunction } from "express"
 import { verify } from "jsonwebtoken"
 import type { JwtPayload } from "jsonwebtoken"
+import { basicResponce } from "./utilResponseService";
 
 /**
  * トークン認証
  * ログイン済のユーザーのみにしかみれないページにミドルウェアとして使う
  * x-auth-tokenという名前でheaderからtokenを取得する。
- * tokenより、userIdをbodyに追加する
+ * jwtからデコードしたuserIdをbodyに追加する
  * @param req
  * @param res
  * @param next
@@ -14,11 +16,14 @@ import type { JwtPayload } from "jsonwebtoken"
  */
 export const auth = async (req: Request, res: Response, next: NextFunction) => {
     //トークン認証
-    const token = req.header("x-auth-token");
+    const jwt = req.header("x-auth-token");
 
     // tokenがない場合、400エラー
-    if (!token) {
-        return res.status(400).json({ msg: 'トークンが見つかりません' })
+    if (!jwt) {
+        const HttpStatus = 400
+        const responseStatus = false
+        const responseMsg = TOKEN_NOT_FOUND.message
+        return basicResponce(res, HttpStatus, responseStatus, responseMsg)
     }
 
     // PrivateKeyがないときはエラー
@@ -29,18 +34,15 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
 
     try {
         // tokenをデコード
-        const decoded = await verify(token, privateKey) as JwtPayload
+        const decoded = await verify(jwt, privateKey) as JwtPayload
 
         // reqのbodyにuserIdを追加
         req.body.userId = decoded.id
         next();
     } catch {
-        return res.status(400).json({
-            errors: [
-                {
-                    msg: "トークンが一致しません",
-                },
-            ],
-        });
+        const HttpStatus = 400
+        const responseStatus = false
+        const responseMsg = TOKEN_NOT_DISCREPANCY.message
+        return basicResponce(res, HttpStatus, responseStatus, responseMsg)
     }
 };

@@ -1,7 +1,7 @@
 import { DEFAULT_DATA_INFO } from "@/consts/db";
-import { NOT_FOUND_USER, RECORD_TEMP } from "@/consts/responseConsts";
+import { RECORD_TEMP, USER_NOT_FOUND } from "@/consts/responseConsts";
 import { offsetTimePrisma } from "@/services/prismaMiddleware";
-import { internalServerErr } from "@/services/utilResponseService";
+import { basicResponce, internalServerErr } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
 /**
  * 新たな体温記録を作成する
@@ -21,10 +21,10 @@ export const registTemp = async (req: Request, res: Response, next: NextFunction
         const user = await offsetTimePrisma.user.findUnique({ where: whereByUserId })
         // ユーザーが見つからなかったら401エラー
         if (!user) {
-            return res.status(401).json({
-                "status": false,
-                "message": NOT_FOUND_USER.message,
-            })
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = USER_NOT_FOUND.message
+            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
         let dateForDb
