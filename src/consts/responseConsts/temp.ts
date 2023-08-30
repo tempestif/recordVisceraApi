@@ -14,3 +14,7 @@ export const TEMP_ACCESS_FORBIDDEN = {
 export const EDIT_TEMP = {
     message: "体温記録を編集しました。"
 } as const
+
+export const DELETE_TEMP = {
+    message: "体温記録を削除しました。"
+} as const

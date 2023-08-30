@@ -1,5 +1,5 @@
 import { DEFAULT_DATA_INFO } from "@/consts/db";
-import { EDIT_TEMP, RECORD_TEMP, TEMP_ACCESS_FORBIDDEN, TEMP_NOT_FOUND, USER_NOT_FOUND } from "@/consts/responseConsts";
+import { DELETE_TEMP, EDIT_TEMP, RECORD_TEMP, TEMP_ACCESS_FORBIDDEN, TEMP_NOT_FOUND, USER_NOT_FOUND } from "@/consts/responseConsts";
 import { offsetTimePrisma } from "@/services/prismaMiddleware";
 import { basicResponce, internalServerErr } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
@@ -240,6 +240,59 @@ export const editTemps = async (req: Request, res: Response, next: NextFunction)
         res.status(200).json({
             "status": true,
             "message": EDIT_TEMP.message,
+            "data": newTemp
+        });
+    } catch (e) {
+        internalServerErr(res, e)
+    }
+}
+
+/**
+ * 指定した体温の記録を削除する
+ * jwtのuserIdと指定した体温記録のuserIdが合致するときのみ削除可能
+ * 体温記録は、user_Tempのidをパラメータに挿入し指定する
+ * BaseUrl/temps/edit/:id
+ * @param req
+ * @param res
+ * @param next
+ * @returns
+ */
+export const deleteTemps = async (req: Request, res: Response, next: NextFunction) => {
+    const id = req.params.id
+    const { userId } = req.body
+
+    // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
+
+    try {
+        // idから体温記録を取得
+        const whereByTempId = { id: Number(id) }
+        const tempData = await offsetTimePrisma.user_Temp.findUnique({ where: whereByTempId })
+        // 体温記録が無かったら401エラー
+        if (!tempData) {
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = TEMP_NOT_FOUND.message
+            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+        }
+
+        // 指定した体温記録がユーザー本人のものか確認
+        const isSelfUser = (tempData.userId === userId)
+        // ユーザー本人のものではない場合、403を返す
+        if (!isSelfUser) {
+            const HttpStatus = 403
+            const responseStatus = false
+            const responseMsg = TEMP_ACCESS_FORBIDDEN.message
+            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+        }
+
+        // 体温記録を削除
+        const newTemp = await offsetTimePrisma.user_Temp.delete({
+            where: whereByTempId
+        })
+
+        res.status(200).json({
+            "status": true,
+            "message": DELETE_TEMP.message,
             "data": newTemp
         });
     } catch (e) {
