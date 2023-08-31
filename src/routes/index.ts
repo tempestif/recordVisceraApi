@@ -1,3 +1,4 @@
+import { registUser, login } from "@/controllers/userController";
 import express from "express";
 const router = express.Router();
 
@@ -5,5 +6,11 @@ const router = express.Router();
 router.get("/", function (req, res, next) {
   res.render("index", { title: "Express" });
 });
+
+/** 認証前アカウントを作成 */
+router.post("/register", registUser)
+
+/** ログイン */
+router.post("/login", login)
 
 export { router };

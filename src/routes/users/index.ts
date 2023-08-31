@@ -1,5 +1,5 @@
 import { verifyMailadress } from "@/controllers/verifyController";
-import { editProfile, login, readPrifile, readUser, registUser, sendMailTest } from "@/controllers/userController";
+import { editProfile, readPrifile, readUser, sendMailTest } from "@/controllers/userController";
 import express from "express";
 import { auth } from "@/services/authService";
 import type { Request, Response, NextFunction } from "express"
@@ -10,13 +10,9 @@ const router = express.Router();
 // NOTE: 「指定した」ユーザー一人の情報が取れるというのが抜けている。「指定」はauthによってtokenから判別されており、APIをたたく側は何もしていないように感じるようになってはいる。
 router.get("/", auth, readUser)
 
-/** 認証前アカウントを作成 */
-router.post("/register", registUser)
 /** メールアドレスをid, tokenによって認証 */
 router.get("/:id/verify/:token", verifyMailadress)
 
-/** ログイン */
-router.post("/login", login)
 
 /** プロフィール取得 */
 // NOTE: 「指定した」ユーザー一人に紐づくプロフィールが取れるというのが抜けている。「指定」はauthによってtokenから判別されており、APIをたたく側は何もしていないように感じるようになってはいる。
