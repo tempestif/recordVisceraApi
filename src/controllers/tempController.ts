@@ -1,5 +1,5 @@
 import { DEFAULT_DATA_INFO } from "@/consts/db";
-import { DELETE_TEMP, EDIT_TEMP, RECORD_TEMP, TEMP_ACCESS_FORBIDDEN, TEMP_NOT_FOUND, USER_NOT_FOUND } from "@/consts/responseConsts";
+import { DELETE_TEMP, EDIT_TEMP, READ_TEMP, RECORD_TEMP, TEMP_ACCESS_FORBIDDEN, TEMP_NOT_FOUND, USER_NOT_FOUND } from "@/consts/responseConsts";
 import { FilterOptionsType, createFilterForPrisma, createSortsForPrisma, filteringFields } from "@/services/dataTransferService";
 import { offsetTimePrisma } from "@/services/prismaClients";
 import { findUniqueUserTempAbsoluteExist, userTempType, findUniqueUserAbsoluteExist } from "@/services/prismaService";
@@ -125,7 +125,7 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
         // レスポンス
         res.status(200).json({
             "status": true,
-            "message": "[readTemp]response",
+            "message": READ_TEMP.message,
             "temps": filteredTemps
         });
     } catch (e) {
@@ -137,7 +137,7 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
  * 指定した体温の記録を編集する
  * jwtのuserIdと指定した体温記録のuserIdが合致するときのみ編集可能
  * 体温記録は、user_Tempのidをパラメータに挿入し指定する
- * BaseUrl/temps/edit/:id
+ * BaseUrl/users/temps/edit/:id
  * 編集内容はbodyで送る
  * @param req
  * @param res
@@ -197,7 +197,7 @@ export const editTemps = async (req: Request, res: Response, next: NextFunction)
  * 指定した体温の記録を削除する
  * jwtのuserIdと指定した体温記録のuserIdが合致するときのみ削除可能
  * 体温記録は、user_Tempのidをパラメータに挿入し指定する
- * BaseUrl/temps/edit/:id
+ * BaseUrl/users/temps/edit/:id
  * @param req
  * @param res
  * @param next
