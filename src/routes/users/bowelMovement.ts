@@ -1,0 +1,15 @@
+import { registBowelMovement, readBowelMovement, editBowelMovement, deleteBowelMovement } from "@/controllers/bowelMovementController";
+import { auth } from "@/services/authService";
+import express from "express";
+const router = express.Router();
+
+/** 新たな排便記録を作成 */
+router.post("/", auth, registBowelMovement)
+/** 排便記録のリストを取得 */
+router.get("/", auth, readBowelMovement)
+/** 指定した排便記録を編集 */
+router.post("/edit/:id", auth, editBowelMovement)
+/** 指定した排便記録を削除 */
+router.post("/delete/:id", auth, deleteBowelMovement)
+
+export { router };

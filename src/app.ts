@@ -7,6 +7,7 @@ import logger from "morgan";
 import { router as indexRouter } from "@/routes/index";
 import { router as usersRouter } from "@/routes/users/index";
 import { router as tempsRouter } from "@/routes/users/temps";
+import { router as bowelMovementRouter } from "@/routes/users/bowelMovement";
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use(express.static("public"));
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/users/temps", tempsRouter);
+app.use("/users/bowel-movements", bowelMovementRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
