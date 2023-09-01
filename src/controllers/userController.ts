@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express"
-import { hashedPassHookprisma, offsetTimePrisma } from "@/services/prismaMiddleware/index"
+import { hashedPassHookprisma, offsetTimePrisma } from "@/services/prismaClients"
 import { PrismaClient } from '@prisma/client'
 import { sendMail } from "@/services/nodemailerService"
 import { randomBytes } from "crypto"
@@ -8,6 +8,7 @@ import { generateAuthToken } from "@/services/jwtService"
 import { basicResponce, internalServerErr } from "@/services/utilResponseService"
 import { ALREADY_USED_MAILADDLESS, COMPLETE_GET_PROFILE, COMPLETE_LOGIN, COMPLETE_UPDATE_PROFILE, PROFILE_NOT_FOUND, SEND_MAIL_FOR_USER_VALID, USER_NOT_FOUND, WRONG_LOGIN_INFO } from "@/consts/responseConsts"
 import { TEXT_VALID_MAIL, TITLE_VALID_MAIL } from "@/consts/mailConsts"
+import { UserType, findUniqueUserAbsoluteExist, findUniqueProfileAbsoluteExist } from "@/services/prismaService"
 const prisma = new PrismaClient()
 
 /**
@@ -106,18 +107,8 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
     try {
         // emailが一致するユーザーを取得
-        const user = await offsetTimePrisma.user.findUnique({
-            where: {
-                email: email
-            }
-        })
-        // ユーザーが見つからなかったら401エラー
-        if (!user) {
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = WRONG_LOGIN_INFO.message
-            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
-        }
+        const whereByEmail = { email }
+        const user = await findUniqueUserAbsoluteExist(whereByEmail, res) as UserType
 
         // パスワードを比較
         const isValidPassword = await compare(password, user.password)
@@ -192,14 +183,7 @@ export const readUser = async (req: Request, res: Response, next: NextFunction) 
     try {
         // userIdでユーザーを取得
         const whereByUserId = { id: userId }
-        const user = await offsetTimePrisma.user.findUnique({ where: whereByUserId })
-        // ユーザーが見つからなかったら401エラー
-        if (!user) {
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = USER_NOT_FOUND.message
-            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
-        }
+        const user = await findUniqueUserAbsoluteExist(whereByUserId, res) as UserType
 
         // password, authCode, verified以外を返却する。
         const { id, email, name, createdAt, updatedAt } = user
@@ -233,14 +217,7 @@ export const readPrifile = async (req: Request, res: Response, next: NextFunctio
     try {
         // userIdでプロフィールを取得
         const whereByUserId = { userId: userId }
-        const profile = await offsetTimePrisma.profile.findUnique({ where: whereByUserId })
-        // プロフィールが見つからなかったら401エラー
-        if (!profile) {
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = PROFILE_NOT_FOUND.message
-            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
-        }
+        const profile = await findUniqueProfileAbsoluteExist(whereByUserId, res)
 
         // レスポンスを返却
         res.status(200).json({
@@ -266,16 +243,9 @@ export const editProfile = async (req: Request, res: Response, next: NextFunctio
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
-        // userIdからプロフィール取得
-        const whereByUserId = { userId: userId }
-        const profile = await offsetTimePrisma.profile.findUnique({ where: whereByUserId })
-        // プロフィールが見つからなかったら401エラー
-        if (!profile) {
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = USER_NOT_FOUND.message
-            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
-        }
+        // userIdでプロフィールを検索
+        const whereByUserId = { userId }
+        await findUniqueProfileAbsoluteExist(whereByUserId, res)
 
         // プロフィールを更新
         const updatedProfile = await offsetTimePrisma.profile.update({

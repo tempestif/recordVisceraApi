@@ -1,6 +1,8 @@
 import { DEFAULT_DATA_INFO } from "@/consts/db";
 import { DELETE_TEMP, EDIT_TEMP, RECORD_TEMP, TEMP_ACCESS_FORBIDDEN, TEMP_NOT_FOUND, USER_NOT_FOUND } from "@/consts/responseConsts";
-import { offsetTimePrisma } from "@/services/prismaMiddleware";
+import { FilterOptionsType, createFilterForPrisma, createSortsForPrisma, filteringFields } from "@/services/dataTransferService";
+import { offsetTimePrisma } from "@/services/prismaClients";
+import { findUniqueUserTempAbsoluteExist, userTempType, findUniqueUserAbsoluteExist } from "@/services/prismaService";
 import { basicResponce, internalServerErr } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
 /**
@@ -18,14 +20,7 @@ export const registTemp = async (req: Request, res: Response, next: NextFunction
     try {
         // userIdからユーザーを取得
         const whereByUserId = { id: userId }
-        const user = await offsetTimePrisma.user.findUnique({ where: whereByUserId })
-        // ユーザーが見つからなかったら401エラー
-        if (!user) {
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = USER_NOT_FOUND.message
-            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
-        }
+        await findUniqueUserAbsoluteExist(whereByUserId, res)
 
         // dateをDate型に変換
         let dateForDb
@@ -83,28 +78,11 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
     const userId = req.body.userId
 
     // 指定されたソートの内容をprismaに渡せるように成型
-    const sorts: { [key: string]: string }[] = []
-    sort?.split(',').forEach(s => {
-        if (s[0] === '-') {
-            const property = s.slice(1)
-            sorts.push({
-                [property]: 'desc'
-            })
-        } else {
-            sorts.push({
-                [s]: 'asc'
-            })
-        }
-    })
+    const sorts = createSortsForPrisma(sort)
 
-    // クエリで指定されたフィルターの内容をprismaに渡せるように成型
+    //  クエリで指定されたフィルターの内容を連想配列にまとめる
     const { id, date, temp, createdAt, updatedAt } = req.query
-    // ループで処理するため、情報を連想配列にまとめる
-    type FilterOptInfo = {
-        data: any,
-        constructor: (i: string) => any
-    }
-    const filterOptions: { [key: string]: FilterOptInfo } = {
+    const filterOptions: FilterOptionsType = {
         id: {
             data: id,
             constructor: (i) => Number(i)
@@ -126,16 +104,8 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
             constructor: (i) => new Date(i)
         },
     }
-
-    // フィルターとして指定されたフィールドだけ、適するオブジェクトに変換してfilterに追加
-    const filter: { [key: string]: any } = {};
-    Object.keys(filterOptions).forEach(key => {
-        // クエリから受け取った値
-        const data = filterOptions[key].data
-        // 値をfilterOptionsで設定したオブジェクトに変換したもの
-        const objForFilter = filterOptions[key].constructor(filterOptions[key].data)
-        if (typeof data === 'string') filter[key] = objForFilter
-    })
+    // 指定されたフィールドのみのオブジェクトを作成
+    const filter = createFilterForPrisma(filterOptions)
 
     try {
         // 体温を取得
@@ -149,25 +119,8 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
             take: limit ? Number(limit) : DEFAULT_DATA_INFO.limit
         })
 
-        // 指定されたフィールドを抽出
-        const fieldAry = fields?.split(',')
-        const filteredTemps = temps.map((temp: { [key: string]: any }) => {
-            let ret
-
-            if (!fieldAry?.length) {
-                // 指定なしの場合は全フィールド返す
-                ret = temp
-            } else {
-                // retに必要なフィールドだけ格納
-                const filteredTemp: { [key: string]: any } = {}
-                fieldAry.forEach(field => {
-                    const tempField = temp[field]
-                    if (tempField) filteredTemp[field] = tempField
-                })
-                ret = filteredTemp
-            }
-            return ret
-        })
+        // 指定されたフィールドでフィルター
+        const filteredTemps = filteringFields(fields, temps)
 
         // レスポンス
         res.status(200).json({
@@ -191,22 +144,15 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
  * @param next
  */
 export const editTemps = async (req: Request, res: Response, next: NextFunction) => {
-    const id = req.params.id
+    const id = Number(req.params.id)
     const { userId, date, temp } = req.body
 
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
         // idから体温記録を取得
-        const whereByTempId = { id: Number(id) }
-        const tempData = await offsetTimePrisma.user_Temp.findUnique({ where: whereByTempId })
-        // 体温記録が無かったら401エラー
-        if (!tempData) {
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = TEMP_NOT_FOUND.message
-            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
-        }
+        const whereByTempId = { id }
+        const tempData = await findUniqueUserTempAbsoluteExist(whereByTempId, res) as userTempType
 
         // 指定した体温記録がユーザー本人のものか確認
         const isSelfUser = (tempData.userId === userId)
@@ -233,7 +179,7 @@ export const editTemps = async (req: Request, res: Response, next: NextFunction)
 
         // 体温記録を編集
         const newTemp = await offsetTimePrisma.user_Temp.update({
-            where: whereByTempId,
+            where: { id },
             data: data
         })
 
@@ -258,22 +204,15 @@ export const editTemps = async (req: Request, res: Response, next: NextFunction)
  * @returns
  */
 export const deleteTemps = async (req: Request, res: Response, next: NextFunction) => {
-    const id = req.params.id
+    const id = Number(req.params.id)
     const { userId } = req.body
 
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
         // idから体温記録を取得
-        const whereByTempId = { id: Number(id) }
-        const tempData = await offsetTimePrisma.user_Temp.findUnique({ where: whereByTempId })
-        // 体温記録が無かったら401エラー
-        if (!tempData) {
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = TEMP_NOT_FOUND.message
-            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
-        }
+        const whereByTempId = { id }
+        const tempData = await findUniqueUserTempAbsoluteExist(whereByTempId, res) as userTempType
 
         // 指定した体温記録がユーザー本人のものか確認
         const isSelfUser = (tempData.userId === userId)
@@ -287,7 +226,7 @@ export const deleteTemps = async (req: Request, res: Response, next: NextFunctio
 
         // 体温記録を削除
         const newTemp = await offsetTimePrisma.user_Temp.delete({
-            where: whereByTempId
+            where: { id }
         })
 
         res.status(200).json({

@@ -1,5 +1,5 @@
 import { internalServerErr } from "@/services/utilResponseService";
-import { offsetTimePrisma } from "@/services/prismaMiddleware";
+import { offsetTimePrisma } from "@/services/prismaClients";
 import type { Request, Response, NextFunction } from "express";
 import { COMPLETE_VALID_MAILADDRESS, USER_NOT_FOUND, TOKEN_NOT_FOUND } from "@/consts/responseConsts";
 import { USER_VARIFIED } from "@/consts/db";
@@ -20,9 +20,7 @@ export const verifyMailadress = async (req: Request, res: Response, next: NextFu
     try {
         // idからユーザーを検索
         const user = await offsetTimePrisma.user.findUnique({
-            where: {
-                id: id
-            }
+            where: { id }
         })
 
         // ユーザーが見つからなかったら400エラー
