@@ -10,3 +10,5 @@ export const PROFILE_NOT_FOUND = {
 export const COMPLETE_UPDATE_PROFILE = {
     message: "プロフィールを更新しました。"
 } as const
+
+// TODO: 性別のconstを作る。1:男, 2:女
