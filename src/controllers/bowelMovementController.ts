@@ -1,5 +1,5 @@
 import { DEFAULT_DATA_INFO } from "@/consts/db";
-import { BOWEL_MOVEMENT_ACCESS_FORBIDDEN, DELETE_BOWEL_MOVEMENT, EDIT_BOWEL_MOVEMENT, READ_BOWEL_MOVEMENT, RECORD_BOWEL_MOVEMENT } from "@/consts/responseConsts/bowelMovement";
+import { BOWEL_MOVEMENT_ACCESS_FORBIDDEN, COUNT_BOWEL_MOVEMENT_PER_DAY, DELETE_BOWEL_MOVEMENT, EDIT_BOWEL_MOVEMENT, READ_BOWEL_MOVEMENT, RECORD_BOWEL_MOVEMENT } from "@/consts/responseConsts/bowelMovement";
 import { FilterOptionsType, createFilterForPrisma, createSortsForPrisma, filteringFields } from "@/services/dataTransferService";
 import { offsetTimePrisma } from "@/services/prismaClients";
 import { findUniqueUserAbsoluteExist } from "@/services/prismaService";
@@ -268,6 +268,36 @@ export const deleteBowelMovement = async (req: Request, res: Response, next: Nex
             "message": DELETE_BOWEL_MOVEMENT.message,
             "data": newBowelMovement
         });
+    } catch (e) {
+        internalServerErr(res, e)
+    }
+}
+
+export const countBowelMovementPerDay = async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.body
+
+    try {
+        // userIdからユーザーの存在を確認
+        const whereByUserId = { id: userId }
+        await findUniqueUserAbsoluteExist(whereByUserId, res)
+
+        // groupBy()で日付毎にカウント。
+        const groupBowelMovements = await offsetTimePrisma.bowel_Movement.groupBy({
+            by: ['day'],
+            _count: {
+                _all: true
+            }
+        })
+
+        res.status(200).json({
+            "status": true,
+            "message": COUNT_BOWEL_MOVEMENT_PER_DAY.message,
+            "data": groupBowelMovements
+        });
+
+
+        // 取ってきた配列のdateを見て、回数を記録
+        // その記録を返却
     } catch (e) {
         internalServerErr(res, e)
     }

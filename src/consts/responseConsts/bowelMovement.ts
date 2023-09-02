@@ -21,3 +21,7 @@ export const EDIT_BOWEL_MOVEMENT = {
 export const DELETE_BOWEL_MOVEMENT = {
     message: "排便記録を削除しました。"
 } as const
+
+export const COUNT_BOWEL_MOVEMENT_PER_DAY = {
+    message: "排便回数/日を集計しました。"
+} as const

@@ -1,4 +1,4 @@
-import { registBowelMovement, readBowelMovement, editBowelMovement, deleteBowelMovement } from "@/controllers/bowelMovementController";
+import { registBowelMovement, readBowelMovement, editBowelMovement, deleteBowelMovement, countBowelMovementPerDay } from "@/controllers/bowelMovementController";
 import { auth } from "@/services/authService";
 import express from "express";
 const router = express.Router();
@@ -11,5 +11,7 @@ router.get("/", auth, readBowelMovement)
 router.post("/edit/:id", auth, editBowelMovement)
 /** 指定した排便記録を削除 */
 router.post("/delete/:id", auth, deleteBowelMovement)
+/** 排便回数/日のリストを計算し返却 */
+router.get("/count", auth, countBowelMovementPerDay)
 
 export { router };
