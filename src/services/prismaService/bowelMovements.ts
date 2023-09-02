@@ -10,7 +10,8 @@ export type bowelMovementType = {
     createdAt: Date;
     updatedAt: Date;
     userId: number;
-    date: Date;
+    day: Date;
+    time: Date;
     blood: number,
     drainage: number,
     note: string,

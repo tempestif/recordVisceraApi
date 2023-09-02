@@ -39,7 +39,8 @@ export const registBowelMovement = async (req: Request, res: Response, next: Nex
         const bowelMovementData = await offsetTimePrisma.bowel_Movement.create({
             data: {
                 userId,
-                date: dateForDb,
+                day: dateForDb,
+                time: dateForDb,
                 blood,
                 drainage,
                 note,
@@ -93,7 +94,11 @@ export const readBowelMovement = async (req: Request, res: Response, next: NextF
             data: id,
             constructor: (i) => Number(i)
         },
-        date: {
+        day: {
+            data: date,
+            constructor: (i) => new Date(i)
+        },
+        time: {
             data: date,
             constructor: (i) => new Date(i)
         },
@@ -188,7 +193,8 @@ export const editBowelMovement = async (req: Request, res: Response, next: NextF
             drainage: number,
             scaleId: number,
             note?: string,
-            date?: Date
+            day?: Date
+            time?: Date
         }
         const data: BowelMovementData = {
             blood,
@@ -197,7 +203,8 @@ export const editBowelMovement = async (req: Request, res: Response, next: NextF
         }
         // dateが設定されているときのみdataに追加
         if (date) {
-            data.date = new Date(date)
+            data.day = new Date(date)
+            data.time = new Date(date)
         }
         // noteが設定されているときのみ追加
         if (note) {

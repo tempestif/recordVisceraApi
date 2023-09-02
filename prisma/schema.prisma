@@ -42,7 +42,8 @@ model Profile {
 
 model User_Temp {
   id        Int      @id @default(autoincrement())
-  date      DateTime
+  day       DateTime @db.Date
+  time      DateTime @db.Time
   temp      Float
   user      User     @relation(fields: [userId], references: [id])
   userId    Int
@@ -54,7 +55,8 @@ model User_Temp {
 
 model User_Weight {
   id        Int      @id @default(autoincrement())
-  date      DateTime
+  day       DateTime @db.Date
+  time      DateTime @db.Time
   weight    Float
   user      User     @relation(fields: [userId], references: [id])
   userId    Int
@@ -66,7 +68,8 @@ model User_Weight {
 
 model Bowel_Movement {
   id                 Int                 @id @default(autoincrement())
-  date               DateTime
+  day                DateTime            @db.Date
+  time               DateTime            @db.Time
   blood              Int
   drainage           Int
   note               String?

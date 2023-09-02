@@ -36,7 +36,8 @@ export const registTemp = async (req: Request, res: Response, next: NextFunction
         const tempData = await offsetTimePrisma.user_Temp.create({
             data: {
                 userId,
-                date: dateForDb,
+                day: dateForDb,
+                time: dateForDb,
                 temp
             }
         })
@@ -87,7 +88,11 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
             data: id,
             constructor: (i) => Number(i)
         },
-        date: {
+        day: {
+            data: date,
+            constructor: (i) => new Date(i)
+        },
+        time: {
             data: date,
             constructor: (i) => new Date(i)
         },
@@ -167,14 +172,16 @@ export const editTemps = async (req: Request, res: Response, next: NextFunction)
         // 編集するdataを成型
         type TempData = {
             temp: number,
-            date?: Date
+            day?: Date
+            time?: Date
         }
         const data: TempData = {
             temp
         }
         // dateが設定されているときのみdataに追加
         if (date) {
-            data.date = new Date(date)
+            data.day = new Date(date)
+            data.time = new Date(date)
         }
 
         // 体温記録を編集

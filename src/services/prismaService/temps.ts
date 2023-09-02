@@ -10,7 +10,8 @@ export type userTempType = {
     createdAt: Date;
     updatedAt: Date;
     userId: number;
-    date: Date;
+    day: Date;
+    time: Date;
     temp: number;
 }
 
