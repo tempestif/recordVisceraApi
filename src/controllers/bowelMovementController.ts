@@ -70,7 +70,7 @@ export const registBowelMovement = async (req: Request, res: Response, next: Nex
  * @param res
  * @param next
  */
-export const readBowelMovement = async (req: Request, res: Response, next: NextFunction) => {
+export const readBowelMovements = async (req: Request, res: Response, next: NextFunction) => {
     // クエリのデータを扱いやすくするための型を定義
     type Query = {
         sort: string | undefined
@@ -273,7 +273,7 @@ export const deleteBowelMovement = async (req: Request, res: Response, next: Nex
     }
 }
 
-export const countBowelMovementPerDay = async (req: Request, res: Response, next: NextFunction) => {
+export const countBowelMovementsPerDay = async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.body
 
     try {

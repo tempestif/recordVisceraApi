@@ -148,7 +148,7 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
  * @param res
  * @param next
  */
-export const editTemps = async (req: Request, res: Response, next: NextFunction) => {
+export const editTemp = async (req: Request, res: Response, next: NextFunction) => {
     const id = Number(req.params.id)
     const { userId, date, temp } = req.body
 
@@ -210,7 +210,7 @@ export const editTemps = async (req: Request, res: Response, next: NextFunction)
  * @param next
  * @returns
  */
-export const deleteTemps = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteTemp = async (req: Request, res: Response, next: NextFunction) => {
     const id = Number(req.params.id)
     const { userId } = req.body
 

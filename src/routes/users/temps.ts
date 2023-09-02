@@ -1,5 +1,5 @@
 import { auth } from "@/services/authService";
-import { deleteTemps, editTemps, readTemps, registTemp } from "@/controllers/tempController";
+import { deleteTemp, editTemp, readTemps, registTemp } from "@/controllers/tempController";
 import express from "express";
 const router = express.Router();
 
@@ -8,8 +8,8 @@ router.post("/", auth, registTemp)
 /** 体温のリストを取得 */
 router.get("/", auth, readTemps)
 /** 指定した体温の記録を編集 */
-router.post("/edit/:id", auth, editTemps)
+router.post("/edit/:id", auth, editTemp)
 /** 指定した体温の記録を削除 */
-router.post("/delete/:id", auth, deleteTemps)
+router.post("/delete/:id", auth, deleteTemp)
 
 export { router };
