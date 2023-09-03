@@ -145,10 +145,31 @@ export const readBowelMovements = async (req: Request, res: Response, next: Next
         // 指定されたフィールドでフィルター
         const filteredBowelMovents = filteringFields(fields, bowelMovents)
 
+        // NOTE: ひとまずもう一度全検索でallCountを取る。もっといい方法を考える。
+        const allCount = await offsetTimePrisma.bowel_Movement.count({
+            where: { userId }
+        })
+
         // レスポンス
         res.status(200).json({
             "status": true,
             "message": READ_BOWEL_MOVEMENT.message,
+            "allCount": allCount,
+            "count": filteredBowelMovents.length,
+            "sort": sort ?? '',
+            "fields": fields ?? '',
+            "limit": limit ?? '',
+            "offset": offset ?? '',
+            "filter": {
+                "id": id ?? '',
+                "date": date ?? '',
+                "blood": blood ?? '',
+                "drainage": drainage ?? '',
+                "note": note ?? '',
+                "scaleId": scaleId ?? '',
+                "createdAt": createdAt ?? '',
+                "updatedAt": updatedAt ?? ''
+            },
             "temps": filteredBowelMovents
         });
     } catch (e) {

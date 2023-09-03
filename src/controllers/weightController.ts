@@ -124,6 +124,11 @@ export const readWeights = async (req: Request, res: Response, next: NextFunctio
             take: limit ? Number(limit) : DEFAULT_DATA_INFO.limit
         })
 
+        // NOTE: ひとまずもう一度全検索でallCountを取る。もっといい方法を考える。
+        const allCount = await offsetTimePrisma.user_Weight.count({
+            where: { userId }
+        })
+
         // 指定されたフィールドでフィルター
         const filteredWeights = filteringFields(fields, weights)
 
@@ -131,6 +136,19 @@ export const readWeights = async (req: Request, res: Response, next: NextFunctio
         res.status(200).json({
             "status": true,
             "message": READ_WEIGHT.message,
+            "allCount": allCount,
+            "count": filteredWeights.length,
+            "sort": sort ?? '',
+            "fields": fields ?? '',
+            "limit": limit ?? '',
+            "offset": offset ?? '',
+            "filter": {
+                "id": id ?? '',
+                "date": date ?? '',
+                "weight": weight ?? '',
+                "createdAt": createdAt ?? '',
+                "updatedAt": updatedAt ?? ''
+            },
             "weights": filteredWeights
         });
     } catch (e) {

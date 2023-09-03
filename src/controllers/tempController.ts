@@ -124,6 +124,11 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
             take: limit ? Number(limit) : DEFAULT_DATA_INFO.limit
         })
 
+        // NOTE: ひとまずもう一度全検索でallCountを取る。もっといい方法を考える。
+        const allCount = await offsetTimePrisma.user_Temp.count({
+            where: { userId }
+        })
+
         // 指定されたフィールドでフィルター
         const filteredTemps = filteringFields(fields, temps)
 
@@ -131,6 +136,19 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
         res.status(200).json({
             "status": true,
             "message": READ_TEMP.message,
+            "allCount": allCount,
+            "count": filteredTemps.length,
+            "sort": sort ?? '',
+            "fields": fields ?? '',
+            "limit": limit ?? '',
+            "offset": offset ?? '',
+            "filter": {
+                "id": id ?? '',
+                "date": date ?? '',
+                "temp": temp ?? '',
+                "createdAt": createdAt ?? '',
+                "updatedAt": updatedAt ?? ''
+            },
             "temps": filteredTemps
         });
     } catch (e) {
