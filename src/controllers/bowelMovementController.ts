@@ -170,7 +170,7 @@ export const readBowelMovements = async (req: Request, res: Response, next: Next
                 "createdAt": createdAt ?? '',
                 "updatedAt": updatedAt ?? ''
             },
-            "temps": filteredBowelMovents
+            "bowelMovements": filteredBowelMovents
         });
     } catch (e) {
         internalServerErr(res, e)
@@ -297,6 +297,13 @@ export const deleteBowelMovement = async (req: Request, res: Response, next: Nex
 export const countBowelMovementsPerDay = async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.body
 
+    // クエリのデータを扱いやすくするための型を定義
+    type Query = {
+        limit: string | undefined
+        offset: string | undefined
+    }
+    const { limit, offset } = req.query as Query
+
     try {
         // userIdからユーザーの存在を確認
         const whereByUserId = { id: userId }
@@ -305,15 +312,29 @@ export const countBowelMovementsPerDay = async (req: Request, res: Response, nex
         // groupBy()で日付毎にカウント。
         const groupBowelMovements = await offsetTimePrisma.bowel_Movement.groupBy({
             by: ['day'],
+            where: {
+                userId
+            },
             _count: {
                 _all: true
             }
         })
 
+        // クエリがなかったらデフォルト値を利用
+        const offsetNum = offset ? Number(offset) : DEFAULT_DATA_INFO.offset
+        const limitNum = limit ? Number(limit) : DEFAULT_DATA_INFO.limit
+
+        // クエリの範囲のみ切り出し
+        const start = offsetNum
+        const end = start + limitNum
+        const slicedGroupBowelMovements = groupBowelMovements.slice(start, end)
+
         res.status(200).json({
             "status": true,
             "message": COUNT_BOWEL_MOVEMENT_PER_DAY.message,
-            "data": groupBowelMovements
+            "allCount": groupBowelMovements.length,
+            "count": slicedGroupBowelMovements.length,
+            "data": slicedGroupBowelMovements
         });
 
 
