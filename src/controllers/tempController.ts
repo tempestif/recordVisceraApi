@@ -1,7 +1,7 @@
 import { DEFAULT_DATA_INFO } from "@/consts/db";
 import { DELETE_TEMP, EDIT_TEMP, READ_TEMP, RECORD_TEMP, TEMP_ACCESS_FORBIDDEN, TEMP_NOT_FOUND, USER_NOT_FOUND } from "@/consts/responseConsts";
 import { FilterOptionsType, createFilterForPrisma, createSortsForPrisma, filteringFields } from "@/services/dataTransferService";
-import { offsetTimePrisma } from "@/services/prismaClients";
+import { customizedPrisma } from "@/services/prismaClients";
 import { findUniqueUserTempAbsoluteExist, userTempType, findUniqueUserAbsoluteExist } from "@/services/prismaService";
 import { basicResponce, internalServerErr } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
@@ -33,7 +33,7 @@ export const registTemp = async (req: Request, res: Response, next: NextFunction
         }
 
         // 体温を追加
-        const tempData = await offsetTimePrisma.user_Temp.create({
+        const tempData = await customizedPrisma.user_Temp.create({
             data: {
                 userId,
                 day: dateForDb,
@@ -114,7 +114,7 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
 
     try {
         // 体温を取得
-        const temps = await offsetTimePrisma.user_Temp.findMany({
+        const temps = await customizedPrisma.user_Temp.findMany({
             orderBy: sorts,
             where: {
                 userId,
@@ -125,7 +125,7 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
         })
 
         // NOTE: ひとまずもう一度全検索でallCountを取る。もっといい方法を考える。
-        const allCount = await offsetTimePrisma.user_Temp.count({
+        const allCount = await customizedPrisma.user_Temp.count({
             where: { userId }
         })
 
@@ -203,7 +203,7 @@ export const editTemp = async (req: Request, res: Response, next: NextFunction) 
         }
 
         // 体温記録を編集
-        const newTemp = await offsetTimePrisma.user_Temp.update({
+        const newTemp = await customizedPrisma.user_Temp.update({
             where: { id },
             data: data
         })
@@ -250,7 +250,7 @@ export const deleteTemp = async (req: Request, res: Response, next: NextFunction
         }
 
         // 体温記録を削除
-        const newTemp = await offsetTimePrisma.user_Temp.delete({
+        const newTemp = await customizedPrisma.user_Temp.delete({
             where: { id }
         })
 

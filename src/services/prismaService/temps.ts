@@ -1,5 +1,5 @@
 import { TEMP_NOT_FOUND } from "@/consts/responseConsts"
-import { offsetTimePrisma } from "../prismaClients"
+import { customizedPrisma } from "../prismaClients"
 import { basicResponce } from "../utilResponseService"
 import { Response } from "express"
 import { Prisma } from "@prisma/client"
@@ -24,7 +24,7 @@ export type userTempType = {
  */
 export const findUniqueUserTempAbsoluteExist = async (where: Prisma.User_TempWhereUniqueInput, res: Response) => {
     // idから体温記録を取得
-    const tempData = await offsetTimePrisma.user_Temp.findUnique({ where })
+    const tempData = await customizedPrisma.user_Temp.findUnique({ where })
     // 体温記録が無かったら401エラー
     if (!tempData) {
         const HttpStatus = 401

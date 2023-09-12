@@ -1,4 +1,4 @@
-import { offsetTimePrisma } from "../prismaClients"
+import { customizedPrisma } from "../prismaClients"
 import { basicResponce } from "../utilResponseService"
 import { Response } from "express"
 import { Prisma } from "@prisma/client"
@@ -24,7 +24,7 @@ export type userWeightType = {
  */
 export const findUniqueUserWeightAbsoluteExist = async (where: Prisma.User_WeightWhereUniqueInput, res: Response) => {
     // idから体重記録を取得
-    const weightData = await offsetTimePrisma.user_Weight.findUnique({ where })
+    const weightData = await customizedPrisma.user_Weight.findUnique({ where })
     // 体重記録が無かったら401エラー
     if (!weightData) {
         const HttpStatus = 401

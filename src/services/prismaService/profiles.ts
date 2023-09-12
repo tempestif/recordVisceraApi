@@ -1,6 +1,6 @@
 import { PROFILE_NOT_FOUND } from "@/consts/responseConsts";
 import { Prisma } from "@prisma/client";
-import { offsetTimePrisma } from "../prismaClients";
+import { customizedPrisma } from "../prismaClients";
 import { basicResponce } from "../utilResponseService";
 import { Response } from "express";
 
@@ -25,7 +25,7 @@ export type ProfileType = {
  */
 export const findUniqueProfileAbsoluteExist = async (where: Prisma.ProfileWhereUniqueInput, res: Response) => {
     // userIdからプロフィールを取得
-    const profile = await offsetTimePrisma.profile.findUnique({ where })
+    const profile = await customizedPrisma.profile.findUnique({ where })
     // プロフィールが見つからなかったら401エラー
     if (!profile) {
         const HttpStatus = 401

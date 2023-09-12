@@ -1,5 +1,5 @@
 import { internalServerErr } from "@/services/utilResponseService";
-import { offsetTimePrisma } from "@/services/prismaClients";
+import { customizedPrisma } from "@/services/prismaClients";
 import type { Request, Response, NextFunction } from "express";
 import { COMPLETE_VALID_MAILADDRESS, USER_NOT_FOUND, TOKEN_NOT_FOUND } from "@/consts/responseConsts";
 import { USER_VARIFIED } from "@/consts/db";
@@ -19,7 +19,7 @@ export const verifyMailadress = async (req: Request, res: Response, next: NextFu
 
     try {
         // idからユーザーを検索
-        const user = await offsetTimePrisma.user.findUnique({
+        const user = await customizedPrisma.user.findUnique({
             where: { id }
         })
 
@@ -41,7 +41,7 @@ export const verifyMailadress = async (req: Request, res: Response, next: NextFu
 
         // tokenが一致していたらuserのverifiedをtrueにする
         if (user.authCode === token) {
-            await offsetTimePrisma.user.update({
+            await customizedPrisma.user.update({
                 where: {
                     id: id
                 },

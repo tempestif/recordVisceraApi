@@ -1,5 +1,5 @@
 import { USER_NOT_FOUND } from "@/consts/responseConsts"
-import { offsetTimePrisma } from "../prismaClients"
+import { customizedPrisma } from "../prismaClients"
 import { basicResponce } from "../utilResponseService"
 import { Response } from "express"
 import { Prisma } from "@prisma/client"
@@ -25,7 +25,7 @@ export type UserType = {
  */
 export const findUniqueUserAbsoluteExist = async (where: Prisma.UserWhereUniqueInput, res: Response) => {
     // userIdからユーザーを取得
-    const user = await offsetTimePrisma.user.findUnique({ where })
+    const user = await customizedPrisma.user.findUnique({ where })
     // ユーザーが見つからなかったら401エラー
     if (!user) {
         const HttpStatus = 401

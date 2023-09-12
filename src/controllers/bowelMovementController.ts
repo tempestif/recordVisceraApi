@@ -1,7 +1,7 @@
 import { DEFAULT_DATA_INFO } from "@/consts/db";
 import { BOWEL_MOVEMENT_ACCESS_FORBIDDEN, COUNT_BOWEL_MOVEMENT_PER_DAY, DELETE_BOWEL_MOVEMENT, EDIT_BOWEL_MOVEMENT, READ_BOWEL_MOVEMENT, RECORD_BOWEL_MOVEMENT } from "@/consts/responseConsts/bowelMovement";
 import { FilterOptionsType, createFilterForPrisma, createSortsForPrisma, filteringFields } from "@/services/dataTransferService";
-import { offsetTimePrisma } from "@/services/prismaClients";
+import { customizedPrisma } from "@/services/prismaClients";
 import { findUniqueUserAbsoluteExist } from "@/services/prismaService";
 import { bowelMovementType, findUniqueBowelMovementAbsoluteExist } from "@/services/prismaService/bowelMovements";
 import { basicResponce, internalServerErr } from "@/services/utilResponseService";
@@ -36,7 +36,7 @@ export const registBowelMovement = async (req: Request, res: Response, next: Nex
         }
 
         // 排便記録を追加
-        const bowelMovementData = await offsetTimePrisma.bowel_Movement.create({
+        const bowelMovementData = await customizedPrisma.bowel_Movement.create({
             data: {
                 userId,
                 day: dateForDb,
@@ -132,7 +132,7 @@ export const readBowelMovements = async (req: Request, res: Response, next: Next
 
     try {
         // 排便記録を取得
-        const bowelMovents = await offsetTimePrisma.bowel_Movement.findMany({
+        const bowelMovents = await customizedPrisma.bowel_Movement.findMany({
             orderBy: sorts,
             where: {
                 userId,
@@ -146,7 +146,7 @@ export const readBowelMovements = async (req: Request, res: Response, next: Next
         const filteredBowelMovents = filteringFields(fields, bowelMovents)
 
         // NOTE: ひとまずもう一度全検索でallCountを取る。もっといい方法を考える。
-        const allCount = await offsetTimePrisma.bowel_Movement.count({
+        const allCount = await customizedPrisma.bowel_Movement.count({
             where: { userId }
         })
 
@@ -233,7 +233,7 @@ export const editBowelMovement = async (req: Request, res: Response, next: NextF
         }
 
         // 排便記録を編集
-        const newBowelMovement = await offsetTimePrisma.bowel_Movement.update({
+        const newBowelMovement = await customizedPrisma.bowel_Movement.update({
             where: { id },
             data: data
         })
@@ -280,7 +280,7 @@ export const deleteBowelMovement = async (req: Request, res: Response, next: Nex
         }
 
         // 排便記録を削除
-        const newBowelMovement = await offsetTimePrisma.bowel_Movement.delete({
+        const newBowelMovement = await customizedPrisma.bowel_Movement.delete({
             where: { id }
         })
 
@@ -310,7 +310,7 @@ export const countBowelMovementsPerDay = async (req: Request, res: Response, nex
         await findUniqueUserAbsoluteExist(whereByUserId, res)
 
         // groupBy()で日付毎にカウント。
-        const groupBowelMovements = await offsetTimePrisma.bowel_Movement.groupBy({
+        const groupBowelMovements = await customizedPrisma.bowel_Movement.groupBy({
             by: ['day'],
             where: {
                 userId

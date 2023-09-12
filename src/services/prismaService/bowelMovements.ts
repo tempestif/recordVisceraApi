@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { offsetTimePrisma } from "../prismaClients";
+import { customizedPrisma } from "../prismaClients";
 import { basicResponce } from "../utilResponseService";
 import { BOWEL_MOVEMENT_NOT_FOUND } from "@/consts/responseConsts/bowelMovement";
 import { Response } from "express";
@@ -28,7 +28,7 @@ export type bowelMovementType = {
  */
 export const findUniqueBowelMovementAbsoluteExist = async (where: Prisma.Bowel_MovementWhereUniqueInput, res: Response) => {
     // idから排便記録を取得
-    const bowelMovementData = await offsetTimePrisma.bowel_Movement.findUnique({ where })
+    const bowelMovementData = await customizedPrisma.bowel_Movement.findUnique({ where })
     // 排便記録が無かったら401エラー
     if (!bowelMovementData) {
         const HttpStatus = 401

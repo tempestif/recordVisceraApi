@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express"
-import { hashedPassHookprisma, offsetTimePrisma } from "@/services/prismaClients"
+import { customizedPrisma } from "@/services/prismaClients"
 import { PrismaClient } from '@prisma/client'
 import { sendMail } from "@/services/nodemailerService"
 import { randomBytes } from "crypto"
@@ -43,7 +43,7 @@ export const registUser = async (req: Request, res: Response, next: NextFunction
         const authCode = randomBytes(32).toString("hex")
 
         // ユーザー作成
-        const newUser = await hashedPassHookprisma.user.create({
+        const newUser = await customizedPrisma.user.create({
             data: {
                 email,
                 password,
@@ -52,7 +52,7 @@ export const registUser = async (req: Request, res: Response, next: NextFunction
             }
         })
         // プロフィール作成
-        await offsetTimePrisma.profile.create({
+        await customizedPrisma.profile.create({
             data: {
                 userId: newUser.id
             }
@@ -130,7 +130,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
                 const newToken = randomBytes(32).toString("hex");
 
                 // DBに記録
-                await offsetTimePrisma.user.update({
+                await customizedPrisma.user.update({
                     where: {
                         id: user.id,
                     },
@@ -248,7 +248,7 @@ export const editProfile = async (req: Request, res: Response, next: NextFunctio
         await findUniqueProfileAbsoluteExist(whereByUserId, res)
 
         // プロフィールを更新
-        const updatedProfile = await offsetTimePrisma.profile.update({
+        const updatedProfile = await customizedPrisma.profile.update({
             where: whereByUserId,
             data: {
                 sex,

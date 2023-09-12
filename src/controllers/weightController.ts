@@ -1,7 +1,7 @@
 import { DEFAULT_DATA_INFO } from "@/consts/db";
 import { DELETE_WEIGHT, EDIT_WEIGHT, READ_WEIGHT, RECORD_WEIGHT, WEIGHT_ACCESS_FORBIDDEN } from "@/consts/responseConsts";
 import { FilterOptionsType, createFilterForPrisma, createSortsForPrisma, filteringFields } from "@/services/dataTransferService";
-import { offsetTimePrisma } from "@/services/prismaClients";
+import { customizedPrisma } from "@/services/prismaClients";
 import { findUniqueUserAbsoluteExist, findUniqueUserWeightAbsoluteExist, userWeightType } from "@/services/prismaService";
 import { basicResponce, internalServerErr } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
@@ -33,7 +33,7 @@ export const registWeight = async (req: Request, res: Response, next: NextFuncti
         }
 
         // 体重を追加
-        const weightData = await offsetTimePrisma.user_Weight.create({
+        const weightData = await customizedPrisma.user_Weight.create({
             data: {
                 userId,
                 day: dateForDb,
@@ -114,7 +114,7 @@ export const readWeights = async (req: Request, res: Response, next: NextFunctio
 
     try {
         // 体重を取得
-        const weights = await offsetTimePrisma.user_Weight.findMany({
+        const weights = await customizedPrisma.user_Weight.findMany({
             orderBy: sorts,
             where: {
                 userId,
@@ -125,7 +125,7 @@ export const readWeights = async (req: Request, res: Response, next: NextFunctio
         })
 
         // NOTE: ひとまずもう一度全検索でallCountを取る。もっといい方法を考える。
-        const allCount = await offsetTimePrisma.user_Weight.count({
+        const allCount = await customizedPrisma.user_Weight.count({
             where: { userId }
         })
 
@@ -203,7 +203,7 @@ export const editWeight = async (req: Request, res: Response, next: NextFunction
         }
 
         // 体重記録を編集
-        const newWeight = await offsetTimePrisma.user_Weight.update({
+        const newWeight = await customizedPrisma.user_Weight.update({
             where: { id },
             data: data
         })
@@ -251,7 +251,7 @@ export const deleteWeight = async (req: Request, res: Response, next: NextFuncti
         }
 
         // 体重記録を削除
-        const newWeight = await offsetTimePrisma.user_Weight.delete({
+        const newWeight = await customizedPrisma.user_Weight.delete({
             where: { id }
         })
 
