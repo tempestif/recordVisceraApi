@@ -6,7 +6,7 @@ import { randomBytes } from "crypto"
 import { compare } from "bcrypt"
 import { generateAuthToken } from "@/services/jwtService"
 import { basicResponce, internalServerErr } from "@/services/utilResponseService"
-import { ALREADY_USED_MAILADDLESS, COMPLETE_GET_PROFILE, COMPLETE_LOGIN, COMPLETE_UPDATE_PROFILE, PROFILE_NOT_FOUND, SEND_MAIL_FOR_USER_VALID, USER_NOT_FOUND, WRONG_LOGIN_INFO } from "@/consts/responseConsts"
+import { ALREADY_USED_MAILADDLESS, COMPLETE_GET_PROFILE, COMPLETE_LOGIN, COMPLETE_UPDATE_PASSWORD, COMPLETE_UPDATE_PROFILE, PROFILE_NOT_FOUND, SEND_MAIL_FOR_USER_VALID, USER_NOT_FOUND, WRONG_LOGIN_INFO } from "@/consts/responseConsts"
 import { TEXT_VALID_MAIL, TITLE_VALID_MAIL } from "@/consts/mailConsts"
 import { UserType, findUniqueUserAbsoluteExist, findUniqueProfileAbsoluteExist } from "@/services/prismaService"
 const prisma = new PrismaClient()
@@ -269,6 +269,55 @@ export const editProfile = async (req: Request, res: Response, next: NextFunctio
 }
 
 /**
+ * ユーザーパスワードを変更
+ * 現在のパスワードが合致していたら新パスワードを更新
+ * @param req
+ * @param res
+ * @param next
+ */
+export const changePassowrd = async (req: Request, res: Response, next: NextFunction) => {
+    const { userId, oldPassword, newPassword } = req.body
+    // TODO: バリデーション
+    try {
+        // userIdでユーザーを取得
+        const whereByUserId = { id: userId }
+        const user = await findUniqueUserAbsoluteExist(whereByUserId, res) as UserType
+
+        // 旧パスワードの一致を確認
+        const isValidPassword = await compare(oldPassword, user.password)
+        // 合致しなかったら401エラー
+        if (!isValidPassword) {
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = WRONG_LOGIN_INFO.message
+            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+        }
+
+        // パスワードを更新
+        const newUser = await customizedPrisma.user.update({
+            where: whereByUserId,
+            data: {
+                password: newPassword
+            }
+        })
+        const { id, email, name, createdAt, updatedAt } = user
+        res.status(200).json({
+            "status": true,
+            "message": COMPLETE_UPDATE_PASSWORD.message,
+            "data": {
+                id,
+                email,
+                name,
+                createdAt,
+                updatedAt
+            }
+        });
+    } catch (e) {
+        internalServerErr(res, e)
+    }
+}
+
+/**
  * 認証確認用のメールを送信する。
  * @param email 送信先メールアドレス
  * @param url 認証用URL
@@ -280,3 +329,5 @@ const sendVerifyMail = async (email: string, url: string) => {
     const text = TEXT_VALID_MAIL.message(url)
     await sendMail(email, mailSubject, text)
 }
+
+

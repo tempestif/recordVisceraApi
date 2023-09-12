@@ -1,5 +1,5 @@
 import { verifyMailadress } from "@/controllers/verifyController";
-import { editProfile, readPrifile, readUser, sendMailTest } from "@/controllers/userController";
+import { editProfile, readPrifile, readUser, sendMailTest, changePassowrd } from "@/controllers/userController";
 import express from "express";
 import { auth } from "@/services/authService";
 import type { Request, Response, NextFunction } from "express"
@@ -7,19 +7,17 @@ import type { Request, Response, NextFunction } from "express"
 const router = express.Router();
 
 /** ユーザー情報取得 */
-// NOTE: 「指定した」ユーザー一人の情報が取れるというのが抜けている。「指定」はauthによってtokenから判別されており、APIをたたく側は何もしていないように感じるようになってはいる。
 router.get("/", auth, readUser)
+/** ユーザーパスワード変更 */
+router.post("/change-password", auth, changePassowrd)
 
 /** メールアドレスをid, tokenによって認証 */
 router.get("/:id/verify/:token", verifyMailadress)
 
 
 /** プロフィール取得 */
-// NOTE: 「指定した」ユーザー一人に紐づくプロフィールが取れるというのが抜けている。「指定」はauthによってtokenから判別されており、APIをたたく側は何もしていないように感じるようになってはいる。
 router.get("/profiles", auth, readPrifile)
 /** プロフィール編集 */
-// NOTE: 「指定した」ユーザー一人に紐づくプロフィールを編集するというのが抜けている。「指定」はauthによってtokenから判別されており、APIをたたく側は何もしていないように感じるようになってはいる。
-// NOTE: 「編集」と「更新」
 router.post("/profiles", auth, editProfile)
 
 // TODO: 本番前に消す
