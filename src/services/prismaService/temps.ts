@@ -22,7 +22,7 @@ export type userTempType = {
  * @param res
  * @returns
  */
-export const findUniqueUserTempAbsoluteExist = async (where: Prisma.User_TempWhereUniqueInput, res: Response) => {
+export const findUniqueUserTempAbsoluteExist = async (where: Prisma.Daily_report_TempWhereUniqueInput, res: Response) => {
     // idから体温記録を取得
     const tempData = await customizedPrisma.user_Temp.findUnique({ where })
     // 体温記録が無かったら401エラー
