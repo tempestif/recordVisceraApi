@@ -2,9 +2,9 @@ import { DEFAULT_DATA_INFO } from "@/consts/db";
 import { BOWEL_MOVEMENT_ACCESS_FORBIDDEN, COUNT_BOWEL_MOVEMENT_PER_DAY, DELETE_BOWEL_MOVEMENT, EDIT_BOWEL_MOVEMENT, READ_BOWEL_MOVEMENT, RECORD_BOWEL_MOVEMENT } from "@/consts/responseConsts/bowelMovement";
 import { FilterOptionsType, createFilterForPrisma, createSortsForPrisma, filteringFields } from "@/services/dataTransferService";
 import { customizedPrisma } from "@/services/prismaClients";
-import { findUniqueUserAbsoluteExist } from "@/services/prismaService";
-import { bowelMovementType, findUniqueBowelMovementAbsoluteExist } from "@/services/prismaService/bowelMovements";
-import { basicResponce, internalServerErr } from "@/services/utilResponseService";
+import { DbRecordNotFoundError, findUniqueUserAbsoluteExist } from "@/services/prismaService";
+import { findUniqueBowelMovementAbsoluteExist } from "@/services/prismaService/bowelMovements";
+import { basicHttpResponce, internalServerErr } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
 /**
  * 新たな排便記録を作成する
@@ -53,7 +53,15 @@ export const registBowelMovement = async (req: Request, res: Response, next: Nex
             "data": bowelMovementData
         });
     } catch (e) {
-        internalServerErr(res, e)
+        if (e instanceof DbRecordNotFoundError) {
+            // レコードが見つからなかったら401エラー
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = e.message
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        } else {
+            internalServerErr(res, e)
+        }
     }
 }
 
@@ -195,7 +203,7 @@ export const editBowelMovement = async (req: Request, res: Response, next: NextF
     try {
         // idから排便記録を取得
         const whereByTempId = { id }
-        const bowelMoventData = await findUniqueBowelMovementAbsoluteExist(whereByTempId, res) as bowelMovementType
+        const bowelMoventData = await findUniqueBowelMovementAbsoluteExist(whereByTempId, res)
 
         // 指定した体温記録がユーザー本人のものか確認
         const isSelfUser = (bowelMoventData.userId === userId)
@@ -204,7 +212,7 @@ export const editBowelMovement = async (req: Request, res: Response, next: NextF
             const HttpStatus = 403
             const responseStatus = false
             const responseMsg = BOWEL_MOVEMENT_ACCESS_FORBIDDEN.message
-            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
         // 編集するdataを成型
@@ -243,7 +251,15 @@ export const editBowelMovement = async (req: Request, res: Response, next: NextF
             "data": newBowelMovement
         });
     } catch (e) {
-        internalServerErr(res, e)
+        if (e instanceof DbRecordNotFoundError) {
+            // レコードが見つからなかったら401エラー
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = e.message
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        } else {
+            internalServerErr(res, e)
+        }
     }
 }
 
@@ -266,7 +282,7 @@ export const deleteBowelMovement = async (req: Request, res: Response, next: Nex
     try {
         // idから排便記録を取得
         const whereByTempId = { id }
-        const bowelMoventData = await findUniqueBowelMovementAbsoluteExist(whereByTempId, res) as bowelMovementType
+        const bowelMoventData = await findUniqueBowelMovementAbsoluteExist(whereByTempId, res)
 
         // 指定した排便記録がユーザー本人のものか確認
         const isSelfUser = (bowelMoventData.userId === userId)
@@ -275,7 +291,7 @@ export const deleteBowelMovement = async (req: Request, res: Response, next: Nex
             const HttpStatus = 403
             const responseStatus = false
             const responseMsg = BOWEL_MOVEMENT_ACCESS_FORBIDDEN.message
-            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
         // 排便記録を削除
@@ -289,7 +305,15 @@ export const deleteBowelMovement = async (req: Request, res: Response, next: Nex
             "data": newBowelMovement
         });
     } catch (e) {
-        internalServerErr(res, e)
+        if (e instanceof DbRecordNotFoundError) {
+            // レコードが見つからなかったら401エラー
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = e.message
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        } else {
+            internalServerErr(res, e)
+        }
     }
 }
 
@@ -335,11 +359,15 @@ export const countBowelMovementsPerDay = async (req: Request, res: Response, nex
             "count": slicedGroupBowelMovements.length,
             "data": slicedGroupBowelMovements
         });
-
-
-        // 取ってきた配列のdateを見て、回数を記録
-        // その記録を返却
     } catch (e) {
-        internalServerErr(res, e)
+        if (e instanceof DbRecordNotFoundError) {
+            // レコードが見つからなかったら401エラー
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = e.message
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        } else {
+            internalServerErr(res, e)
+        }
     }
 }

@@ -2,8 +2,8 @@ import { DEFAULT_DATA_INFO } from "@/consts/db";
 import { DELETE_TEMP, EDIT_TEMP, READ_TEMP, RECORD_TEMP, TEMP_ACCESS_FORBIDDEN, TEMP_NOT_FOUND, USER_NOT_FOUND } from "@/consts/responseConsts";
 import { FilterOptionsType, createFilterForPrisma, createSortsForPrisma, filteringFields } from "@/services/dataTransferService";
 import { customizedPrisma } from "@/services/prismaClients";
-import { findUniqueUserTempAbsoluteExist, userTempType, findUniqueDailyReportAbsoluteExist, dailyReportType } from "@/services/prismaService";
-import { basicResponce, internalServerErr } from "@/services/utilResponseService";
+import { findUniqueUserTempAbsoluteExist, findUniqueDailyReportAbsoluteExist, DbRecordNotFoundError } from "@/services/prismaService";
+import { basicHttpResponce, internalServerErr } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
 /**
  * 新たな体温記録を作成する
@@ -20,7 +20,7 @@ export const registTemp = async (req: Request, res: Response, next: NextFunction
     try {
         // userIdから今日の体調を取得
         const whereByUserId = { id: userId }
-        const dailyReport = await findUniqueDailyReportAbsoluteExist(whereByUserId, res) as dailyReportType
+        const dailyReport = await findUniqueDailyReportAbsoluteExist(whereByUserId, res)
 
         // 体温を追加
         const tempData = await customizedPrisma.daily_report_Temp.create({
@@ -36,7 +36,15 @@ export const registTemp = async (req: Request, res: Response, next: NextFunction
             "data": tempData
         });
     } catch (e) {
-        internalServerErr(res, e)
+        if (e instanceof DbRecordNotFoundError) {
+            // レコードが見つからなかったら401エラー
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = e.message
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        } else {
+            internalServerErr(res, e)
+        }
     }
 }
 
@@ -94,7 +102,7 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
 
     // userIdからdailyReportIdを取得
     const whereByUserId = { id: userId }
-    const dailyReport = await findUniqueDailyReportAbsoluteExist(whereByUserId, res) as dailyReportType
+    const dailyReport = await findUniqueDailyReportAbsoluteExist(whereByUserId, res)
     const dailyReportId = dailyReport.id
     try {
         // 体温を取得
@@ -158,17 +166,17 @@ export const editTemp = async (req: Request, res: Response, next: NextFunction) 
     try {
         // idから体温記録を取得
         const whereByTempId = { id }
-        const tempData = await findUniqueUserTempAbsoluteExist(whereByTempId, res) as userTempType
+        const tempData = await findUniqueUserTempAbsoluteExist(whereByTempId, res)
 
         // 指定した体温記録がユーザー本人のものか確認
-        const dailyReport = await findUniqueDailyReportAbsoluteExist({ id: tempData.dailyReportId }, res) as dailyReportType
+        const dailyReport = await findUniqueDailyReportAbsoluteExist({ id: tempData.dailyReportId }, res)
         const isSelfUser = (dailyReport.userId === userId)
         // ユーザー本人のものではない場合、403を返す
         if (!isSelfUser) {
             const HttpStatus = 403
             const responseStatus = false
             const responseMsg = TEMP_ACCESS_FORBIDDEN.message
-            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
         // 編集するdataを成型
@@ -188,7 +196,15 @@ export const editTemp = async (req: Request, res: Response, next: NextFunction) 
             "data": newTemp
         });
     } catch (e) {
-        internalServerErr(res, e)
+        if (e instanceof DbRecordNotFoundError) {
+            // レコードが見つからなかったら401エラー
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = e.message
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        } else {
+            internalServerErr(res, e)
+        }
     }
 }
 
@@ -211,17 +227,17 @@ export const deleteTemp = async (req: Request, res: Response, next: NextFunction
     try {
         // idから体温記録を取得
         const whereByTempId = { id }
-        const tempData = await findUniqueUserTempAbsoluteExist(whereByTempId, res) as userTempType
+        const tempData = await findUniqueUserTempAbsoluteExist(whereByTempId, res)
 
         // 指定した体温記録がユーザー本人のものか確認
-        const dailyReport = await findUniqueDailyReportAbsoluteExist({ id: tempData.dailyReportId }, res) as dailyReportType
+        const dailyReport = await findUniqueDailyReportAbsoluteExist({ id: tempData.dailyReportId }, res)
         const isSelfUser = (dailyReport.userId === userId)
         // ユーザー本人のものではない場合、403を返す
         if (!isSelfUser) {
             const HttpStatus = 403
             const responseStatus = false
             const responseMsg = TEMP_ACCESS_FORBIDDEN.message
-            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
         // 体温記録を削除
@@ -235,6 +251,14 @@ export const deleteTemp = async (req: Request, res: Response, next: NextFunction
             "data": newTemp
         });
     } catch (e) {
-        internalServerErr(res, e)
+        if (e instanceof DbRecordNotFoundError) {
+            // レコードが見つからなかったら401エラー
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = e.message
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        } else {
+            internalServerErr(res, e)
+        }
     }
 }

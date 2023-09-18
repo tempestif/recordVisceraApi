@@ -1,27 +1,13 @@
 import { Prisma } from "@prisma/client";
 import { customizedPrisma } from "../prismaClients";
-import { basicResponce } from "../utilResponseService";
+import { basicHttpResponce } from "../utilResponseService";
 import { BOWEL_MOVEMENT_NOT_FOUND } from "@/consts/responseConsts/bowelMovement";
 import { Response } from "express";
-
-// TODO: 絶対Prismaに型がある。探す。
-export type bowelMovementType = {
-    id: number;
-    createdAt: Date;
-    updatedAt: Date;
-    userId: number;
-    day: Date;
-    time: Date;
-    blood: number,
-    drainage: number,
-    note: string,
-    bristolStoolScale: number,
-
-}
+import { DbRecordNotFoundError } from ".";
 
 /**
  * DBより、排便記録の存在確認、取得を行う。
- * 排便記録が存在しなかった場合は401エラー
+ * 排便記録が存在しなかった場合はDbRecordNotFoundErrorを投げる
  * @param where 検索条件
  * @param res
  * @returns
@@ -29,12 +15,10 @@ export type bowelMovementType = {
 export const findUniqueBowelMovementAbsoluteExist = async (where: Prisma.Bowel_MovementWhereUniqueInput, res: Response) => {
     // idから排便記録を取得
     const bowelMovementData = await customizedPrisma.bowel_Movement.findUnique({ where })
-    // 排便記録が無かったら401エラー
+    // 排便記録が無かったらDbRecordNotFoundErrorを投げる
     if (!bowelMovementData) {
-        const HttpStatus = 401
-        const responseStatus = false
         const responseMsg = BOWEL_MOVEMENT_NOT_FOUND.message
-        return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+        throw new DbRecordNotFoundError(responseMsg)
     }
 
     return bowelMovementData

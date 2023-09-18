@@ -18,7 +18,7 @@ export const internalServerErr = (res: Response, e: any) => {
  * @param message
  * @returns
  */
-export const basicResponce = (res: Response, HttpStatus: number, status: boolean, message: string) => {
+export const basicHttpResponce = (res: Response, HttpStatus: number, status: boolean, message: string) => {
     return res.status(HttpStatus).json({
         status,
         message

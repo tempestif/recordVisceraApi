@@ -1,21 +1,13 @@
 import { TEMP_NOT_FOUND } from "@/consts/responseConsts"
 import { customizedPrisma } from "../prismaClients"
-import { basicResponce } from "../utilResponseService"
+import { basicHttpResponce } from "../utilResponseService"
 import { Response } from "express"
 import { Prisma } from "@prisma/client"
-
-// TODO: 絶対Prismaに型がある。探す。
-export type userTempType = {
-    id: number;
-    createdAt: Date;
-    updatedAt: Date;
-    dailyReportId: number;
-    result: number;
-}
+import { DbRecordNotFoundError } from "."
 
 /**
  * DBより、体温記録の存在確認、取得を行う。
- * 体温記録が存在しなかった場合は401エラー
+ * 体温記録が存在しなかった場合はDbRecordNotFoundErrorを投げる
  * @param where 検索条件
  * @param res
  * @returns
@@ -23,12 +15,10 @@ export type userTempType = {
 export const findUniqueUserTempAbsoluteExist = async (where: Prisma.Daily_report_TempWhereUniqueInput, res: Response) => {
     // idから体温記録を取得
     const tempData = await customizedPrisma.daily_report_Temp.findUnique({ where })
-    // 体温記録が無かったら401エラー
+    // 体温記録が無かったらDbRecordNotFoundErrorを投げる
     if (!tempData) {
-        const HttpStatus = 401
-        const responseStatus = false
         const responseMsg = TEMP_NOT_FOUND.message
-        return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+        throw new DbRecordNotFoundError(responseMsg)
     }
 
     return tempData

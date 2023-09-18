@@ -2,7 +2,7 @@ import { TOKEN_NOT_DISCREPANCY, TOKEN_NOT_FOUND } from "@/consts/responseConsts"
 import type { Request, Response, NextFunction } from "express"
 import { verify } from "jsonwebtoken"
 import type { JwtPayload } from "jsonwebtoken"
-import { basicResponce } from "./utilResponseService";
+import { basicHttpResponce } from "./utilResponseService";
 import { findUniqueUserAbsoluteExist } from "./prismaService";
 
 /**
@@ -26,7 +26,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
         const HttpStatus = 400
         const responseStatus = false
         const responseMsg = TOKEN_NOT_FOUND.message
-        return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+        return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
     }
 
     // PrivateKeyがないときはエラー
@@ -53,6 +53,6 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
         const HttpStatus = 400
         const responseStatus = false
         const responseMsg = TOKEN_NOT_DISCREPANCY.message
-        return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+        return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
     }
 };

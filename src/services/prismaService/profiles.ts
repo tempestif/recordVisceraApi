@@ -1,24 +1,13 @@
 import { PROFILE_NOT_FOUND } from "@/consts/responseConsts";
 import { Prisma } from "@prisma/client";
 import { customizedPrisma } from "../prismaClients";
-import { basicResponce } from "../utilResponseService";
+import { basicHttpResponce } from "../utilResponseService";
 import { Response } from "express";
-
-// TODO: 絶対Prismaに型がある。探す。
-export type ProfileType = {
-    id: number;
-    createdAt: Date;
-    updatedAt: Date;
-    email: string;
-    name: string;
-    password: string;
-    authCode: string;
-    verified: number;
-}
+import { DbRecordNotFoundError } from ".";
 
 /**
  * DBより、プロフィールの存在確認、取得を行う。
- * プロフィールが存在しなかった場合は401エラー
+ * プロフィールが存在しなかった場合はDbRecordNotFoundErrorを投げる
  * @param where 検索条件
  * @param res
  * @returns
@@ -26,12 +15,10 @@ export type ProfileType = {
 export const findUniqueProfileAbsoluteExist = async (where: Prisma.ProfileWhereUniqueInput, res: Response) => {
     // userIdからプロフィールを取得
     const profile = await customizedPrisma.profile.findUnique({ where })
-    // プロフィールが見つからなかったら401エラー
+    // プロフィールが見つからなかったらDbRecordNotFoundErrorを投げる
     if (!profile) {
-        const HttpStatus = 401
-        const responseStatus = false
         const responseMsg = PROFILE_NOT_FOUND.message
-        return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+        throw new DbRecordNotFoundError(responseMsg)
     }
 
     return profile

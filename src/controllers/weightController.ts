@@ -2,8 +2,8 @@ import { DEFAULT_DATA_INFO } from "@/consts/db";
 import { DELETE_WEIGHT, EDIT_WEIGHT, READ_WEIGHT, RECORD_WEIGHT, WEIGHT_ACCESS_FORBIDDEN } from "@/consts/responseConsts";
 import { FilterOptionsType, createFilterForPrisma, createSortsForPrisma, filteringFields } from "@/services/dataTransferService";
 import { customizedPrisma } from "@/services/prismaClients";
-import { dailyReportType, findUniqueDailyReportAbsoluteExist, findUniqueUserWeightAbsoluteExist, userWeightType } from "@/services/prismaService";
-import { basicResponce, internalServerErr } from "@/services/utilResponseService";
+import { DbRecordNotFoundError, findUniqueDailyReportAbsoluteExist, findUniqueUserWeightAbsoluteExist } from "@/services/prismaService";
+import { basicHttpResponce, internalServerErr } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
 /**
  * 新たな体重記録を作成する
@@ -20,7 +20,7 @@ export const registWeight = async (req: Request, res: Response, next: NextFuncti
     try {
         // userIdから今日の体調を取得
         const whereByUserId = { id: userId }
-        const dailyReport = await findUniqueDailyReportAbsoluteExist(whereByUserId, res) as dailyReportType
+        const dailyReport = await findUniqueDailyReportAbsoluteExist(whereByUserId, res)
 
         // 体重を追加
         const weightData = await customizedPrisma.daily_report_Weight.create({
@@ -36,7 +36,15 @@ export const registWeight = async (req: Request, res: Response, next: NextFuncti
             "data": weightData
         });
     } catch (e) {
-        internalServerErr(res, e)
+        if (e instanceof DbRecordNotFoundError) {
+            // レコードが見つからなかったら401エラー
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = e.message
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        } else {
+            internalServerErr(res, e)
+        }
     }
 }
 
@@ -94,7 +102,7 @@ export const readWeights = async (req: Request, res: Response, next: NextFunctio
 
     // userIdからdailyReportIdを取得
     const whereByUserId = { id: userId }
-    const dailyReport = await findUniqueDailyReportAbsoluteExist(whereByUserId, res) as dailyReportType
+    const dailyReport = await findUniqueDailyReportAbsoluteExist(whereByUserId, res)
     const dailyReportId = dailyReport.id
     try {
         // 体重を取得
@@ -135,7 +143,15 @@ export const readWeights = async (req: Request, res: Response, next: NextFunctio
             "weights": filteredWeights
         });
     } catch (e) {
-        internalServerErr(res, e)
+        if (e instanceof DbRecordNotFoundError) {
+            // レコードが見つからなかったら401エラー
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = e.message
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        } else {
+            internalServerErr(res, e)
+        }
     }
 }
 
@@ -158,17 +174,17 @@ export const editWeight = async (req: Request, res: Response, next: NextFunction
     try {
         // idから体重記録を取得
         const whereByWeightId = { id }
-        const weightData = await findUniqueUserWeightAbsoluteExist(whereByWeightId, res) as userWeightType
+        const weightData = await findUniqueUserWeightAbsoluteExist(whereByWeightId, res)
 
         // 指定した体重記録がユーザー本人のものか確認
-        const dailyReport = await findUniqueDailyReportAbsoluteExist({ id: weightData.dailyReportId }, res) as dailyReportType
+        const dailyReport = await findUniqueDailyReportAbsoluteExist({ id: weightData.dailyReportId }, res)
         const isSelfUser = (dailyReport.userId === userId)
         // ユーザー本人のものではない場合、403を返す
         if (!isSelfUser) {
             const HttpStatus = 403
             const responseStatus = false
             const responseMsg = WEIGHT_ACCESS_FORBIDDEN.message
-            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
 
@@ -187,7 +203,15 @@ export const editWeight = async (req: Request, res: Response, next: NextFunction
             "data": newWeight
         });
     } catch (e) {
-        internalServerErr(res, e)
+        if (e instanceof DbRecordNotFoundError) {
+            // レコードが見つからなかったら401エラー
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = e.message
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        } else {
+            internalServerErr(res, e)
+        }
     }
 }
 
@@ -210,18 +234,17 @@ export const deleteWeight = async (req: Request, res: Response, next: NextFuncti
     try {
         // idから体重記録を取得
         const whereByWeightId = { id }
-        // FIXME: 例外を投げないと二回レスポンスを投げようとしてエラーになる。これ、まとめる意味があるかも含めてちょっと検討。
-        const weightData = await findUniqueUserWeightAbsoluteExist(whereByWeightId, res) as userWeightType
+        const weightData = await findUniqueUserWeightAbsoluteExist(whereByWeightId, res)
 
         // 指定した体重記録がユーザー本人のものか確認
-        const dailyReport = await findUniqueDailyReportAbsoluteExist({ id: weightData.dailyReportId }, res) as dailyReportType
+        const dailyReport = await findUniqueDailyReportAbsoluteExist({ id: weightData.dailyReportId }, res)
         const isSelfUser = (dailyReport.userId === userId)
         // ユーザー本人のものではない場合、403を返す
         if (!isSelfUser) {
             const HttpStatus = 403
             const responseStatus = false
             const responseMsg = WEIGHT_ACCESS_FORBIDDEN.message
-            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
         // 体重記録を削除
@@ -235,6 +258,14 @@ export const deleteWeight = async (req: Request, res: Response, next: NextFuncti
             "data": newWeight
         });
     } catch (e) {
-        internalServerErr(res, e)
+        if (e instanceof DbRecordNotFoundError) {
+            // レコードが見つからなかったら401エラー
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = e.message
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        } else {
+            internalServerErr(res, e)
+        }
     }
 }

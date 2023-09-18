@@ -5,10 +5,10 @@ import { sendMail } from "@/services/nodemailerService"
 import { randomBytes } from "crypto"
 import { compare } from "bcrypt"
 import { generateAuthToken } from "@/services/jwtService"
-import { basicResponce, internalServerErr } from "@/services/utilResponseService"
+import { basicHttpResponce, internalServerErr } from "@/services/utilResponseService"
 import { ALREADY_USED_MAILADDLESS, COMPLETE_GET_PROFILE, COMPLETE_LOGIN, COMPLETE_UPDATE_PASSWORD, COMPLETE_UPDATE_PROFILE, PROFILE_NOT_FOUND, SEND_MAIL_FOR_USER_VALID, USER_NOT_FOUND, WRONG_LOGIN_INFO } from "@/consts/responseConsts"
 import { TEXT_VALID_MAIL, TITLE_VALID_MAIL } from "@/consts/mailConsts"
-import { UserType, findUniqueUserAbsoluteExist, findUniqueProfileAbsoluteExist } from "@/services/prismaService"
+import { findUniqueUserAbsoluteExist, findUniqueProfileAbsoluteExist, DbRecordNotFoundError } from "@/services/prismaService"
 const prisma = new PrismaClient()
 
 /**
@@ -36,7 +36,7 @@ export const registUser = async (req: Request, res: Response, next: NextFunction
             const HttpStatus = 400
             const responseStatus = false
             const responseMsg = ALREADY_USED_MAILADDLESS.message
-            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
         // 認証トークン作成
@@ -66,7 +66,7 @@ export const registUser = async (req: Request, res: Response, next: NextFunction
         const HttpStatus = 201
         const responseStatus = true
         const responseMsg = SEND_MAIL_FOR_USER_VALID.message
-        basicResponce(res, HttpStatus, responseStatus, responseMsg)
+        basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
     } catch (e) {
         // エラーの時のレスポンス
         internalServerErr(res, e)
@@ -108,7 +108,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     try {
         // emailが一致するユーザーを取得
         const whereByEmail = { email }
-        const user = await findUniqueUserAbsoluteExist(whereByEmail, res) as UserType
+        const user = await findUniqueUserAbsoluteExist(whereByEmail, res)
 
         // パスワードを比較
         const isValidPassword = await compare(password, user.password)
@@ -117,7 +117,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             const HttpStatus = 401
             const responseStatus = false
             const responseMsg = WRONG_LOGIN_INFO.message
-            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
         // メールアドレス認証が行われていない場合、認証メールを送信し処理終了
@@ -153,7 +153,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             const HttpStatus = 201
             const responseStatus = true
             const responseMsg = SEND_MAIL_FOR_USER_VALID.message
-            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
         // jwt発行
@@ -165,8 +165,15 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             "message": COMPLETE_LOGIN.message,
         });
     } catch (e) {
-        // エラーの時のレスポンス
-        internalServerErr(res, e)
+        if (e instanceof DbRecordNotFoundError) {
+            // レコードが見つからなかったら401エラー
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = e.message
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        } else {
+            internalServerErr(res, e)
+        }
     }
 }
 
@@ -183,7 +190,7 @@ export const readUser = async (req: Request, res: Response, next: NextFunction) 
     try {
         // userIdでユーザーを取得
         const whereByUserId = { id: userId }
-        const user = await findUniqueUserAbsoluteExist(whereByUserId, res) as UserType
+        const user = await findUniqueUserAbsoluteExist(whereByUserId, res)
 
         // password, authCode, verified以外を返却する。
         const { id, email, name, createdAt, updatedAt } = user
@@ -199,7 +206,15 @@ export const readUser = async (req: Request, res: Response, next: NextFunction) 
             }
         });
     } catch (e) {
-        internalServerErr(res, e)
+        if (e instanceof DbRecordNotFoundError) {
+            // レコードが見つからなかったら401エラー
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = e.message
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        } else {
+            internalServerErr(res, e)
+        }
     }
 }
 
@@ -226,7 +241,15 @@ export const readPrifile = async (req: Request, res: Response, next: NextFunctio
             "data": profile
         });
     } catch (e) {
-        internalServerErr(res, e)
+        if (e instanceof DbRecordNotFoundError) {
+            // レコードが見つからなかったら401エラー
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = e.message
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        } else {
+            internalServerErr(res, e)
+        }
     }
 }
 
@@ -264,7 +287,15 @@ export const editProfile = async (req: Request, res: Response, next: NextFunctio
         });
 
     } catch (e) {
-        internalServerErr(res, e)
+        if (e instanceof DbRecordNotFoundError) {
+            // レコードが見つからなかったら401エラー
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = e.message
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        } else {
+            internalServerErr(res, e)
+        }
     }
 }
 
@@ -281,7 +312,7 @@ export const changePassowrd = async (req: Request, res: Response, next: NextFunc
     try {
         // userIdでユーザーを取得
         const whereByUserId = { id: userId }
-        const user = await findUniqueUserAbsoluteExist(whereByUserId, res) as UserType
+        const user = await findUniqueUserAbsoluteExist(whereByUserId, res)
 
         // 旧パスワードの一致を確認
         const isValidPassword = await compare(oldPassword, user.password)
@@ -290,7 +321,7 @@ export const changePassowrd = async (req: Request, res: Response, next: NextFunc
             const HttpStatus = 401
             const responseStatus = false
             const responseMsg = WRONG_LOGIN_INFO.message
-            return basicResponce(res, HttpStatus, responseStatus, responseMsg)
+            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
         // パスワードを更新
@@ -300,7 +331,7 @@ export const changePassowrd = async (req: Request, res: Response, next: NextFunc
                 password: newPassword
             }
         })
-        const { id, email, name, createdAt, updatedAt } = user
+        const { id, email, name, createdAt, updatedAt } = newUser
         res.status(200).json({
             "status": true,
             "message": COMPLETE_UPDATE_PASSWORD.message,
@@ -313,7 +344,15 @@ export const changePassowrd = async (req: Request, res: Response, next: NextFunc
             }
         });
     } catch (e) {
-        internalServerErr(res, e)
+        if (e instanceof DbRecordNotFoundError) {
+            // レコードが見つからなかったら401エラー
+            const HttpStatus = 401
+            const responseStatus = false
+            const responseMsg = e.message
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        } else {
+            internalServerErr(res, e)
+        }
     }
 }
 
