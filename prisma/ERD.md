@@ -174,7 +174,7 @@ erDiagram
     }
   
 
-  "blood_checkup" {
+  "checkup_blood" {
     Int hematocrit "❓"
     Int crp "❓"
     Int id "🗝️"
@@ -184,18 +184,18 @@ erDiagram
     }
   
 
-  "additional_blood_checkup" {
+  "checkup_blood_additional" {
     String itemName 
     String result "❓"
     String unit "❓"
     Int id "🗝️"
-    Int blood_CheckupId 
+    Int checkup_BloodId 
     DateTime createdAt 
     DateTime updatedAt 
     }
   
 
-  "mri_checkup" {
+  "checkup_mri" {
     String result 
     Int id "🗝️"
     Int checkupId 
@@ -204,7 +204,7 @@ erDiagram
     }
   
 
-  "ct_checkup" {
+  "checkup_ct" {
     String result 
     Int id "🗝️"
     Int checkupId 
@@ -213,7 +213,7 @@ erDiagram
     }
   
 
-  "custom_checkup" {
+  "checkup_custom" {
     String checkupName 
     String result "❓"
     Int id "🗝️"
@@ -308,17 +308,17 @@ erDiagram
     "clinic_report" o{--}o "checkup" : "Checkup"
     "clinic_report" o{--}o "clinic_note" : "Clinic_Note"
     "clinic_report" o|--|| "users" : "User"
-    "checkup" o{--}o "blood_checkup" : "Blood_Checkup"
-    "checkup" o{--}o "mri_checkup" : "Mri_Checkup"
-    "checkup" o{--}o "ct_checkup" : "Ct_Checkup"
-    "checkup" o{--}o "custom_checkup" : "Custom_Checkup"
+    "checkup" o{--}o "checkup_blood" : "Checkup_Blood"
+    "checkup" o{--}o "checkup_mri" : "Checkup_Mri"
+    "checkup" o{--}o "checkup_ct" : "Checkup_Ct"
+    "checkup" o{--}o "checkup_custom" : "Checkup_Custom"
     "checkup" o|--|| "clinic_report" : "Clinic_Report"
-    "blood_checkup" o{--}o "additional_blood_checkup" : "Additional_Blood_Checkup"
-    "blood_checkup" o|--|| "checkup" : "Checkup"
-    "additional_blood_checkup" o|--|| "blood_checkup" : "Blood_Checkup"
-    "mri_checkup" o|--|| "checkup" : "Checkup"
-    "ct_checkup" o|--|| "checkup" : "Checkup"
-    "custom_checkup" o|--|| "checkup" : "Checkup"
+    "checkup_blood" o{--}o "checkup_blood_additional" : "Checkup_Blood_Additional"
+    "checkup_blood" o|--|| "checkup" : "Checkup"
+    "checkup_blood_additional" o|--|| "checkup_blood" : "Checkup_Blood"
+    "checkup_mri" o|--|| "checkup" : "Checkup"
+    "checkup_ct" o|--|| "checkup" : "Checkup"
+    "checkup_custom" o|--|| "checkup" : "Checkup"
     "clinic_note" o|--|| "clinic_report" : "Clinic_Report"
     "user_medication_info" o|--|| "users" : "User"
     "user_medication_info" o{--}o "user_medication_schedule" : "User_Medication_Schedule"

@@ -66,6 +66,34 @@ model Profile {
   @@map("profiles")
 }
 
+// 治療歴
+model User_Medical_History {
+  // 回腸造瘻術の有無
+  ileostomy Int
+  // id, ユーザー紐づけ, 作成日時, 更新日時
+  id        Int      @id @default(autoincrement())
+  User      User     @relation(fields: [userId], references: [id])
+  userId    Int      @unique
+  createdAt DateTime @default(dbgenerated("NOW()")) @db.DateTime
+  updatedAt DateTime @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
+
+  @@map("user_medical_history")
+}
+
+// ユーザー設定
+model User_Setting {
+  // テーマカラー
+  themeColor Int
+  // id, ユーザー紐づけ, 作成日時, 更新日時
+  id         Int      @id @default(autoincrement())
+  User       User     @relation(fields: [userId], references: [id])
+  userId     Int      @unique
+  createdAt  DateTime @default(dbgenerated("NOW()")) @db.DateTime
+  updatedAt  DateTime @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
+
+  @@map("user_setting")
+}
+
 // 便の状態
 model Bowel_Movement {
   // 日時
@@ -97,34 +125,6 @@ model Bristol_Stool_Scale {
   Bowel_Movement Bowel_Movement[]
 
   @@map("bristol_stool_scales")
-}
-
-// 治療歴
-model User_Medical_History {
-  // 回腸造瘻術の有無
-  ileostomy Int
-  // id, ユーザー紐づけ, 作成日時, 更新日時
-  id        Int      @id @default(autoincrement())
-  User      User     @relation(fields: [userId], references: [id])
-  userId    Int      @unique
-  createdAt DateTime @default(dbgenerated("NOW()")) @db.DateTime
-  updatedAt DateTime @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
-
-  @@map("user_medical_history")
-}
-
-// ユーザー設定
-model User_Setting {
-  // テーマカラー
-  themeColor Int
-  // id, ユーザー紐づけ, 作成日時, 更新日時
-  id         Int      @id @default(autoincrement())
-  User       User     @relation(fields: [userId], references: [id])
-  userId     Int      @unique
-  createdAt  DateTime @default(dbgenerated("NOW()")) @db.DateTime
-  updatedAt  DateTime @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
-
-  @@map("user_setting")
 }
 
 // 今日の体調
@@ -312,13 +312,13 @@ model Clinic_Report {
 // 検査予定/結果
 model Checkup {
   // 血液検査
-  Blood_Checkup  Blood_Checkup?
+  Checkup_Blood  Checkup_Blood?
   // MRI
-  Mri_Checkup    Mri_Checkup?
+  Checkup_Mri    Checkup_Mri?
   // CT
-  Ct_Checkup     Ct_Checkup?
+  Checkup_Ct     Checkup_Ct?
   // カスタム検査
-  Custom_Checkup Custom_Checkup?
+  Checkup_Custom Checkup_Custom?
   // id, 通院記録, 作成日時, 更新日時
   id             Int             @id @default(autoincrement())
   Clinic_Report  Clinic_Report   @relation(fields: [clinicReportId], references: [id])
@@ -330,13 +330,13 @@ model Checkup {
 }
 
 // 血液検査
-model Blood_Checkup {
+model Checkup_Blood {
   // Hr
   hematocrit               Int?
   // CRP
   crp                      Int?
   // その他
-  Additional_Blood_Checkup Additional_Blood_Checkup[]
+  Checkup_Blood_Additional Checkup_Blood_Additional[]
   // id, 検査予定/結果, 作成日時, 更新日時
   id                       Int                        @id @default(autoincrement())
   Checkup                  Checkup                    @relation(fields: [checkupId], references: [id])
@@ -344,11 +344,11 @@ model Blood_Checkup {
   createdAt                DateTime                   @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt                DateTime                   @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
-  @@map("blood_checkup")
+  @@map("checkup_blood")
 }
 
 // その他の血液検査
-model Additional_Blood_Checkup {
+model Checkup_Blood_Additional {
   // 検査項目名
   itemName        String
   // 検査結果
@@ -357,16 +357,16 @@ model Additional_Blood_Checkup {
   unit            String?
   // id, 血液検査, 作成日時, 更新日時
   id              Int           @id @default(autoincrement())
-  Blood_Checkup   Blood_Checkup @relation(fields: [blood_CheckupId], references: [id])
-  blood_CheckupId Int
+  Checkup_Blood   Checkup_Blood @relation(fields: [checkup_BloodId], references: [id])
+  checkup_BloodId Int
   createdAt       DateTime      @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt       DateTime      @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
-  @@map("additional_blood_checkup")
+  @@map("checkup_blood_additional")
 }
 
 // MRIの検査結果
-model Mri_Checkup {
+model Checkup_Mri {
   // 結果
   result    String
   // id, 検査予定/結果, 作成日時, 更新日時
@@ -376,11 +376,11 @@ model Mri_Checkup {
   createdAt DateTime @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt DateTime @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
-  @@map("mri_checkup")
+  @@map("checkup_mri")
 }
 
 // CTの検査結果
-model Ct_Checkup {
+model Checkup_Ct {
   // 結果
   result    String
   // id, 検査予定/結果, 作成日時, 更新日時
@@ -390,11 +390,11 @@ model Ct_Checkup {
   createdAt DateTime @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt DateTime @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
-  @@map("ct_checkup")
+  @@map("checkup_ct")
 }
 
 // ユーザーカスタムの検査
-model Custom_Checkup {
+model Checkup_Custom {
   // 検査名
   checkupName String
   // 検査結果
@@ -406,7 +406,7 @@ model Custom_Checkup {
   createdAt   DateTime @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt   DateTime @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
-  @@map("custom_checkup")
+  @@map("checkup_custom")
 }
 
 // 通院ノート
