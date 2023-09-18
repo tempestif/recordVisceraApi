@@ -7,7 +7,7 @@
     "start": "tsc && node ./dist/bin/www"
   },
   "dependencies": {
-    "@prisma/client": "^5.2.0",
+    "@prisma/client": "^5.3.1",
     "@types/bcrypt": "^5.0.0",
     "bcrypt": "^5.1.1",
     "cookie-parser": "~1.4.4",
@@ -17,7 +17,8 @@
     "http-errors": "~1.6.3",
     "jsonwebtoken": "^9.0.1",
     "morgan": "~1.9.1",
-    "nodemailer": "^6.9.4"
+    "nodemailer": "^6.9.4",
+    "winston": "^3.10.0"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "^10.4.0",
@@ -30,7 +31,8 @@
     "@types/morgan": "^1.9.5",
     "@types/node": "^20.5.4",
     "@types/nodemailer": "^6.4.9",
-    "prisma": "^5.2.0",
+    "@types/winston": "^2.4.4",
+    "prisma": "^5.3.1",
     "prisma-erd-generator": "^1.11.1",
     "ts-node-dev": "^2.0.0",
     "tsconfig-paths": "^4.2.0",

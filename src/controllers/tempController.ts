@@ -2,7 +2,7 @@ import { DEFAULT_DATA_INFO } from "@/consts/db";
 import { DELETE_TEMP, EDIT_TEMP, READ_TEMP, RECORD_TEMP, TEMP_ACCESS_FORBIDDEN, TEMP_NOT_FOUND, USER_NOT_FOUND } from "@/consts/responseConsts";
 import { FilterOptionsType, createFilterForPrisma, createSortsForPrisma, filteringFields } from "@/services/dataTransferService";
 import { customizedPrisma } from "@/services/prismaClients";
-import { findUniqueUserTempAbsoluteExist, userTempType, findUniqueUserAbsoluteExist } from "@/services/prismaService";
+import { findUniqueUserTempAbsoluteExist, userTempType, findUniqueDailyReportAbsoluteExist, dailyReportType } from "@/services/prismaService";
 import { basicResponce, internalServerErr } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
 /**
@@ -14,31 +14,19 @@ import type { Request, Response, NextFunction } from "express";
  * @returns
  */
 export const registTemp = async (req: Request, res: Response, next: NextFunction) => {
-    const { userId, temp, date } = req.body
+    const { userId, temp } = req.body
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
-        // userIdからユーザーを取得
+        // userIdから今日の体調を取得
         const whereByUserId = { id: userId }
-        await findUniqueUserAbsoluteExist(whereByUserId, res)
-
-        // dateをDate型に変換
-        let dateForDb
-        if (!date) {
-            // dateが指定なしの場合、現在日時を入力
-            dateForDb = new Date()
-        } else {
-            // dateが指定されていた場合、指定のdate
-            dateForDb = new Date(date)
-        }
+        const dailyReport = await findUniqueDailyReportAbsoluteExist(whereByUserId, res) as dailyReportType
 
         // 体温を追加
-        const tempData = await customizedPrisma.user_Temp.create({
+        const tempData = await customizedPrisma.daily_report_Temp.create({
             data: {
-                userId,
-                day: dateForDb,
-                time: dateForDb,
-                temp
+                dailyReportId: dailyReport.id,
+                result: temp
             }
         })
 
@@ -82,19 +70,11 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
     const sorts = createSortsForPrisma(sort)
 
     //  クエリで指定されたフィルターの内容を連想配列にまとめる
-    const { id, date, temp, createdAt, updatedAt } = req.query
+    const { id, temp, createdAt, updatedAt } = req.query
     const filterOptions: FilterOptionsType = {
         id: {
             data: id,
             constructor: (i) => Number(i)
-        },
-        day: {
-            data: date,
-            constructor: (i) => new Date(i)
-        },
-        time: {
-            data: date,
-            constructor: (i) => new Date(i)
         },
         temp: {
             data: temp,
@@ -112,12 +92,16 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
     // 指定されたフィールドのみのオブジェクトを作成
     const filter = createFilterForPrisma(filterOptions)
 
+    // userIdからdailyReportIdを取得
+    const whereByUserId = { id: userId }
+    const dailyReport = await findUniqueDailyReportAbsoluteExist(whereByUserId, res) as dailyReportType
+    const dailyReportId = dailyReport.id
     try {
         // 体温を取得
-        const temps = await customizedPrisma.user_Temp.findMany({
+        const temps = await customizedPrisma.daily_report_Temp.findMany({
             orderBy: sorts,
             where: {
-                userId,
+                dailyReportId,
                 ...filter
             },
             skip: offset ? Number(offset) : DEFAULT_DATA_INFO.offset,
@@ -125,8 +109,8 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
         })
 
         // NOTE: ひとまずもう一度全検索でallCountを取る。もっといい方法を考える。
-        const allCount = await customizedPrisma.user_Temp.count({
-            where: { userId }
+        const allCount = await customizedPrisma.daily_report_Temp.count({
+            where: { dailyReportId }
         })
 
         // 指定されたフィールドでフィルター
@@ -144,7 +128,6 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
             "offset": offset ?? '',
             "filter": {
                 "id": id ?? '',
-                "date": date ?? '',
                 "temp": temp ?? '',
                 "createdAt": createdAt ?? '',
                 "updatedAt": updatedAt ?? ''
@@ -168,7 +151,7 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
  */
 export const editTemp = async (req: Request, res: Response, next: NextFunction) => {
     const id = Number(req.params.id)
-    const { userId, date, temp } = req.body
+    const { userId, temp } = req.body
 
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
@@ -178,7 +161,8 @@ export const editTemp = async (req: Request, res: Response, next: NextFunction) 
         const tempData = await findUniqueUserTempAbsoluteExist(whereByTempId, res) as userTempType
 
         // 指定した体温記録がユーザー本人のものか確認
-        const isSelfUser = (tempData.userId === userId)
+        const dailyReport = await findUniqueDailyReportAbsoluteExist({ id: tempData.dailyReportId }, res) as dailyReportType
+        const isSelfUser = (dailyReport.userId === userId)
         // ユーザー本人のものではない場合、403を返す
         if (!isSelfUser) {
             const HttpStatus = 403
@@ -188,22 +172,12 @@ export const editTemp = async (req: Request, res: Response, next: NextFunction) 
         }
 
         // 編集するdataを成型
-        type TempData = {
-            temp: number,
-            day?: Date
-            time?: Date
-        }
-        const data: TempData = {
-            temp
-        }
-        // dateが設定されているときのみdataに追加
-        if (date) {
-            data.day = new Date(date)
-            data.time = new Date(date)
+        const data = {
+            result: temp
         }
 
         // 体温記録を編集
-        const newTemp = await customizedPrisma.user_Temp.update({
+        const newTemp = await customizedPrisma.daily_report_Temp.update({
             where: { id },
             data: data
         })
@@ -240,7 +214,8 @@ export const deleteTemp = async (req: Request, res: Response, next: NextFunction
         const tempData = await findUniqueUserTempAbsoluteExist(whereByTempId, res) as userTempType
 
         // 指定した体温記録がユーザー本人のものか確認
-        const isSelfUser = (tempData.userId === userId)
+        const dailyReport = await findUniqueDailyReportAbsoluteExist({ id: tempData.dailyReportId }, res) as dailyReportType
+        const isSelfUser = (dailyReport.userId === userId)
         // ユーザー本人のものではない場合、403を返す
         if (!isSelfUser) {
             const HttpStatus = 403
@@ -250,7 +225,7 @@ export const deleteTemp = async (req: Request, res: Response, next: NextFunction
         }
 
         // 体温記録を削除
-        const newTemp = await customizedPrisma.user_Temp.delete({
+        const newTemp = await customizedPrisma.daily_report_Temp.delete({
             where: { id }
         })
 

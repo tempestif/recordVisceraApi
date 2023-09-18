@@ -15,9 +15,8 @@ import type { Request, Response, NextFunction } from "express";
  * @returns
  */
 export const registBowelMovement = async (req: Request, res: Response, next: NextFunction) => {
-    const { userId, scaleId, blood, drainage, note, date } = req.body
+    const { userId, bristolStoolScale, blood, drainage, note, date } = req.body
 
-    console.log(scaleId)
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
@@ -44,7 +43,7 @@ export const registBowelMovement = async (req: Request, res: Response, next: Nex
                 blood,
                 drainage,
                 note,
-                scaleId
+                bristolStoolScale
             }
         })
 
@@ -88,7 +87,7 @@ export const readBowelMovements = async (req: Request, res: Response, next: Next
     const sorts = createSortsForPrisma(sort)
 
     //  クエリで指定されたフィルターの内容を連想配列にまとめる
-    const { id, date, blood, drainage, note, scaleId, createdAt, updatedAt } = req.query
+    const { id, date, blood, drainage, note, bristolStoolScale, createdAt, updatedAt } = req.query
     const filterOptions: FilterOptionsType = {
         id: {
             data: id,
@@ -114,8 +113,8 @@ export const readBowelMovements = async (req: Request, res: Response, next: Next
             data: note,
             constructor: (i) => String(i)
         },
-        scaleId: {
-            data: scaleId,
+        bristolStoolScale: {
+            data: bristolStoolScale,
             constructor: (i) => Number(i)
         },
         createdAt: {
@@ -166,7 +165,7 @@ export const readBowelMovements = async (req: Request, res: Response, next: Next
                 "blood": blood ?? '',
                 "drainage": drainage ?? '',
                 "note": note ?? '',
-                "scaleId": scaleId ?? '',
+                "bristolStoolScale": bristolStoolScale ?? '',
                 "createdAt": createdAt ?? '',
                 "updatedAt": updatedAt ?? ''
             },
@@ -189,7 +188,7 @@ export const readBowelMovements = async (req: Request, res: Response, next: Next
  */
 export const editBowelMovement = async (req: Request, res: Response, next: NextFunction) => {
     const id = Number(req.params.id)
-    const { userId, date, blood, drainage, note, scaleId } = req.body
+    const { userId, date, blood, drainage, note, bristolStoolScale } = req.body
 
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
@@ -212,7 +211,7 @@ export const editBowelMovement = async (req: Request, res: Response, next: NextF
         type BowelMovementData = {
             blood: number,
             drainage: number,
-            scaleId: number,
+            bristolStoolScale: number,
             note?: string,
             day?: Date
             time?: Date
@@ -220,7 +219,7 @@ export const editBowelMovement = async (req: Request, res: Response, next: NextF
         const data: BowelMovementData = {
             blood,
             drainage,
-            scaleId
+            bristolStoolScale
         }
         // dateが設定されているときのみdataに追加
         if (date) {

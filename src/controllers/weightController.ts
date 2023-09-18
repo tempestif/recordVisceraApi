@@ -2,7 +2,7 @@ import { DEFAULT_DATA_INFO } from "@/consts/db";
 import { DELETE_WEIGHT, EDIT_WEIGHT, READ_WEIGHT, RECORD_WEIGHT, WEIGHT_ACCESS_FORBIDDEN } from "@/consts/responseConsts";
 import { FilterOptionsType, createFilterForPrisma, createSortsForPrisma, filteringFields } from "@/services/dataTransferService";
 import { customizedPrisma } from "@/services/prismaClients";
-import { findUniqueUserAbsoluteExist, findUniqueUserWeightAbsoluteExist, userWeightType } from "@/services/prismaService";
+import { dailyReportType, findUniqueDailyReportAbsoluteExist, findUniqueUserWeightAbsoluteExist, userWeightType } from "@/services/prismaService";
 import { basicResponce, internalServerErr } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
 /**
@@ -14,31 +14,19 @@ import type { Request, Response, NextFunction } from "express";
  * @returns
  */
 export const registWeight = async (req: Request, res: Response, next: NextFunction) => {
-    const { userId, weight, date } = req.body
+    const { userId, weight } = req.body
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
-        // userIdからユーザーを取得
+        // userIdから今日の体調を取得
         const whereByUserId = { id: userId }
-        await findUniqueUserAbsoluteExist(whereByUserId, res)
-
-        // dateをDate型に変換
-        let dateForDb
-        if (!date) {
-            // dateが指定なしの場合、現在日時を入力
-            dateForDb = new Date()
-        } else {
-            // dateが指定されていた場合、指定のdate
-            dateForDb = new Date(date)
-        }
+        const dailyReport = await findUniqueDailyReportAbsoluteExist(whereByUserId, res) as dailyReportType
 
         // 体重を追加
-        const weightData = await customizedPrisma.user_Weight.create({
+        const weightData = await customizedPrisma.daily_report_Weight.create({
             data: {
-                userId,
-                day: dateForDb,
-                time: dateForDb,
-                weight
+                dailyReportId: dailyReport.id,
+                result: weight
             }
         })
 
@@ -82,19 +70,11 @@ export const readWeights = async (req: Request, res: Response, next: NextFunctio
     const sorts = createSortsForPrisma(sort)
 
     //  クエリで指定されたフィルターの内容を連想配列にまとめる
-    const { id, date, weight, createdAt, updatedAt } = req.query
+    const { id, weight, createdAt, updatedAt } = req.query
     const filterOptions: FilterOptionsType = {
         id: {
             data: id,
             constructor: (i) => Number(i)
-        },
-        day: {
-            data: date,
-            constructor: (i) => new Date(i)
-        },
-        time: {
-            data: date,
-            constructor: (i) => new Date(i)
         },
         weight: {
             data: weight,
@@ -112,12 +92,16 @@ export const readWeights = async (req: Request, res: Response, next: NextFunctio
     // 指定されたフィールドのみのオブジェクトを作成
     const filter = createFilterForPrisma(filterOptions)
 
+    // userIdからdailyReportIdを取得
+    const whereByUserId = { id: userId }
+    const dailyReport = await findUniqueDailyReportAbsoluteExist(whereByUserId, res) as dailyReportType
+    const dailyReportId = dailyReport.id
     try {
         // 体重を取得
-        const weights = await customizedPrisma.user_Weight.findMany({
+        const weights = await customizedPrisma.daily_report_Weight.findMany({
             orderBy: sorts,
             where: {
-                userId,
+                dailyReportId,
                 ...filter
             },
             skip: offset ? Number(offset) : DEFAULT_DATA_INFO.offset,
@@ -125,8 +109,8 @@ export const readWeights = async (req: Request, res: Response, next: NextFunctio
         })
 
         // NOTE: ひとまずもう一度全検索でallCountを取る。もっといい方法を考える。
-        const allCount = await customizedPrisma.user_Weight.count({
-            where: { userId }
+        const allCount = await customizedPrisma.daily_report_Weight.count({
+            where: { dailyReportId }
         })
 
         // 指定されたフィールドでフィルター
@@ -144,7 +128,6 @@ export const readWeights = async (req: Request, res: Response, next: NextFunctio
             "offset": offset ?? '',
             "filter": {
                 "id": id ?? '',
-                "date": date ?? '',
                 "weight": weight ?? '',
                 "createdAt": createdAt ?? '',
                 "updatedAt": updatedAt ?? ''
@@ -168,7 +151,7 @@ export const readWeights = async (req: Request, res: Response, next: NextFunctio
  */
 export const editWeight = async (req: Request, res: Response, next: NextFunction) => {
     const id = Number(req.params.id)
-    const { userId, date, weight } = req.body
+    const { userId, weight } = req.body
 
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
@@ -178,7 +161,8 @@ export const editWeight = async (req: Request, res: Response, next: NextFunction
         const weightData = await findUniqueUserWeightAbsoluteExist(whereByWeightId, res) as userWeightType
 
         // 指定した体重記録がユーザー本人のものか確認
-        const isSelfUser = (weightData.userId === userId)
+        const dailyReport = await findUniqueDailyReportAbsoluteExist({ id: weightData.dailyReportId }, res) as dailyReportType
+        const isSelfUser = (dailyReport.userId === userId)
         // ユーザー本人のものではない場合、403を返す
         if (!isSelfUser) {
             const HttpStatus = 403
@@ -187,23 +171,12 @@ export const editWeight = async (req: Request, res: Response, next: NextFunction
             return basicResponce(res, HttpStatus, responseStatus, responseMsg)
         }
 
-        // 編集するdataを成型
-        type WeightData = {
-            weight: number,
-            day?: Date
-            time?: Date
-        }
-        const data: WeightData = {
-            weight
-        }
-        // dateが設定されているときのみdataに追加
-        if (date) {
-            data.day = new Date(date)
-            data.time = new Date(date)
-        }
 
+        const data = {
+            result: weight
+        }
         // 体重記録を編集
-        const newWeight = await customizedPrisma.user_Weight.update({
+        const newWeight = await customizedPrisma.daily_report_Weight.update({
             where: { id },
             data: data
         })
@@ -241,7 +214,8 @@ export const deleteWeight = async (req: Request, res: Response, next: NextFuncti
         const weightData = await findUniqueUserWeightAbsoluteExist(whereByWeightId, res) as userWeightType
 
         // 指定した体重記録がユーザー本人のものか確認
-        const isSelfUser = (weightData.userId === userId)
+        const dailyReport = await findUniqueDailyReportAbsoluteExist({ id: weightData.dailyReportId }, res) as dailyReportType
+        const isSelfUser = (dailyReport.userId === userId)
         // ユーザー本人のものではない場合、403を返す
         if (!isSelfUser) {
             const HttpStatus = 403
@@ -251,7 +225,7 @@ export const deleteWeight = async (req: Request, res: Response, next: NextFuncti
         }
 
         // 体重記録を削除
-        const newWeight = await customizedPrisma.user_Weight.delete({
+        const newWeight = await customizedPrisma.daily_report_Weight.delete({
             where: { id }
         })
 

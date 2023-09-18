@@ -24,6 +24,24 @@ erDiagram
     }
   
 
+  "user_medical_history" {
+    Int ileostomy 
+    Int id "🗝️"
+    Int userId 
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "user_setting" {
+    Int themeColor 
+    Int id "🗝️"
+    Int userId 
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
   "bowel_movements" {
     DateTime day 
     DateTime time 
@@ -44,24 +62,6 @@ erDiagram
     }
   
 
-  "user_medical_history" {
-    Int ileostomy 
-    Int id "🗝️"
-    Int userId 
-    DateTime createdAt 
-    DateTime updatedAt 
-    }
-  
-
-  "user_setting" {
-    Int themeColor 
-    Int id "🗝️"
-    Int userId 
-    DateTime createdAt 
-    DateTime updatedAt 
-    }
-  
-
   "daily_report" {
     DateTime day 
     DateTime time 
@@ -75,7 +75,7 @@ erDiagram
   "daily_report_temp" {
     Float result 
     Int id "🗝️"
-    Int daily_ReportId 
+    Int dailyReportId 
     DateTime createdAt 
     DateTime updatedAt 
     }
@@ -84,7 +84,7 @@ erDiagram
   "daily_report_weight" {
     Float result 
     Int id "🗝️"
-    Int daily_ReportId 
+    Int dailyReportId 
     DateTime createdAt 
     DateTime updatedAt 
     }
@@ -93,7 +93,7 @@ erDiagram
   "daily_report_stomachache" {
     Int result 
     Int id "🗝️"
-    Int daily_ReportId 
+    Int dailyReportId 
     DateTime createdAt 
     DateTime updatedAt 
     }
@@ -108,7 +108,7 @@ erDiagram
   "daily_report_condition" {
     Int conditionScaleId 
     Int id "🗝️"
-    Int daily_ReportId 
+    Int dailyReportId 
     DateTime createdAt 
     DateTime updatedAt 
     }
@@ -123,7 +123,7 @@ erDiagram
   "daily_report_arthritis" {
     Int result 
     Int id "🗝️"
-    Int daily_ReportId 
+    Int dailyReportId 
     DateTime createdAt 
     DateTime updatedAt 
     }
@@ -132,7 +132,7 @@ erDiagram
   "daily_report_skin_lesions" {
     Int result 
     Int id "🗝️"
-    Int daily_ReportId 
+    Int dailyReportId 
     DateTime createdAt 
     DateTime updatedAt 
     }
@@ -141,7 +141,7 @@ erDiagram
   "daily_report_ocular_lesions" {
     Int result 
     Int id "🗝️"
-    Int daily_ReportId 
+    Int dailyReportId 
     DateTime createdAt 
     DateTime updatedAt 
     }
@@ -150,7 +150,7 @@ erDiagram
   "daily_report_abdominal" {
     Int result 
     Int id "🗝️"
-    Int daily_ReportId 
+    Int dailyReportId 
     DateTime createdAt 
     DateTime updatedAt 
     }
@@ -189,7 +189,7 @@ erDiagram
     String result "❓"
     String unit "❓"
     Int id "🗝️"
-    Int checkup_BloodId 
+    Int checkupBloodId 
     DateTime createdAt 
     DateTime updatedAt 
     }
@@ -279,11 +279,11 @@ erDiagram
     "users" o{--}o "user_medication_schedule" : "User_Medication_Schedule"
     "users" o{--}o "user_medication_result" : "User_Medication_Result"
     "profiles" o|--|| "users" : "user"
+    "user_medical_history" o|--|| "users" : "User"
+    "user_setting" o|--|| "users" : "User"
     "bowel_movements" o|--|| "bristol_stool_scales" : "Bristol_Stool_Scales"
     "bowel_movements" o|--|| "users" : "User"
     "bristol_stool_scales" o{--}o "bowel_movements" : "Bowel_Movement"
-    "user_medical_history" o|--|| "users" : "User"
-    "user_setting" o|--|| "users" : "User"
     "daily_report" o{--}o "daily_report_temp" : "Daily_report_Temp"
     "daily_report" o{--}o "daily_report_weight" : "Daily_report_Weight"
     "daily_report" o{--}o "daily_report_stomachache" : "Daily_report_Stomachache"

@@ -9,10 +9,8 @@ export type userWeightType = {
     id: number;
     createdAt: Date;
     updatedAt: Date;
-    userId: number;
-    day: Date;
-    time: Date;
-    weight: number;
+    dailyReportId: number;
+    result: number;
 }
 
 /**
@@ -22,9 +20,9 @@ export type userWeightType = {
  * @param res
  * @returns
  */
-export const findUniqueUserWeightAbsoluteExist = async (where: Prisma.User_WeightWhereUniqueInput, res: Response) => {
+export const findUniqueUserWeightAbsoluteExist = async (where: Prisma.Daily_report_WeightWhereUniqueInput, res: Response) => {
     // idから体重記録を取得
-    const weightData = await customizedPrisma.user_Weight.findUnique({ where })
+    const weightData = await customizedPrisma.daily_report_Weight.findUnique({ where })
     // 体重記録が無かったら401エラー
     if (!weightData) {
         const HttpStatus = 401

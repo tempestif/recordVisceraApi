@@ -15,7 +15,7 @@ export type bowelMovementType = {
     blood: number,
     drainage: number,
     note: string,
-    scaleId: number,
+    bristolStoolScale: number,
 
 }
 

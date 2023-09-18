@@ -9,10 +9,8 @@ export type userTempType = {
     id: number;
     createdAt: Date;
     updatedAt: Date;
-    userId: number;
-    day: Date;
-    time: Date;
-    temp: number;
+    dailyReportId: number;
+    result: number;
 }
 
 /**
@@ -24,7 +22,7 @@ export type userTempType = {
  */
 export const findUniqueUserTempAbsoluteExist = async (where: Prisma.Daily_report_TempWhereUniqueInput, res: Response) => {
     // idから体温記録を取得
-    const tempData = await customizedPrisma.user_Temp.findUnique({ where })
+    const tempData = await customizedPrisma.daily_report_Temp.findUnique({ where })
     // 体温記録が無かったら401エラー
     if (!tempData) {
         const HttpStatus = 401
