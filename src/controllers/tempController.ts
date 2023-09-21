@@ -1,10 +1,14 @@
 import { DEFAULT_DATA_INFO } from "@/consts/db";
-import { DELETE_TEMP, EDIT_TEMP, READ_TEMP, RECORD_TEMP, TEMP_ACCESS_FORBIDDEN, TEMP_NOT_FOUND, USER_NOT_FOUND } from "@/consts/responseConsts";
+import { PROCESS_FAILURE, PROCESS_SUCCESS } from "@/consts/logConsts";
+import { DELETE_TEMP, EDIT_TEMP, READ_TEMP, RECORD_TEMP, TEMP_ACCESS_FORBIDDEN } from "@/consts/responseConsts";
+import { CustomLogger, LoggingObjType, maskConfInfoInReqBody } from "@/services/LoggerService";
 import { FilterOptionsType, createFilterForPrisma, createSortsForPrisma, filteringFields } from "@/services/dataTransferService";
+import { ErrorHandleIncludeDbRecordNotFound, internalServerErrorHandle } from "@/services/errorHandlingService";
 import { customizedPrisma } from "@/services/prismaClients";
 import { findUniqueUserTempAbsoluteExist, findUniqueDailyReportAbsoluteExist, DbRecordNotFoundError } from "@/services/prismaService";
-import { basicHttpResponce, internalServerErr } from "@/services/utilResponseService";
+import { basicHttpResponce, basicHttpResponceIncludeData } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
+const logger = new CustomLogger()
 /**
  * 新たな体温記録を作成する
  * dateが入力されなかった場合は現在日時をdateとする
@@ -15,10 +19,15 @@ import type { Request, Response, NextFunction } from "express";
  */
 export const registTemp = async (req: Request, res: Response, next: NextFunction) => {
     const { userId, temp } = req.body
+
+    // logのために関数名を取得
+    const currentFuncName = registTemp.name
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
         // userIdから今日の体調を取得
+        // FIXME: 「今日」を判別してdailyReportを取得する必要がある。これではuserに紐づくdailyReportが取れてるだけ
+        // 多分、findOrCreateにするべきな気がする。
         const whereByUserId = { id: userId }
         const dailyReport = await findUniqueDailyReportAbsoluteExist(whereByUserId, res)
 
@@ -30,21 +39,25 @@ export const registTemp = async (req: Request, res: Response, next: NextFunction
             }
         })
 
-        res.status(200).json({
-            "status": true,
-            "message": RECORD_TEMP.message,
-            "data": tempData
-        });
-    } catch (e) {
-        if (e instanceof DbRecordNotFoundError) {
-            // レコードが見つからなかったら401エラー
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = e.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
-        } else {
-            internalServerErr(res, e)
+        // レスポンスを返却
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = RECORD_TEMP.message
+        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, tempData)
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId: userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
         }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+    } catch (e) {
+        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
     }
 }
 
@@ -61,6 +74,8 @@ export const registTemp = async (req: Request, res: Response, next: NextFunction
  * @param next
  */
 export const readTemps = async (req: Request, res: Response, next: NextFunction) => {
+    // logのために関数名を取得
+    const currentFuncName = readTemps.name
     // クエリのデータを扱いやすくするための型を定義
     type Query = {
         sort: string | undefined
@@ -100,11 +115,11 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
     // 指定されたフィールドのみのオブジェクトを作成
     const filter = createFilterForPrisma(filterOptions)
 
-    // userIdからdailyReportIdを取得
-    const whereByUserId = { id: userId }
-    const dailyReport = await findUniqueDailyReportAbsoluteExist(whereByUserId, res)
-    const dailyReportId = dailyReport.id
     try {
+        // userIdからdailyReportIdを取得
+        const whereByUserId = { id: userId }
+        const dailyReport = await findUniqueDailyReportAbsoluteExist(whereByUserId, res)
+        const dailyReportId = dailyReport.id
         // 体温を取得
         const temps = await customizedPrisma.daily_report_Temp.findMany({
             orderBy: sorts,
@@ -125,9 +140,12 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
         const filteredTemps = filteringFields(fields, temps)
 
         // レスポンス
-        res.status(200).json({
-            "status": true,
-            "message": READ_TEMP.message,
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = READ_TEMP.message
+        res.status(HttpStatus).json({
+            "status": responseStatus,
+            "message": responseMsg,
             "allCount": allCount,
             "count": filteredTemps.length,
             "sort": sort ?? '',
@@ -142,8 +160,20 @@ export const readTemps = async (req: Request, res: Response, next: NextFunction)
             },
             "temps": filteredTemps
         });
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId: userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
+        }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
     } catch (e) {
-        internalServerErr(res, e)
+        ErrorHandleIncludeDbRecordNotFound(e, userId.message, req, res, currentFuncName)
     }
 }
 
@@ -161,6 +191,9 @@ export const editTemp = async (req: Request, res: Response, next: NextFunction) 
     const id = Number(req.params.id)
     const { userId, temp } = req.body
 
+    // logのために関数名を取得
+    const currentFuncName = editTemp.name
+
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
@@ -176,7 +209,21 @@ export const editTemp = async (req: Request, res: Response, next: NextFunction) 
             const HttpStatus = 403
             const responseStatus = false
             const responseMsg = TEMP_ACCESS_FORBIDDEN.message
-            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+
+            // ログを出力
+            const logBody: LoggingObjType = {
+                userId: userId,
+                ipAddress: req.ip,
+                method: req.method,
+                path: req.originalUrl,
+                body: maskConfInfoInReqBody(req).body,
+                status: String(HttpStatus),
+                responseMsg
+            }
+            logger.error(PROCESS_FAILURE.message(currentFuncName), logBody)
+
+            return
         }
 
         // 編集するdataを成型
@@ -190,21 +237,25 @@ export const editTemp = async (req: Request, res: Response, next: NextFunction) 
             data: data
         })
 
-        res.status(200).json({
-            "status": true,
-            "message": EDIT_TEMP.message,
-            "data": newTemp
-        });
-    } catch (e) {
-        if (e instanceof DbRecordNotFoundError) {
-            // レコードが見つからなかったら401エラー
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = e.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
-        } else {
-            internalServerErr(res, e)
+        // レスポンスを返却
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = EDIT_TEMP.message
+        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, newTemp)
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId: userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
         }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+    } catch (e) {
+        ErrorHandleIncludeDbRecordNotFound(e, userId.message, req, res, currentFuncName)
     }
 }
 
@@ -222,6 +273,9 @@ export const deleteTemp = async (req: Request, res: Response, next: NextFunction
     const id = Number(req.params.id)
     const { userId } = req.body
 
+    // logのために関数名を取得
+    const currentFuncName = deleteTemp.name
+
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
@@ -237,7 +291,21 @@ export const deleteTemp = async (req: Request, res: Response, next: NextFunction
             const HttpStatus = 403
             const responseStatus = false
             const responseMsg = TEMP_ACCESS_FORBIDDEN.message
-            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+
+            // ログを出力
+            const logBody: LoggingObjType = {
+                userId: userId,
+                ipAddress: req.ip,
+                method: req.method,
+                path: req.originalUrl,
+                body: maskConfInfoInReqBody(req).body,
+                status: String(HttpStatus),
+                responseMsg
+            }
+            logger.error(PROCESS_FAILURE.message(currentFuncName), logBody)
+
+            return
         }
 
         // 体温記録を削除
@@ -245,20 +313,12 @@ export const deleteTemp = async (req: Request, res: Response, next: NextFunction
             where: { id }
         })
 
-        res.status(200).json({
-            "status": true,
-            "message": DELETE_TEMP.message,
-            "data": newTemp
-        });
+        // レスポンスを返却
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = DELETE_TEMP.message
+        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, newTemp)
     } catch (e) {
-        if (e instanceof DbRecordNotFoundError) {
-            // レコードが見つからなかったら401エラー
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = e.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
-        } else {
-            internalServerErr(res, e)
-        }
+        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
     }
 }

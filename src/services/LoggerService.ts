@@ -1,5 +1,22 @@
+import { UNSPECIFIED_USER_ID_TYPE } from '@/consts/logConsts';
+import { Request } from 'express';
 import { createLogger, format, Logger, transports } from 'winston';
+export type LoggingObjType = {
+    userId: number | UNSPECIFIED_USER_ID_TYPE
+    ipAddress: string
+    method: string
+    path: string
+    body: string
+    status: string
+    responseMsg: string
+}
 
+/**
+ * Loggerクラス
+ * 保存場所
+ * error: log/error.log
+ * その他: log/combined.log
+ */
 export class CustomLogger {
     private logger: Logger
     constructor() {
@@ -13,17 +30,17 @@ export class CustomLogger {
                 // - Write all logs with level `error` and below to `error.log`
                 // - Write all logs with level `info` and below to `combined.log`
                 //
-                new transports.File({ filename: 'error.log', level: 'error' }),
-                new transports.File({ filename: 'combined.log' }),
+                new transports.File({ filename: 'log/error.log', level: 'error' }),
+                new transports.File({ filename: 'log/combined.log' }),
             ],
         })
     }
-    log(message: string, userId: number) {
-        this.logger.info(message, { userId });
+    log(message: string, obj: LoggingObjType) {
+        this.logger.info(message, obj);
     }
 
-    error(message: string, trace: string) {
-        this.logger.error(message, trace)
+    error(message: string, obj: LoggingObjType) {
+        this.logger.error(message, obj)
     }
 
     warn(message: string) {
@@ -37,4 +54,22 @@ export class CustomLogger {
     verbose(message: string) {
         this.logger.verbose(message)
     }
+}
+
+const CONF_INFO_NAMES = ["email", "password"]
+
+/**
+ * 個人情報をマスクしたreqを作成する
+ * @param req
+ * @returns
+ */
+export const maskConfInfoInReqBody = (req: Request) => {
+    for (let i of Object.keys(req.body)) {
+        for (let confName of CONF_INFO_NAMES) {
+            if (i === confName) {
+                req.body[i] = "****"
+            }
+        }
+    }
+    return req
 }

@@ -1,10 +1,14 @@
 import { DEFAULT_DATA_INFO } from "@/consts/db";
+import { PROCESS_SUCCESS } from "@/consts/logConsts";
 import { DELETE_WEIGHT, EDIT_WEIGHT, READ_WEIGHT, RECORD_WEIGHT, WEIGHT_ACCESS_FORBIDDEN } from "@/consts/responseConsts";
+import { CustomLogger, LoggingObjType, maskConfInfoInReqBody } from "@/services/LoggerService";
 import { FilterOptionsType, createFilterForPrisma, createSortsForPrisma, filteringFields } from "@/services/dataTransferService";
+import { ErrorHandleIncludeDbRecordNotFound } from "@/services/errorHandlingService";
 import { customizedPrisma } from "@/services/prismaClients";
-import { DbRecordNotFoundError, findUniqueDailyReportAbsoluteExist, findUniqueUserWeightAbsoluteExist } from "@/services/prismaService";
-import { basicHttpResponce, internalServerErr } from "@/services/utilResponseService";
+import { findUniqueDailyReportAbsoluteExist, findUniqueUserWeightAbsoluteExist } from "@/services/prismaService";
+import { basicHttpResponce, basicHttpResponceIncludeData } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
+const logger = new CustomLogger()
 /**
  * 新たな体重記録を作成する
  * dateが入力されなかった場合は現在日時をdateとする
@@ -15,10 +19,15 @@ import type { Request, Response, NextFunction } from "express";
  */
 export const registWeight = async (req: Request, res: Response, next: NextFunction) => {
     const { userId, weight } = req.body
+
+    // logのために関数名を取得
+    const currentFuncName = registWeight.name
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
         // userIdから今日の体調を取得
+        // FIXME: 「今日」を判別してdailyReportを取得する必要がある。これではuserに紐づくdailyReportが取れてるだけ
+        // 多分、findOrCreateにするべきな気がする。
         const whereByUserId = { id: userId }
         const dailyReport = await findUniqueDailyReportAbsoluteExist(whereByUserId, res)
 
@@ -30,21 +39,25 @@ export const registWeight = async (req: Request, res: Response, next: NextFuncti
             }
         })
 
-        res.status(200).json({
-            "status": true,
-            "message": RECORD_WEIGHT.message,
-            "data": weightData
-        });
-    } catch (e) {
-        if (e instanceof DbRecordNotFoundError) {
-            // レコードが見つからなかったら401エラー
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = e.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
-        } else {
-            internalServerErr(res, e)
+        // レスポンスを返却
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = RECORD_WEIGHT.message
+        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, weightData)
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId: userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
         }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+    } catch (e) {
+        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
     }
 }
 
@@ -61,6 +74,9 @@ export const registWeight = async (req: Request, res: Response, next: NextFuncti
  * @param next
  */
 export const readWeights = async (req: Request, res: Response, next: NextFunction) => {
+    // logのために関数名を取得
+    const currentFuncName = readWeights.name
+
     // クエリのデータを扱いやすくするための型を定義
     type Query = {
         sort: string | undefined
@@ -125,9 +141,12 @@ export const readWeights = async (req: Request, res: Response, next: NextFunctio
         const filteredWeights = filteringFields(fields, weights)
 
         // レスポンス
-        res.status(200).json({
-            "status": true,
-            "message": READ_WEIGHT.message,
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = READ_WEIGHT.message
+        res.status(HttpStatus).json({
+            "status": responseStatus,
+            "message": responseMsg,
             "allCount": allCount,
             "count": filteredWeights.length,
             "sort": sort ?? '',
@@ -143,15 +162,7 @@ export const readWeights = async (req: Request, res: Response, next: NextFunctio
             "weights": filteredWeights
         });
     } catch (e) {
-        if (e instanceof DbRecordNotFoundError) {
-            // レコードが見つからなかったら401エラー
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = e.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
-        } else {
-            internalServerErr(res, e)
-        }
+        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
     }
 }
 
@@ -168,6 +179,9 @@ export const readWeights = async (req: Request, res: Response, next: NextFunctio
 export const editWeight = async (req: Request, res: Response, next: NextFunction) => {
     const id = Number(req.params.id)
     const { userId, weight } = req.body
+
+    // logのために関数名を取得
+    const currentFuncName = editWeight.name
 
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
@@ -197,21 +211,25 @@ export const editWeight = async (req: Request, res: Response, next: NextFunction
             data: data
         })
 
-        res.status(200).json({
-            "status": true,
-            "message": EDIT_WEIGHT.message,
-            "data": newWeight
-        });
-    } catch (e) {
-        if (e instanceof DbRecordNotFoundError) {
-            // レコードが見つからなかったら401エラー
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = e.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
-        } else {
-            internalServerErr(res, e)
+        // レスポンスを返却
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = EDIT_WEIGHT.message
+        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, newWeight)
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId: userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
         }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+    } catch (e) {
+        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
     }
 }
 
@@ -228,6 +246,9 @@ export const editWeight = async (req: Request, res: Response, next: NextFunction
 export const deleteWeight = async (req: Request, res: Response, next: NextFunction) => {
     const id = Number(req.params.id)
     const { userId } = req.body
+
+    // logのために関数名を取得
+    const currentFuncName = deleteWeight.name
 
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
@@ -252,20 +273,24 @@ export const deleteWeight = async (req: Request, res: Response, next: NextFuncti
             where: { id }
         })
 
-        res.status(200).json({
-            "status": true,
-            "message": DELETE_WEIGHT.message,
-            "data": newWeight
-        });
-    } catch (e) {
-        if (e instanceof DbRecordNotFoundError) {
-            // レコードが見つからなかったら401エラー
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = e.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
-        } else {
-            internalServerErr(res, e)
+        // レスポンスを返却
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = DELETE_WEIGHT.message
+        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, newWeight)
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId: userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
         }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+    } catch (e) {
+        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
     }
 }

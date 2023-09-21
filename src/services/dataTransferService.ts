@@ -48,6 +48,12 @@ export const createSortsForPrisma = (sort: string | undefined) => {
     return sorts
 }
 
+/**
+ * 取得したDBのデータをフィルターする
+ * @param fields 必要なフィールド
+ * @param DbObj DBのデータ
+ * @returns
+ */
 export const filteringFields = (fields: string | undefined, DbObj: { [key: string]: any }) => {
     // 指定されたフィールドを抽出
     const fieldAry = fields?.split(',')

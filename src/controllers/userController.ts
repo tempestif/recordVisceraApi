@@ -1,15 +1,17 @@
-import type { Request, Response, NextFunction } from "express"
+import { type Request, type Response, type NextFunction } from "express"
 import { customizedPrisma } from "@/services/prismaClients"
-import { PrismaClient } from '@prisma/client'
 import { sendMail } from "@/services/nodemailerService"
 import { randomBytes } from "crypto"
 import { compare } from "bcrypt"
 import { generateAuthToken } from "@/services/jwtService"
-import { basicHttpResponce, internalServerErr } from "@/services/utilResponseService"
-import { ALREADY_USED_MAILADDLESS, COMPLETE_GET_PROFILE, COMPLETE_LOGIN, COMPLETE_UPDATE_PASSWORD, COMPLETE_UPDATE_PROFILE, PROFILE_NOT_FOUND, SEND_MAIL_FOR_USER_VALID, USER_NOT_FOUND, WRONG_LOGIN_INFO } from "@/consts/responseConsts"
+import { basicHttpResponce, basicHttpResponceIncludeData, internalServerErr } from "@/services/utilResponseService"
+import { ALREADY_USED_MAILADDLESS, COMPLETE_GET_PROFILE, COMPLETE_LOGIN, COMPLETE_UPDATE_PASSWORD, COMPLETE_UPDATE_PROFILE, SEND_MAIL_FOR_USER_VALID, WRONG_LOGIN_INFO } from "@/consts/responseConsts"
 import { TEXT_VALID_MAIL, TITLE_VALID_MAIL } from "@/consts/mailConsts"
-import { findUniqueUserAbsoluteExist, findUniqueProfileAbsoluteExist, DbRecordNotFoundError } from "@/services/prismaService"
-const prisma = new PrismaClient()
+import { findUniqueUserAbsoluteExist, findUniqueProfileAbsoluteExist } from "@/services/prismaService"
+import { CustomLogger, LoggingObjType, maskConfInfoInReqBody } from "@/services/LoggerService"
+import { PROCESS_FAILURE, PROCESS_SUCCESS, UNSPECIFIED_USER_ID } from "@/consts/logConsts"
+import { ErrorHandleIncludeDbRecordNotFound, internalServerErrorHandle } from "@/services/errorHandlingService"
+const logger = new CustomLogger()
 
 /**
  * 認証前アカウントを作成し、認証メールを送信する
@@ -22,21 +24,37 @@ const prisma = new PrismaClient()
 export const registUser = async (req: Request, res: Response, next: NextFunction) => {
     const { email, password, name } = req.body
 
+    // logのために関数名を取得
+    const currentFuncName = registUser.name
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
         // emailでユーザーを取得
-        const result = await prisma.user.findUnique({
+        const user = await customizedPrisma.user.findUnique({
             where: {
                 email: email
             }
         })
         // ユーザーが存在していたら400エラー
-        if (result) {
+        if (user) {
             const HttpStatus = 400
             const responseStatus = false
             const responseMsg = ALREADY_USED_MAILADDLESS.message
-            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+
+            // ログを出力
+            const logBody: LoggingObjType = {
+                userId: UNSPECIFIED_USER_ID.message,
+                ipAddress: req.ip,
+                method: req.method,
+                path: req.originalUrl,
+                body: maskConfInfoInReqBody(req).body,
+                status: String(HttpStatus),
+                responseMsg
+            }
+            logger.error(PROCESS_FAILURE.message(currentFuncName), logBody)
+
+            return
         }
 
         // 認証トークン作成
@@ -67,9 +85,20 @@ export const registUser = async (req: Request, res: Response, next: NextFunction
         const responseStatus = true
         const responseMsg = SEND_MAIL_FOR_USER_VALID.message
         basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId: UNSPECIFIED_USER_ID.message,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
+        }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
     } catch (e) {
-        // エラーの時のレスポンス
-        internalServerErr(res, e)
+        internalServerErrorHandle(e, UNSPECIFIED_USER_ID.message, req, res, currentFuncName)
     }
 }
 
@@ -105,19 +134,38 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
     const { email, password } = req.body
 
+    // logのために関数名を取得
+    const currentFuncName = login.name
     try {
         // emailが一致するユーザーを取得
         const whereByEmail = { email }
         const user = await findUniqueUserAbsoluteExist(whereByEmail, res)
+        const userId = user.id
 
         // パスワードを比較
         const isValidPassword = await compare(password, user.password)
         // 合致しなかったら401エラー
         if (!isValidPassword) {
+            // レスポンスを返却
             const HttpStatus = 401
             const responseStatus = false
             const responseMsg = WRONG_LOGIN_INFO.message
-            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+
+            // TODO: email, passwordをマスクする
+            // ログを出力
+            const logBody: LoggingObjType = {
+                userId: userId,
+                ipAddress: req.ip,
+                method: req.method,
+                path: req.originalUrl,
+                body: maskConfInfoInReqBody(req).body,
+                status: String(HttpStatus),
+                responseMsg
+            }
+            logger.error(PROCESS_FAILURE.message(currentFuncName), logBody)
+
+            return
         }
 
         // メールアドレス認証が行われていない場合、認証メールを送信し処理終了
@@ -146,34 +194,56 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             }
 
             // メール送信
-            const verifyUrl = `${process.env.BASE_URL}/users/${user.id}/verify/${token}`
+            const verifyUrl = `${process.env.BASE_URL}/users/${userId}/verify/${token}`
             await sendVerifyMail(email, verifyUrl)
 
             // レスポンスを返却
             const HttpStatus = 201
             const responseStatus = true
             const responseMsg = SEND_MAIL_FOR_USER_VALID.message
-            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+
+            // ログを出力
+            const logBody: LoggingObjType = {
+                userId: userId,
+                ipAddress: req.ip,
+                method: req.method,
+                path: req.originalUrl,
+                body: maskConfInfoInReqBody(req).body,
+                status: String(HttpStatus),
+                responseMsg
+            }
+            logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+
+            return
         }
 
         // jwt発行
-        const jwt = generateAuthToken(user.id);
+        const jwt = generateAuthToken(userId);
+
         // レスポンスを返却
-        res.status(200).json({
-            "status": true,
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = COMPLETE_LOGIN.message
+        res.status(HttpStatus).json({
+            "status": responseStatus,
             "token": jwt,
-            "message": COMPLETE_LOGIN.message,
+            "message": responseMsg,
         });
-    } catch (e) {
-        if (e instanceof DbRecordNotFoundError) {
-            // レコードが見つからなかったら401エラー
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = e.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
-        } else {
-            internalServerErr(res, e)
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId: userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
         }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+    } catch (e: unknown) {
+        ErrorHandleIncludeDbRecordNotFound(e, UNSPECIFIED_USER_ID.message, req, res, currentFuncName)
     }
 }
 
@@ -185,36 +255,44 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
  * @returns
  */
 export const readUser = async (req: Request, res: Response, next: NextFunction) => {
+    // TODO: バリデーション
     const { userId } = req.body
 
+    // logのために関数名を取得
+    const currentFuncName = readUser.name
     try {
         // userIdでユーザーを取得
         const whereByUserId = { id: userId }
         const user = await findUniqueUserAbsoluteExist(whereByUserId, res)
 
+        // レスポンスを返却
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = COMPLETE_GET_PROFILE.message
         // password, authCode, verified以外を返却する。
         const { id, email, name, createdAt, updatedAt } = user
-        res.status(200).json({
-            "status": true,
-            "message": COMPLETE_GET_PROFILE.message,
-            "data": {
-                id,
-                email,
-                name,
-                createdAt,
-                updatedAt
-            }
-        });
-    } catch (e) {
-        if (e instanceof DbRecordNotFoundError) {
-            // レコードが見つからなかったら401エラー
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = e.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
-        } else {
-            internalServerErr(res, e)
+        const respondUser = {
+            id,
+            email,
+            name,
+            createdAt,
+            updatedAt
         }
+        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, respondUser)
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId: userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
+        }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+    } catch (e: unknown) {
+        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
     }
 }
 
@@ -226,30 +304,35 @@ export const readUser = async (req: Request, res: Response, next: NextFunction) 
  * @param next
  * @returns
  */
-export const readPrifile = async (req: Request, res: Response, next: NextFunction) => {
+export const readProfile = async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.body
 
+    // logのために関数名を取得
+    const currentFuncName = readProfile.name
     try {
         // userIdでプロフィールを取得
         const whereByUserId = { userId: userId }
         const profile = await findUniqueProfileAbsoluteExist(whereByUserId, res)
 
         // レスポンスを返却
-        res.status(200).json({
-            "status": true,
-            "message": COMPLETE_GET_PROFILE.message,
-            "data": profile
-        });
-    } catch (e) {
-        if (e instanceof DbRecordNotFoundError) {
-            // レコードが見つからなかったら401エラー
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = e.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
-        } else {
-            internalServerErr(res, e)
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = COMPLETE_GET_PROFILE.message
+        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, profile)
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
         }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+    } catch (e) {
+        ErrorHandleIncludeDbRecordNotFound(e, userId.message, req, res, currentFuncName)
     }
 }
 
@@ -263,6 +346,8 @@ export const readPrifile = async (req: Request, res: Response, next: NextFunctio
 export const editProfile = async (req: Request, res: Response, next: NextFunction) => {
     const { userId, sex, height, birthday } = req.body
 
+    // logのために関数名を取得
+    const currentFuncName = editProfile.name
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
@@ -280,22 +365,26 @@ export const editProfile = async (req: Request, res: Response, next: NextFunctio
             }
         })
 
-        res.status(200).json({
-            "status": true,
-            "message": COMPLETE_UPDATE_PROFILE.message,
-            "data": updatedProfile
-        });
+        // レスポンスを返却
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = COMPLETE_UPDATE_PROFILE.message
+        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, updatedProfile)
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
+        }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
 
     } catch (e) {
-        if (e instanceof DbRecordNotFoundError) {
-            // レコードが見つからなかったら401エラー
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = e.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
-        } else {
-            internalServerErr(res, e)
-        }
+        ErrorHandleIncludeDbRecordNotFound(e, userId.message, req, res, currentFuncName)
     }
 }
 
@@ -308,6 +397,9 @@ export const editProfile = async (req: Request, res: Response, next: NextFunctio
  */
 export const changePassowrd = async (req: Request, res: Response, next: NextFunction) => {
     const { userId, oldPassword, newPassword } = req.body
+
+    // logのために関数名を取得
+    const currentFuncName = changePassowrd.name
     // TODO: バリデーション
     try {
         // userIdでユーザーを取得
@@ -321,7 +413,21 @@ export const changePassowrd = async (req: Request, res: Response, next: NextFunc
             const HttpStatus = 401
             const responseStatus = false
             const responseMsg = WRONG_LOGIN_INFO.message
-            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+
+            // ログを出力
+            const logBody: LoggingObjType = {
+                userId,
+                ipAddress: req.ip,
+                method: req.method,
+                path: req.originalUrl,
+                body: maskConfInfoInReqBody(req).body,
+                status: String(HttpStatus),
+                responseMsg
+            }
+            logger.error(PROCESS_FAILURE.message(currentFuncName), logBody)
+
+            return
         }
 
         // パスワードを更新
@@ -331,28 +437,34 @@ export const changePassowrd = async (req: Request, res: Response, next: NextFunc
                 password: newPassword
             }
         })
+
+        // レスポンスを返却
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = COMPLETE_UPDATE_PASSWORD.message
         const { id, email, name, createdAt, updatedAt } = newUser
-        res.status(200).json({
-            "status": true,
-            "message": COMPLETE_UPDATE_PASSWORD.message,
-            "data": {
-                id,
-                email,
-                name,
-                createdAt,
-                updatedAt
-            }
-        });
-    } catch (e) {
-        if (e instanceof DbRecordNotFoundError) {
-            // レコードが見つからなかったら401エラー
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = e.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
-        } else {
-            internalServerErr(res, e)
+        const respondUser = {
+            id,
+            email,
+            name,
+            createdAt,
+            updatedAt
         }
+        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, respondUser)
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
+        }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+    } catch (e) {
+        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
     }
 }
 
@@ -368,5 +480,3 @@ const sendVerifyMail = async (email: string, url: string) => {
     const text = TEXT_VALID_MAIL.message(url)
     await sendMail(email, mailSubject, text)
 }
-
-

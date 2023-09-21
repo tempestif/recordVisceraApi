@@ -1,5 +1,5 @@
 import { verifyMailadress } from "@/controllers/verifyController";
-import { editProfile, readPrifile, readUser, sendMailTest, changePassowrd } from "@/controllers/userController";
+import { editProfile, readProfile, readUser, sendMailTest, changePassowrd } from "@/controllers/userController";
 import express from "express";
 import { auth } from "@/services/authService";
 import type { Request, Response, NextFunction } from "express"
@@ -16,7 +16,7 @@ router.get("/:id/verify/:token", verifyMailadress)
 
 
 /** プロフィール取得 */
-router.get("/profiles", auth, readPrifile)
+router.get("/profiles", auth, readProfile)
 /** プロフィール編集 */
 router.post("/profiles", auth, editProfile)
 

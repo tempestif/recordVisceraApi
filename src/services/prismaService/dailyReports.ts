@@ -14,12 +14,12 @@ import { DbRecordNotFoundError } from "."
  */
 export const findUniqueDailyReportAbsoluteExist = async (where: Prisma.Daily_ReportWhereUniqueInput, res: Response) => {
     // idから今日の体調を取得
-    const tempData = await customizedPrisma.daily_Report.findUnique({ where })
+    const dailyReportData = await customizedPrisma.daily_Report.findUnique({ where })
     // 今日の体調が無かったらDbRecordNotFoundErrorを投げる
-    if (!tempData) {
+    if (!dailyReportData) {
         const responseMsg = DAILY_REPORT_NOT_FOUND.message
         throw new DbRecordNotFoundError(responseMsg)
     }
 
-    return tempData
+    return dailyReportData
 }

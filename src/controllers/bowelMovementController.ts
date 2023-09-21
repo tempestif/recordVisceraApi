@@ -1,11 +1,16 @@
 import { DEFAULT_DATA_INFO } from "@/consts/db";
+import { PROCESS_FAILURE, PROCESS_SUCCESS } from "@/consts/logConsts";
 import { BOWEL_MOVEMENT_ACCESS_FORBIDDEN, COUNT_BOWEL_MOVEMENT_PER_DAY, DELETE_BOWEL_MOVEMENT, EDIT_BOWEL_MOVEMENT, READ_BOWEL_MOVEMENT, RECORD_BOWEL_MOVEMENT } from "@/consts/responseConsts/bowelMovement";
+import { CustomLogger, LoggingObjType, maskConfInfoInReqBody } from "@/services/LoggerService";
 import { FilterOptionsType, createFilterForPrisma, createSortsForPrisma, filteringFields } from "@/services/dataTransferService";
+import { ErrorHandleIncludeDbRecordNotFound, internalServerErrorHandle } from "@/services/errorHandlingService";
 import { customizedPrisma } from "@/services/prismaClients";
-import { DbRecordNotFoundError, findUniqueUserAbsoluteExist } from "@/services/prismaService";
+import { findUniqueUserAbsoluteExist } from "@/services/prismaService";
 import { findUniqueBowelMovementAbsoluteExist } from "@/services/prismaService/bowelMovements";
-import { basicHttpResponce, internalServerErr } from "@/services/utilResponseService";
+import { basicHttpResponce, basicHttpResponceIncludeData } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
+const logger = new CustomLogger()
+
 /**
  * 新たな排便記録を作成する
  * dateが入力されなかった場合は現在日時をdateとする
@@ -17,6 +22,8 @@ import type { Request, Response, NextFunction } from "express";
 export const registBowelMovement = async (req: Request, res: Response, next: NextFunction) => {
     const { userId, bristolStoolScale, blood, drainage, note, date } = req.body
 
+    // logのために関数名を取得
+    const currentFuncName = registBowelMovement.name
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
@@ -47,21 +54,25 @@ export const registBowelMovement = async (req: Request, res: Response, next: Nex
             }
         })
 
-        res.status(200).json({
-            "status": true,
-            "message": RECORD_BOWEL_MOVEMENT.message,
-            "data": bowelMovementData
-        });
-    } catch (e) {
-        if (e instanceof DbRecordNotFoundError) {
-            // レコードが見つからなかったら401エラー
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = e.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
-        } else {
-            internalServerErr(res, e)
+        // レスポンスを返却
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = RECORD_BOWEL_MOVEMENT.message
+        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, bowelMovementData)
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
         }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+    } catch (e) {
+        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
     }
 }
 
@@ -78,6 +89,8 @@ export const registBowelMovement = async (req: Request, res: Response, next: Nex
  * @param next
  */
 export const readBowelMovements = async (req: Request, res: Response, next: NextFunction) => {
+    // logのために関数名を取得
+    const currentFuncName = readBowelMovements.name
     // クエリのデータを扱いやすくするための型を定義
     type Query = {
         sort: string | undefined
@@ -158,9 +171,12 @@ export const readBowelMovements = async (req: Request, res: Response, next: Next
         })
 
         // レスポンス
-        res.status(200).json({
-            "status": true,
-            "message": READ_BOWEL_MOVEMENT.message,
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = READ_BOWEL_MOVEMENT.message
+        res.status(HttpStatus).json({
+            "status": responseStatus,
+            "message": responseMsg,
             "allCount": allCount,
             "count": filteredBowelMovents.length,
             "sort": sort ?? '',
@@ -179,8 +195,20 @@ export const readBowelMovements = async (req: Request, res: Response, next: Next
             },
             "bowelMovements": filteredBowelMovents
         });
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
+        }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
     } catch (e) {
-        internalServerErr(res, e)
+        internalServerErrorHandle(e, userId, req, res, currentFuncName)
     }
 }
 
@@ -198,6 +226,9 @@ export const editBowelMovement = async (req: Request, res: Response, next: NextF
     const id = Number(req.params.id)
     const { userId, date, blood, drainage, note, bristolStoolScale } = req.body
 
+    // logのために関数名を取得
+    const currentFuncName = editBowelMovement.name
+
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
@@ -212,7 +243,21 @@ export const editBowelMovement = async (req: Request, res: Response, next: NextF
             const HttpStatus = 403
             const responseStatus = false
             const responseMsg = BOWEL_MOVEMENT_ACCESS_FORBIDDEN.message
-            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+
+            // ログを出力
+            const logBody: LoggingObjType = {
+                userId,
+                ipAddress: req.ip,
+                method: req.method,
+                path: req.originalUrl,
+                body: maskConfInfoInReqBody(req).body,
+                status: String(HttpStatus),
+                responseMsg
+            }
+            logger.error(PROCESS_FAILURE.message(editBowelMovement.name), logBody)
+
+            return
         }
 
         // 編集するdataを成型
@@ -245,21 +290,25 @@ export const editBowelMovement = async (req: Request, res: Response, next: NextF
             data: data
         })
 
-        res.status(200).json({
-            "status": true,
-            "message": EDIT_BOWEL_MOVEMENT.message,
-            "data": newBowelMovement
-        });
-    } catch (e) {
-        if (e instanceof DbRecordNotFoundError) {
-            // レコードが見つからなかったら401エラー
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = e.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
-        } else {
-            internalServerErr(res, e)
+        // レスポンスを返却
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = EDIT_BOWEL_MOVEMENT.message
+        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, newBowelMovement)
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
         }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+    } catch (e) {
+        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
     }
 }
 
@@ -277,6 +326,9 @@ export const deleteBowelMovement = async (req: Request, res: Response, next: Nex
     const id = Number(req.params.id)
     const { userId } = req.body
 
+    // logのために関数名を取得
+    const currentFuncName = deleteBowelMovement.name
+
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
@@ -291,7 +343,21 @@ export const deleteBowelMovement = async (req: Request, res: Response, next: Nex
             const HttpStatus = 403
             const responseStatus = false
             const responseMsg = BOWEL_MOVEMENT_ACCESS_FORBIDDEN.message
-            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+
+            // ログを出力
+            const logBody: LoggingObjType = {
+                userId,
+                ipAddress: req.ip,
+                method: req.method,
+                path: req.originalUrl,
+                body: maskConfInfoInReqBody(req).body,
+                status: String(HttpStatus),
+                responseMsg
+            }
+            logger.error(PROCESS_FAILURE.message(deleteBowelMovement.name), logBody)
+
+            return
         }
 
         // 排便記録を削除
@@ -299,26 +365,33 @@ export const deleteBowelMovement = async (req: Request, res: Response, next: Nex
             where: { id }
         })
 
-        res.status(200).json({
-            "status": true,
-            "message": DELETE_BOWEL_MOVEMENT.message,
-            "data": newBowelMovement
-        });
-    } catch (e) {
-        if (e instanceof DbRecordNotFoundError) {
-            // レコードが見つからなかったら401エラー
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = e.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
-        } else {
-            internalServerErr(res, e)
+        // レスポンスを返却
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = DELETE_BOWEL_MOVEMENT.message
+        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, newBowelMovement)
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
         }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+    } catch (e) {
+        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
     }
 }
 
 export const countBowelMovementsPerDay = async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.body
+
+    // logのために関数名を取得
+    const currentFuncName = countBowelMovementsPerDay.name
 
     // クエリのデータを扱いやすくするための型を定義
     type Query = {
@@ -352,22 +425,30 @@ export const countBowelMovementsPerDay = async (req: Request, res: Response, nex
         const end = start + limitNum
         const slicedGroupBowelMovements = groupBowelMovements.slice(start, end)
 
-        res.status(200).json({
-            "status": true,
-            "message": COUNT_BOWEL_MOVEMENT_PER_DAY.message,
+        // レスポンスを返却
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = COUNT_BOWEL_MOVEMENT_PER_DAY.message
+        res.status(HttpStatus).json({
+            "status": responseStatus,
+            "message": responseMsg,
             "allCount": groupBowelMovements.length,
             "count": slicedGroupBowelMovements.length,
             "data": slicedGroupBowelMovements
         });
-    } catch (e) {
-        if (e instanceof DbRecordNotFoundError) {
-            // レコードが見つからなかったら401エラー
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = e.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
-        } else {
-            internalServerErr(res, e)
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
         }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+    } catch (e) {
+        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
     }
 }
