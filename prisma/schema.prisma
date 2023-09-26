@@ -21,29 +21,29 @@ generator erd {
 // ユーザー
 model User {
   // メールアドレス
-  email                    String                     @unique
+  email                String                 @unique
   // ユーザーネーム
-  name                     String
+  name                 String
   // パスワード
-  password                 String
+  password             String
   // 認証トークン
-  authCode                 String
+  authCode             String
   // メールアドレス認証有無
-  verified                 Int                        @default(0)
+  verified             Int                    @default(0)
   // 紐づけ
-  bowelMovement            Bowel_Movement[]
-  profile                  Profile?
-  User_Medical_History     User_Medical_History?
-  User_Setting             User_Setting?
-  Daily_Report             Daily_Report[]
-  Clinic_Report            Clinic_Report[]
-  User_Medication_Info     User_Medication_Info[]
+  bowelMovement        Bowel_Movement[]
+  profile              Profile?
+  User_Medical_History User_Medical_History?
+  User_Setting         User_Setting?
+  Daily_Report         Daily_Report[]
+  Clinic_Report        Clinic_Report[]
+  Medication_Info_User Medication_Info_User[]
+  Medication_Schedule  Medication_Schedule[]
+  Medication_Result    Medication_Result[]
   // id, 作成日時, 更新日時
-  id                       Int                        @id @default(autoincrement())
-  createdAt                DateTime                   @default(dbgenerated("NOW()")) @db.DateTime
-  updatedAt                DateTime                   @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
-  User_Medication_Schedule User_Medication_Schedule[]
-  User_Medication_Result   User_Medication_Result[]
+  id                   Int                    @id @default(autoincrement())
+  createdAt            DateTime               @default(dbgenerated("NOW()")) @db.DateTime
+  updatedAt            DateTime               @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
   @@map("users")
 }
@@ -130,30 +130,32 @@ model Bristol_Stool_Scale {
 // 今日の体調
 model Daily_Report {
   // 日時
-  day                          DateTime                       @db.Date
-  time                         DateTime                       @db.Time
+  day                              DateTime                          @db.Date
+  time                             DateTime                          @db.Time
   // 体温
-  Daily_report_Temp            Daily_report_Temp?
+  Daily_report_Temp                Daily_report_Temp?
   // 体重
-  Daily_report_Weight          Daily_report_Weight?
+  Daily_report_Weight              Daily_report_Weight?
   // 腹痛
-  Daily_report_Stomachache     Daily_report_Stomachache?
+  Daily_report_Stomachache         Daily_report_Stomachache?
   // 体調
-  Daily_report_Condition       Daily_report_Condition?
+  Daily_report_Condition           Daily_report_Condition?
   // 関節痛の有無
-  Daily_report_Arthritis       Daily_report_Arthritis?
+  Daily_report_Arthritis           Daily_report_Arthritis?
   // 皮膚病変の有無
-  Daily_report_SkinLesions     Daily_report_Skin_Lesions?
+  Daily_report_SkinLesions         Daily_report_Skin_Lesions?
   // 眼病変の有無
-  Daily_report_OcularLesitions Daily_report_Ocular_Lesitions?
+  Daily_report_OcularLesitions     Daily_report_Ocular_Lesitions?
+  // 肛門病変の有無
+  Daily_report_Anorectal_Lesitions Daily_report_Anorectal_Lesitions?
   // 腹部腫瘤の有無
-  Daily_report_Abdominal       Daily_report_Abdominal?
+  Daily_report_Abdominal           Daily_report_Abdominal?
   // id, ユーザー紐づけ, 作成日時, 更新日時
-  id                           Int                            @id @default(autoincrement())
-  User                         User                           @relation(fields: [userId], references: [id])
-  userId                       Int
-  createdAt                    DateTime                       @default(dbgenerated("NOW()")) @db.DateTime
-  updatedAt                    DateTime                       @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
+  id                               Int                               @id @default(autoincrement())
+  User                             User                              @relation(fields: [userId], references: [id])
+  userId                           Int
+  createdAt                        DateTime                          @default(dbgenerated("NOW()")) @db.DateTime
+  updatedAt                        DateTime                          @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
   @@map("daily_report")
 }
@@ -161,13 +163,13 @@ model Daily_Report {
 // 体温
 model Daily_report_Temp {
   // 結果
-  result         Float
+  result        Float
   // id, 今日の体調紐づけ, 作成日時, 更新日時
-  id             Int          @id @default(autoincrement())
-  Daily_Report   Daily_Report @relation(fields: [dailyReportId], references: [id])
+  id            Int          @id @default(autoincrement())
+  Daily_Report  Daily_Report @relation(fields: [dailyReportId], references: [id])
   dailyReportId Int          @unique
-  createdAt      DateTime     @default(dbgenerated("NOW()")) @db.DateTime
-  updatedAt      DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
+  createdAt     DateTime     @default(dbgenerated("NOW()")) @db.DateTime
+  updatedAt     DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
   @@map("daily_report_temp")
 }
@@ -175,13 +177,13 @@ model Daily_report_Temp {
 // 体重
 model Daily_report_Weight {
   // 結果
-  result         Float
+  result        Float
   // id, 今日の体調紐づけ, 作成日時, 更新日時
-  id             Int          @id @default(autoincrement())
-  Daily_Report   Daily_Report @relation(fields: [dailyReportId], references: [id])
+  id            Int          @id @default(autoincrement())
+  Daily_Report  Daily_Report @relation(fields: [dailyReportId], references: [id])
   dailyReportId Int          @unique
-  createdAt      DateTime     @default(dbgenerated("NOW()")) @db.DateTime
-  updatedAt      DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
+  createdAt     DateTime     @default(dbgenerated("NOW()")) @db.DateTime
+  updatedAt     DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
   @@map("daily_report_weight")
 }
@@ -194,7 +196,7 @@ model Daily_report_Stomachache {
   // id, 今日の体調紐づけ, 作成日時, 更新日時
   id                      Int                     @id @default(autoincrement())
   Daily_Report            Daily_Report            @relation(fields: [dailyReportId], references: [id])
-  dailyReportId          Int                     @unique
+  dailyReportId           Int                     @unique
   createdAt               DateTime                @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt               DateTime                @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
@@ -205,6 +207,7 @@ model Daily_report_Stomachache {
 model Stomachache_Scale_Types {
   id                       Int                        @id @default(autoincrement())
   typeName                 String                     @unique
+  score                    Int
   Daily_report_Stomachache Daily_report_Stomachache[]
 
   @@map("stomachache_scale_types")
@@ -218,7 +221,7 @@ model Daily_report_Condition {
   // id, 今日の体調紐づけ, 作成日時, 更新日時
   id                    Int                   @id @default(autoincrement())
   Daily_Report          Daily_Report          @relation(fields: [dailyReportId], references: [id])
-  dailyReportId        Int                   @unique
+  dailyReportId         Int                   @unique
   createdAt             DateTime              @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt             DateTime              @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
@@ -229,6 +232,7 @@ model Daily_report_Condition {
 model Condition_Scale_Types {
   id                     Int                      @id @default(autoincrement())
   typeName               String                   @unique
+  score                  Int
   Daily_report_Condition Daily_report_Condition[]
 
   @@map("condition_scale_types")
@@ -237,13 +241,13 @@ model Condition_Scale_Types {
 // 関節痛の有無
 model Daily_report_Arthritis {
   // 結果
-  result         Int
+  result        Int
   // id, 今日の体調紐づけ, 作成日時, 更新日時
-  id             Int          @id @default(autoincrement())
-  Daily_Report   Daily_Report @relation(fields: [dailyReportId], references: [id])
+  id            Int          @id @default(autoincrement())
+  Daily_Report  Daily_Report @relation(fields: [dailyReportId], references: [id])
   dailyReportId Int          @unique
-  createdAt      DateTime     @default(dbgenerated("NOW()")) @db.DateTime
-  updatedAt      DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
+  createdAt     DateTime     @default(dbgenerated("NOW()")) @db.DateTime
+  updatedAt     DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
   @@map("daily_report_arthritis")
 }
@@ -251,13 +255,13 @@ model Daily_report_Arthritis {
 // 皮膚病変の有無
 model Daily_report_Skin_Lesions {
   // 結果
-  result         Int
+  result        Int
   // id, 今日の体調紐づけ, 作成日時, 更新日時
-  id             Int          @id @default(autoincrement())
-  Daily_Report   Daily_Report @relation(fields: [dailyReportId], references: [id])
+  id            Int          @id @default(autoincrement())
+  Daily_Report  Daily_Report @relation(fields: [dailyReportId], references: [id])
   dailyReportId Int          @unique
-  createdAt      DateTime     @default(dbgenerated("NOW()")) @db.DateTime
-  updatedAt      DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
+  createdAt     DateTime     @default(dbgenerated("NOW()")) @db.DateTime
+  updatedAt     DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
   @@map("daily_report_skin_lesions")
 }
@@ -265,29 +269,56 @@ model Daily_report_Skin_Lesions {
 // 眼病変の有無
 model Daily_report_Ocular_Lesitions {
   // 結果
-  result         Int
+  result        Int
   // id, 今日の体調紐づけ, 作成日時, 更新日時
-  id             Int          @id @default(autoincrement())
-  Daily_Report   Daily_Report @relation(fields: [dailyReportId], references: [id])
+  id            Int          @id @default(autoincrement())
+  Daily_Report  Daily_Report @relation(fields: [dailyReportId], references: [id])
   dailyReportId Int          @unique
-  createdAt      DateTime     @default(dbgenerated("NOW()")) @db.DateTime
-  updatedAt      DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
+  createdAt     DateTime     @default(dbgenerated("NOW()")) @db.DateTime
+  updatedAt     DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
   @@map("daily_report_ocular_lesions")
+}
+
+// 肛門病変の有無
+model Daily_report_Anorectal_Lesitions {
+  // 痔瘻
+  fistula       Int
+  // その他の肛門病変
+  others        Int
+  // id, 今日の体調紐づけ, 作成日時, 更新日時
+  id            Int          @id @default(autoincrement())
+  Daily_Report  Daily_Report @relation(fields: [dailyReportId], references: [id])
+  dailyReportId Int          @unique
+  createdAt     DateTime     @default(dbgenerated("NOW()")) @db.DateTime
+  updatedAt     DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
+
+  @@map("daily_report_anorectal_lesions")
 }
 
 // 腹部腫瘤の有無
 model Daily_report_Abdominal {
   // 結果
-  result         Int
+  Abdominal_Scale_Types   Abdominal_Scale_Types @relation(fields: [abdominal_Scale_TypesId], references: [id])
+  abdominal_Scale_TypesId Int
   // id, 今日の体調紐づけ, 作成日時, 更新日時
-  id             Int          @id @default(autoincrement())
-  Daily_Report   Daily_Report @relation(fields: [dailyReportId], references: [id])
-  dailyReportId Int          @unique
-  createdAt      DateTime     @default(dbgenerated("NOW()")) @db.DateTime
-  updatedAt      DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
+  id                      Int                   @id @default(autoincrement())
+  Daily_Report            Daily_Report          @relation(fields: [dailyReportId], references: [id])
+  dailyReportId           Int                   @unique
+  createdAt               DateTime              @default(dbgenerated("NOW()")) @db.DateTime
+  updatedAt               DateTime              @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
   @@map("daily_report_abdominal")
+}
+
+// 腹部腫瘤スケール区分
+model Abdominal_Scale_Types {
+  id                     Int                      @id @default(autoincrement())
+  typeName               String                   @unique
+  score                  Int
+  Daily_report_Abdominal Daily_report_Abdominal[]
+
+  @@map("abdominal_scale_types")
 }
 
 // 通院記録
@@ -350,17 +381,17 @@ model Checkup_Blood {
 // その他の血液検査
 model Checkup_Blood_Additional {
   // 検査項目名
-  itemName        String
+  itemName       String
   // 検査結果
-  result          String?
+  result         String?
   // 単位
-  unit            String?
+  unit           String?
   // id, 血液検査, 作成日時, 更新日時
-  id              Int           @id @default(autoincrement())
-  Checkup_Blood   Checkup_Blood @relation(fields: [checkupBloodId], references: [id])
+  id             Int           @id @default(autoincrement())
+  Checkup_Blood  Checkup_Blood @relation(fields: [checkupBloodId], references: [id])
   checkupBloodId Int
-  createdAt       DateTime      @default(dbgenerated("NOW()")) @db.DateTime
-  updatedAt       DateTime      @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
+  createdAt      DateTime      @default(dbgenerated("NOW()")) @db.DateTime
+  updatedAt      DateTime      @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
   @@map("checkup_blood_additional")
 }
@@ -424,32 +455,48 @@ model Clinic_Note {
 }
 
 // ユーザー登録薬剤リスト
-model User_Medication_Info {
-  // 薬剤名
-  name                     String
+model Medication_Info_User {
+  // 薬剤
+  Medication_Info_Master Medication_Info_Master @relation(fields: [medicationId], references: [id])
+  medicationId           Int
   // 服用個数
-  count                    Float
-  // 用量
-  dosage                   Float
+  count                  Float?
   // id, ユーザー紐づけ, 作成日時, 更新日時
-  id                       Int                        @id @default(autoincrement())
-  User                     User                       @relation(fields: [userId], references: [id])
-  userId                   Int
-  createdAt                DateTime                   @default(dbgenerated("NOW()")) @db.DateTime
-  updatedAt                DateTime                   @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
-  User_Medication_Schedule User_Medication_Schedule[]
-  User_Medication_Result   User_Medication_Result[]
+  id                     Int                    @id @default(autoincrement())
+  User                   User                   @relation(fields: [userId], references: [id])
+  userId                 Int
+  createdAt              DateTime               @default(dbgenerated("NOW()")) @db.DateTime
+  updatedAt              DateTime               @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
+  Medication_Schedule    Medication_Schedule[]
+  Medication_Result      Medication_Result[]
 
-  @@map("user_medication_info")
+  @@map("medication_info_user")
+}
+
+// 薬剤マスタ
+model Medication_Info_Master {
+  // 薬剤名
+  name                 String
+  // YJコード
+  yjCode               String
+  // 規格
+  specification        String
+  // id, ユーザー薬剤紐づけ, 作成日時, 更新日時
+  id                   Int                    @id @default(autoincrement())
+  createdAt            DateTime               @default(dbgenerated("NOW()")) @db.DateTime
+  updatedAt            DateTime               @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
+  Medication_Info_User Medication_Info_User[]
+
+  @@map("medication_info_master")
 }
 
 // ユーザー服薬予定
-model User_Medication_Schedule {
+model Medication_Schedule {
   // 服用タイミング
   Medication_Timing_Types Medication_Timing_Types @relation(fields: [timing], references: [id])
   timing                  Int
   // 薬剤
-  User_Medication_Info    User_Medication_Info    @relation(fields: [medicationInfoId], references: [id])
+  Medication_Info_User    Medication_Info_User    @relation(fields: [medicationInfoId], references: [id])
   medicationInfoId        Int
   // id, ユーザー紐づけ, 作成日時, 更新日時
   id                      Int                     @id @default(autoincrement())
@@ -458,25 +505,25 @@ model User_Medication_Schedule {
   createdAt               DateTime                @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt               DateTime                @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
-  @@map("user_medication_schedule")
+  @@map("medication_schedule")
 }
 
 // 服用タイミング区分
 model Medication_Timing_Types {
-  id                       Int                        @id @default(autoincrement())
-  typeName                 String                     @unique
-  User_Medication_Schedule User_Medication_Schedule[]
+  id                  Int                   @id @default(autoincrement())
+  typeName            String                @unique
+  Medication_Schedule Medication_Schedule[]
 
   @@map("medication_timing_types")
 }
 
 // ユーザー服薬記録
-model User_Medication_Result {
+model Medication_Result {
   // 日時
   day                  DateTime             @db.Date
   time                 DateTime             @db.Time
   // 薬剤
-  User_Medication_Info User_Medication_Info @relation(fields: [medicationInfoId], references: [id])
+  Medication_Info_User Medication_Info_User @relation(fields: [medicationInfoId], references: [id])
   medicationInfoId     Int
   // id, ユーザー紐づけ, 作成日時, 更新日時
   id                   Int                  @id @default(autoincrement())
@@ -485,5 +532,5 @@ model User_Medication_Result {
   createdAt            DateTime             @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt            DateTime             @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
-  @@map("user_medication_result")
+  @@map("medication_result")
 }

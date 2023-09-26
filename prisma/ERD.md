@@ -102,6 +102,7 @@ erDiagram
   "stomachache_scale_types" {
     Int id "🗝️"
     String typeName 
+    Int score 
     }
   
 
@@ -117,6 +118,7 @@ erDiagram
   "condition_scale_types" {
     Int id "🗝️"
     String typeName 
+    Int score 
     }
   
 
@@ -147,12 +149,29 @@ erDiagram
     }
   
 
-  "daily_report_abdominal" {
-    Int result 
+  "daily_report_anorectal_lesions" {
+    Int fistula 
+    Int others 
     Int id "🗝️"
     Int dailyReportId 
     DateTime createdAt 
     DateTime updatedAt 
+    }
+  
+
+  "daily_report_abdominal" {
+    Int abdominal_Scale_TypesId 
+    Int id "🗝️"
+    Int dailyReportId 
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "abdominal_scale_types" {
+    Int id "🗝️"
+    String typeName 
+    Int score 
     }
   
 
@@ -232,10 +251,9 @@ erDiagram
     }
   
 
-  "user_medication_info" {
-    String name 
-    Float count 
-    Float dosage 
+  "medication_info_user" {
+    Int medicationId 
+    Float count "❓"
     Int id "🗝️"
     Int userId 
     DateTime createdAt 
@@ -243,7 +261,17 @@ erDiagram
     }
   
 
-  "user_medication_schedule" {
+  "medication_info_master" {
+    String name 
+    String yjCode 
+    String specification 
+    Int id "🗝️"
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "medication_schedule" {
     Int timing 
     Int medicationInfoId 
     Int id "🗝️"
@@ -259,7 +287,7 @@ erDiagram
     }
   
 
-  "user_medication_result" {
+  "medication_result" {
     DateTime day 
     DateTime time 
     Int medicationInfoId 
@@ -275,9 +303,9 @@ erDiagram
     "users" o{--}o "user_setting" : "User_Setting"
     "users" o{--}o "daily_report" : "Daily_Report"
     "users" o{--}o "clinic_report" : "Clinic_Report"
-    "users" o{--}o "user_medication_info" : "User_Medication_Info"
-    "users" o{--}o "user_medication_schedule" : "User_Medication_Schedule"
-    "users" o{--}o "user_medication_result" : "User_Medication_Result"
+    "users" o{--}o "medication_info_user" : "Medication_Info_User"
+    "users" o{--}o "medication_schedule" : "Medication_Schedule"
+    "users" o{--}o "medication_result" : "Medication_Result"
     "profiles" o|--|| "users" : "user"
     "user_medical_history" o|--|| "users" : "User"
     "user_setting" o|--|| "users" : "User"
@@ -291,6 +319,7 @@ erDiagram
     "daily_report" o{--}o "daily_report_arthritis" : "Daily_report_Arthritis"
     "daily_report" o{--}o "daily_report_skin_lesions" : "Daily_report_SkinLesions"
     "daily_report" o{--}o "daily_report_ocular_lesions" : "Daily_report_OcularLesitions"
+    "daily_report" o{--}o "daily_report_anorectal_lesions" : "Daily_report_Anorectal_Lesitions"
     "daily_report" o{--}o "daily_report_abdominal" : "Daily_report_Abdominal"
     "daily_report" o|--|| "users" : "User"
     "daily_report_temp" o|--|| "daily_report" : "Daily_Report"
@@ -304,7 +333,10 @@ erDiagram
     "daily_report_arthritis" o|--|| "daily_report" : "Daily_Report"
     "daily_report_skin_lesions" o|--|| "daily_report" : "Daily_Report"
     "daily_report_ocular_lesions" o|--|| "daily_report" : "Daily_Report"
+    "daily_report_anorectal_lesions" o|--|| "daily_report" : "Daily_Report"
+    "daily_report_abdominal" o|--|| "abdominal_scale_types" : "Abdominal_Scale_Types"
     "daily_report_abdominal" o|--|| "daily_report" : "Daily_Report"
+    "abdominal_scale_types" o{--}o "daily_report_abdominal" : "Daily_report_Abdominal"
     "clinic_report" o{--}o "checkup" : "Checkup"
     "clinic_report" o{--}o "clinic_note" : "Clinic_Note"
     "clinic_report" o|--|| "users" : "User"
@@ -320,13 +352,15 @@ erDiagram
     "checkup_ct" o|--|| "checkup" : "Checkup"
     "checkup_custom" o|--|| "checkup" : "Checkup"
     "clinic_note" o|--|| "clinic_report" : "Clinic_Report"
-    "user_medication_info" o|--|| "users" : "User"
-    "user_medication_info" o{--}o "user_medication_schedule" : "User_Medication_Schedule"
-    "user_medication_info" o{--}o "user_medication_result" : "User_Medication_Result"
-    "user_medication_schedule" o|--|| "medication_timing_types" : "Medication_Timing_Types"
-    "user_medication_schedule" o|--|| "user_medication_info" : "User_Medication_Info"
-    "user_medication_schedule" o|--|| "users" : "User"
-    "medication_timing_types" o{--}o "user_medication_schedule" : "User_Medication_Schedule"
-    "user_medication_result" o|--|| "user_medication_info" : "User_Medication_Info"
-    "user_medication_result" o|--|| "users" : "User"
+    "medication_info_user" o|--|| "medication_info_master" : "Medication_Info_Master"
+    "medication_info_user" o|--|| "users" : "User"
+    "medication_info_user" o{--}o "medication_schedule" : "Medication_Schedule"
+    "medication_info_user" o{--}o "medication_result" : "Medication_Result"
+    "medication_info_master" o{--}o "medication_info_user" : "Medication_Info_User"
+    "medication_schedule" o|--|| "medication_timing_types" : "Medication_Timing_Types"
+    "medication_schedule" o|--|| "medication_info_user" : "Medication_Info_User"
+    "medication_schedule" o|--|| "users" : "User"
+    "medication_timing_types" o{--}o "medication_schedule" : "Medication_Schedule"
+    "medication_result" o|--|| "medication_info_user" : "Medication_Info_User"
+    "medication_result" o|--|| "users" : "User"
 ```
