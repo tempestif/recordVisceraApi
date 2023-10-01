@@ -1,5 +1,5 @@
-import { verifyMailadress } from "@/controllers/verifyController";
-import { editProfile, readProfile, readUser, sendMailTest, changePassowrd } from "@/controllers/userController";
+import { verifyMailadress } from "@/controllers/users/verifyController";
+import { readUser, sendMailTest, changePassowrd } from "@/controllers/users/userController";
 import express from "express";
 import { auth } from "@/services/authService";
 import type { Request, Response, NextFunction } from "express"
@@ -13,12 +13,6 @@ router.post("/change-password", auth, changePassowrd)
 
 /** メールアドレスをid, tokenによって認証 */
 router.get("/:id/verify/:token", verifyMailadress)
-
-
-/** プロフィール取得 */
-router.get("/profiles", auth, readProfile)
-/** プロフィール編集 */
-router.post("/profiles", auth, editProfile)
 
 // TODO: 本番前に消す
 // メール送信テスト

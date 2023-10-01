@@ -1,4 +1,4 @@
-import { countBowelMovementsPerDay, deleteBowelMovement, editBowelMovement, readBowelMovements, registBowelMovement } from "@/controllers/bowelMovementController";
+import { countBowelMovementsPerDay, deleteBowelMovement, editBowelMovement, readBowelMovements, registBowelMovement } from "@/controllers/users/bowelMovementController";
 import { auth } from "@/services/authService";
 import express from "express";
 const router = express.Router();

@@ -6,9 +6,18 @@ import logger from "morgan";
 
 import { router as indexRouter } from "@/routes/index";
 import { router as usersRouter } from "@/routes/users/index";
-import { router as tempsRouter } from "@/routes/users/temps";
-import { router as bowelMovementRouter } from "@/routes/users/bowelMovement";
-import { router as weightsRouter } from "@/routes/users/weights";
+import { router as bowelMovementsRouter } from "@/routes/users/bowelMovements";
+import { router as resetPasswordsRouter } from "@/routes/resetPasswords/index";
+import { router as dailyReportsRouter } from "@/routes/users/dailyReports";
+import { router as medicalHistoriesRouter } from "@/routes/users/medicalHistories";
+import { router as settingsRouter } from "@/routes/users/settings";
+import { router as profilesRouter } from "@/routes/users/profiles";
+import { router as medicationsListsRouter } from "@/routes/users/medications/lists";
+import { router as medicationsSchedulesRouter } from "@/routes/users/medications/schedules";
+import { router as medicationslogsRouter } from "@/routes/users/medications/logs";
+import { router as clinicsRouter } from "@/routes/users/clinics/index";
+import { router as clinicsCheckupsRouter } from "@/routes/users/clinics/checkups";
+import { router as clinicsNotesRouter } from "@/routes/users/clinics/notes";
 
 const app = express();
 
@@ -32,9 +41,18 @@ app.use(express.static("public"));
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
-app.use("/users/temps", tempsRouter);
-app.use("/users/bowel-movements", bowelMovementRouter);
-app.use("/users/weights", weightsRouter);
+app.use("/users/bowel-movements", bowelMovementsRouter);
+app.use("/users/daily-reports", dailyReportsRouter);
+app.use("/users/medical-histories", medicalHistoriesRouter);
+app.use("/users/settings", settingsRouter);
+app.use("/users/profiles", profilesRouter);
+app.use("/reset-passwords", resetPasswordsRouter);
+app.use("/users/medications/lists", medicationsListsRouter);
+app.use("/users/medications/schedules", medicationsSchedulesRouter);
+app.use("/users/medications/logs", medicationslogsRouter);
+app.use("/users/clinics", clinicsRouter);
+app.use("/users/clinics/checkups", clinicsCheckupsRouter);
+app.use("/users/clinics/notes", clinicsNotesRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
