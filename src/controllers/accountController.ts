@@ -57,7 +57,7 @@ export const registUser = async (req: Request, res: Response, next: NextFunction
         }
 
         // 認証トークン作成
-        const authCode = randomBytes(32).toString("hex")
+        const verifyEmailHash = randomBytes(32).toString("hex")
 
         // ユーザー作成
         const newUser = await customizedPrisma.user.create({
@@ -65,7 +65,7 @@ export const registUser = async (req: Request, res: Response, next: NextFunction
                 email,
                 password,
                 name,
-                authCode,
+                verifyEmailHash,
             }
         })
         // プロフィール作成
@@ -76,8 +76,9 @@ export const registUser = async (req: Request, res: Response, next: NextFunction
         })
 
         // メール送信
-        const verifyUrl = `${process.env.BASE_URL}/users/${newUser.id}/verify/${newUser.authCode}`
-        await sendVerifyMail(email, verifyUrl)
+        // TODO: ここはフロント側のページのURLを送信するべき。フロントを実装したら修正する。
+        const verifyUrl = `${process.env.BASE_URL}/users/${newUser.id}/verify/${newUser.verifyEmailHash}`
+        await sendMailForEmailVerify(email, verifyUrl)
 
         // レスポンスを返却
         const HttpStatus = 201
@@ -153,7 +154,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             let token
 
             // tokenが無かったら新たに発行してDBに記録
-            if (!user.authCode) {
+            if (!user.verifyEmailHash) {
                 const newToken = randomBytes(32).toString("hex");
 
                 // DBに記録
@@ -162,19 +163,19 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
                         id: user.id,
                     },
                     data: {
-                        authCode: newToken
+                        verifyEmailHash: newToken
                     }
                 })
 
                 // tokenを新たに生成したものに。
                 token = newToken
             } else {
-                token = user.authCode
+                token = user.verifyEmailHash
             }
 
             // メール送信
             const verifyUrl = `${process.env.BASE_URL}/users/${userId}/verify/${token}`
-            await sendVerifyMail(email, verifyUrl)
+            await sendMailForEmailVerify(email, verifyUrl)
 
             // レスポンスを返却
             const HttpStatus = 201
@@ -227,11 +228,11 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 }
 
 /**
- * 認証確認用のメールを送信する。
+ * email認証確認用のメールを送信する。
  * @param email 送信先メールアドレス
  * @param url 認証用URL
  */
-const sendVerifyMail = async (email: string, url: string) => {
+const sendMailForEmailVerify = async (email: string, url: string) => {
     // 件名
     const mailSubject = TITLE_VALID_MAIL.message
     // 本文

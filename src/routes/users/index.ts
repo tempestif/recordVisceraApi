@@ -1,4 +1,3 @@
-import { verifyMailadress } from "@/controllers/users/verifyController";
 import { readUser, sendMailTest, changePassowrd } from "@/controllers/users/userController";
 import express from "express";
 import { auth } from "@/services/authService";
@@ -10,9 +9,6 @@ const router = express.Router();
 router.get("/", auth, readUser)
 /** ユーザーパスワード変更 */
 router.post("/change-password", auth, changePassowrd)
-
-/** メールアドレスをid, tokenによって認証 */
-router.get("/:id/verify/:token", verifyMailadress)
 
 // TODO: 本番前に消す
 // メール送信テスト
