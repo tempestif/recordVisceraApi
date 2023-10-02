@@ -26,8 +26,10 @@ model User {
   name                 String
   // パスワード
   password             String
-  // 認証トークン
-  authCode             String
+  // Email認証トークン
+  verifyEmailHash      String?
+  // パスワード再設定認証トークン
+  passResetHash        String?
   // メールアドレス認証有無
   verified             Int                    @default(0)
   // 紐づけ

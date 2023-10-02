@@ -5,7 +5,8 @@ erDiagram
     String email 
     String name 
     String password 
-    String authCode 
+    String verifyEmailHash "❓"
+    String passResetHash "❓"
     Int verified 
     Int id "🗝️"
     DateTime createdAt 
