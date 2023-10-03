@@ -4,6 +4,7 @@ import { basicHttpResponce } from "../utilResponseService"
 import { Response } from "express"
 import { DAILY_REPORT_NOT_FOUND } from "@/consts/responseConsts"
 import { DbRecordNotFoundError } from "."
+import { DynamicModelExtensionThis, Args_2 } from "@prisma/client/runtime/library"
 
 /**
  * DBより、今日の体調の存在確認、取得を行う。
@@ -22,4 +23,132 @@ export const findUniqueDailyReportAbsoluteExist = async (where: Prisma.Daily_Rep
     }
 
     return dailyReportData
+}
+
+export type RecordDataType = {
+    temp?: number
+    weight?: number
+    stomachach?: number
+    condition?: number
+    arthritis?: number
+    skinLesitions?: number
+    ocularLesitions?: number
+    anirectalLesitions?: number
+    anirectalOtherLesitions?: number
+    abdominal?: number
+}
+
+/**
+ * daily_reportテーブルとそれに紐づく記録テーブルを作成する。
+ * 記録が入力されていないテーブルは作成しない。
+ * @param userId ユーザーID
+ * @param date 作成する記録のdate
+ * @param recordData 記録内容
+ */
+export const createDailyReport = async (userId: number, date: Date, recordData: RecordDataType) => {
+    // 今日の体調テーブルを作成
+    const dailyReport = await customizedPrisma.daily_Report.create({
+        data: {
+            userId,
+            day: date,
+            time: date,
+        }
+    })
+    const dailyReportId = dailyReport.id
+
+    // 紐づく記録テーブルを追加
+    // 体温
+    if (recordData.temp) {
+        await createDailyReportRecordsTable(customizedPrisma.daily_report_Temp, dailyReportId, { result: recordData.temp });
+    }
+    // 体重
+    if (recordData.weight) {
+        await createDailyReportRecordsTable(customizedPrisma.daily_report_Weight, dailyReportId, { result: recordData.weight });
+    }
+    // 腹痛
+    if (recordData.stomachach) {
+        await createDailyReportRecordsTable(customizedPrisma.daily_report_Stomachache, dailyReportId, { result: recordData.stomachach });
+    }
+    // 体調
+    if (recordData.condition) {
+        await createDailyReportRecordsTable(customizedPrisma.daily_report_Condition, dailyReportId, { conditionScaleId: recordData.condition });
+    }
+    // 関節痛の有無
+    if (recordData.arthritis) {
+        await createDailyReportRecordsTable(customizedPrisma.daily_report_Arthritis, dailyReportId, { result: recordData.arthritis });
+    }
+    // 皮膚病変の有無
+    if (recordData.skinLesitions) {
+        await createDailyReportRecordsTable(customizedPrisma.daily_report_Skin_Lesions, dailyReportId, { result: recordData.skinLesitions });
+    }
+    // 眼病変の有無
+    if (recordData.ocularLesitions) {
+        await createDailyReportRecordsTable(customizedPrisma.daily_report_Ocular_Lesitions, dailyReportId, { result: recordData.ocularLesitions });
+    }
+    // 肛門病変の有無
+    if (recordData.anirectalLesitions || recordData.anirectalOtherLesitions) {
+        await createDailyReportRecordsTable(customizedPrisma.daily_report_Anorectal_Lesitions, dailyReportId, {
+            fistula: recordData.anirectalLesitions,
+            others: recordData.anirectalOtherLesitions
+        });
+    }
+    // 腹部腫瘤の有無
+    if (recordData.abdominal) {
+        await createDailyReportRecordsTable(customizedPrisma.daily_report_Abdominal, dailyReportId, { abdominal_Scale_TypesId: recordData.abdominal });
+    }
+
+    // NOTE: ここでエラーが出たら取得できなかったという旨のものが投げられる。それでよい？
+    // 返却用にもう一度daily_reportを取得。パフォーマンス悪すぎるなら他のやり方を考える
+    const returnDailyReport = await customizedPrisma.daily_Report.findUniqueOrThrow({
+        where: {
+            id: dailyReportId
+        },
+        include: {
+            Daily_report_Temp: true,
+            Daily_report_Weight: true,
+            Daily_report_Stomachache: true,
+            Daily_report_Condition: true,
+            Daily_report_Arthritis: true,
+            Daily_report_Skin_Lesions: true,
+            Daily_report_Ocular_Lesitions: true,
+            Daily_report_Anorectal_Lesitions: true,
+            Daily_report_Abdominal: true
+        }
+    })
+
+    return returnDailyReport
+}
+
+// レコード作成を行うテーブル名の文字列リテラル
+type AcceptedModelNames =
+    | "Daily_report_Temp"
+    | "Daily_report_Weight"
+    | "Daily_report_Stomachache"
+    | "Daily_report_Condition"
+    | "Daily_report_Arthritis"
+    | "Daily_report_Skin_Lesions"
+    | "Daily_report_Ocular_Lesitions"
+    | "Daily_report_Anorectal_Lesitions"
+    | "Daily_report_Abdominal";
+type PrismaArgType = {
+    result: {};
+    model: {};
+    query: {};
+    client: {};
+}
+type PrismaTypeMap = Prisma.TypeMap<Args_2 & PrismaArgType>
+
+/**
+ * テーブルを作成、dataの内容をレコードに記録する
+ * @param prismaTable prismaClientのテーブル
+ * @param dailyReportId 今日の体調のid
+ * @param data レコードに記録する内容
+ */
+export const createDailyReportRecordsTable = async (prismaTable: DynamicModelExtensionThis<PrismaTypeMap, AcceptedModelNames, PrismaArgType>, dailyReportId: number, data: any) => {
+    await prismaTable.create({
+        data: {
+            dailyReportId,
+            ...data
+        }
+    });
 }
