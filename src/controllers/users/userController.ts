@@ -9,6 +9,9 @@ import { findUniqueUserAbsoluteExist } from "@/services/prismaService"
 import { CustomLogger, LoggingObjType, maskConfInfoInReqBody } from "@/services/LoggerService"
 import { PROCESS_FAILURE, PROCESS_SUCCESS } from "@/consts/logConsts"
 import { ErrorHandleIncludeDbRecordNotFound } from "@/services/errorHandlingService"
+import { BRISTOL_STOOL_SCALES } from "@/consts/db/bristolStoolScales"
+import { PrismaPromise_2 } from "@prisma/client/runtime/library"
+import { Prisma } from "@prisma/client"
 const logger = new CustomLogger()
 
 /**
@@ -170,21 +173,126 @@ export const changePassowrd = async (req: Request, res: Response, next: NextFunc
  * @returns
  */
 export const readCdai = async (req: Request, res: Response, next: NextFunction) => {
-    const { userId, bristolStoolScale, blood, drainage, note, date } = req.body
+    const { userId } = req.body
 
     // logのために関数名を取得
     const currentFuncName = readCdai.name
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
-        // userIdから排便記録を取得
-        const whereByUserId = { id: userId }
-        const bowelMovementData = await findUniqueBowelMovementAbsoluteExist(whereByUserId, res)
 
-        // 水様便、泥状便の数をカウント
-        
+        // 1. userIdで直近1週間分のbowelMovementsを取得
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+        const bowelMovementData = await customizedPrisma.bowel_Movement.findMany({//TODO 変数名変える
+            where: {
+                userId,
+                day: {
+                    gte: oneWeekAgo
+                },
+            }
+        })
 
-        
+        // 2. 水様便、泥状便の数をカウント
+        const filteredBowelMovementData = bowelMovementData.filter((obj: Prisma.$Bowel_MovementPayload['scalars']) => { obj.bristolStoolScale >= BRISTOL_STOOL_SCALES.mudLike })
+        const mudOrWaterLikePooCount = filteredBowelMovementData.length
+
+        // 3. userIdからuser_medical_historyを取得
+        const medicalHistoryData = await customizedPrisma.user_Medical_History.findMany({//TODO 変数名変える
+            where: {
+                userId,
+            }
+        })
+
+        // 4. userIdから直近1週間分のdaily_report_stomachacheを取得
+        const dailyReport = await customizedPrisma.daily_Report.findMany({//TODO 変数名変える
+            where: {
+                userId,
+                day: {
+                    gte: oneWeekAgo
+                },
+            },
+            include: {
+                Daily_report_Temp: true,
+                Daily_report_Weight: true,
+                Daily_report_Stomachache: true,
+                Daily_report_Condition: true,
+                Daily_report_Arthritis: true,
+                Daily_report_SkinLesions: true,
+                Daily_report_OcularLesitions: true,
+                Daily_report_Anorectal_Lesitions: true,
+                Daily_report_Abdominal: true,
+            }
+        })
+
+        // 5. 腹痛のスコアを合計
+        let stomachachesScore = 0
+        let conditionsScore = 0
+        dailyReport.map((obj) => {
+            return {
+                stomachacheScaleId: obj.Daily_report_Stomachache?.result,
+                conditionScaleId: obj.Daily_report_Condition?.conditionScaleId
+            }
+        }).forEach(async (obj) => {
+            const stomachacheScaleTypes = await customizedPrisma.stomachache_Scale_Types.findUnique({
+                where: {
+                    id: obj.stomachacheScaleId
+                }
+            })
+            stomachachesScore += stomachacheScaleTypes?.score ?? 0
+            
+            const conditionScaleTypes = await customizedPrisma.condition_Scale_Types.findUnique({
+                where: {
+                    id: obj.conditionScaleId
+                }
+            })
+            conditionsScore += conditionScaleTypes?.score ?? 0
+
+        })
+
+
+
+
+        // 6. userIdから直近1週間分のdaily_report_conditionを取得
+
+
+
+        // 7. 体調のスコアを合計
+        // 8. userIdでdaily_report_arthritis, daily_report_skin_lesions, daily_report_ocular_lesions, daily_report_anorectal_lesionsのそれぞれの項目の有無を取得
+        // 9. userIdで直近3回分のmedication_resultを取得
+        // 10. ロペラミドorオピアトの仕様有無を取得
+        // 11. userIdで最新のcheckup_bloodのhematocritを取得
+        // 12. userIdでprofilesのsex, heightを取得
+        // 13. ヘマトクリット値のスコアを算出
+        //     - 男性：47 - ヘマトクリット値
+        //     - 女性：42 - ヘマトクリット値
+        // 14. userIdでdaily_report_weightのresultを取得
+        // 15. 標準体重を算出
+        //     - 100 × ( 1 - 体重/ (身長m)² ×22 )
+        // 16. CDAIを算出
+
+        //     詳細は[別タスク](https://www.notion.so/1f478f9636e647438cb13087689f7787?pvs=21)
+
+        // 17. CDAIによって重症度を算出
+
+        //     軽症: 150 - 220
+
+        //     中等症: 221-450
+
+        //     重症: 451-
+
+        // 18. レスポンス返却
+
+        //     HttpStatus
+        //     responseStatus
+        //     responseMsg
+
+        //     cdai
+
+        //     重症度のテキスト
+
+
+
         // dateをDate型に変換
         let dateForDb
         if (!date) {
