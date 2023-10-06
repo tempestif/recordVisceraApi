@@ -40,12 +40,13 @@ export type RecordDataType = {
 
 /**
  * daily_reportテーブルとそれに紐づく記録テーブルを作成する。
- * 記録が入力されていないテーブルは作成しない。
+ * 記録が入力されていないテーブルも作成する。
  * @param userId ユーザーID
  * @param date 作成する記録のdate
  * @param recordData 記録内容
  */
 export const createDailyReport = async (userId: number, date: Date, recordData: RecordDataType) => {
+    // TODO: try-catchを実装する。
     // 今日の体調テーブルを作成
     const dailyReport = await customizedPrisma.daily_Report.create({
         data: {
@@ -58,44 +59,26 @@ export const createDailyReport = async (userId: number, date: Date, recordData: 
 
     // 紐づく記録テーブルを追加
     // 体温
-    if (recordData.temp) {
-        await createDailyReportRecordsTable(customizedPrisma.daily_report_Temp, dailyReportId, { result: recordData.temp });
-    }
+    await createDailyReportRecordsTable(customizedPrisma.daily_report_Temp, dailyReportId, { result: recordData.temp });
     // 体重
-    if (recordData.weight) {
-        await createDailyReportRecordsTable(customizedPrisma.daily_report_Weight, dailyReportId, { result: recordData.weight });
-    }
+    await createDailyReportRecordsTable(customizedPrisma.daily_report_Weight, dailyReportId, { result: recordData.weight });
     // 腹痛
-    if (recordData.stomachach) {
-        await createDailyReportRecordsTable(customizedPrisma.daily_report_Stomachache, dailyReportId, { result: recordData.stomachach });
-    }
+    await createDailyReportRecordsTable(customizedPrisma.daily_report_Stomachache, dailyReportId, { result: recordData.stomachach });
     // 体調
-    if (recordData.condition) {
-        await createDailyReportRecordsTable(customizedPrisma.daily_report_Condition, dailyReportId, { conditionScaleId: recordData.condition });
-    }
+    await createDailyReportRecordsTable(customizedPrisma.daily_report_Condition, dailyReportId, { conditionScaleId: recordData.condition });
     // 関節痛の有無
-    if (recordData.arthritis) {
-        await createDailyReportRecordsTable(customizedPrisma.daily_report_Arthritis, dailyReportId, { result: recordData.arthritis });
-    }
+    await createDailyReportRecordsTable(customizedPrisma.daily_report_Arthritis, dailyReportId, { result: recordData.arthritis });
     // 皮膚病変の有無
-    if (recordData.skinLesitions) {
-        await createDailyReportRecordsTable(customizedPrisma.daily_report_Skin_Lesions, dailyReportId, { result: recordData.skinLesitions });
-    }
+    await createDailyReportRecordsTable(customizedPrisma.daily_report_Skin_Lesions, dailyReportId, { result: recordData.skinLesitions });
     // 眼病変の有無
-    if (recordData.ocularLesitions) {
-        await createDailyReportRecordsTable(customizedPrisma.daily_report_Ocular_Lesitions, dailyReportId, { result: recordData.ocularLesitions });
-    }
+    await createDailyReportRecordsTable(customizedPrisma.daily_report_Ocular_Lesitions, dailyReportId, { result: recordData.ocularLesitions });
     // 肛門病変の有無
-    if (recordData.anirectalLesitions || recordData.anirectalOtherLesitions) {
-        await createDailyReportRecordsTable(customizedPrisma.daily_report_Anorectal_Lesitions, dailyReportId, {
-            fistula: recordData.anirectalLesitions,
-            others: recordData.anirectalOtherLesitions
-        });
-    }
+    await createDailyReportRecordsTable(customizedPrisma.daily_report_Anorectal_Lesitions, dailyReportId, {
+        fistula: recordData.anirectalLesitions,
+        others: recordData.anirectalOtherLesitions
+    });
     // 腹部腫瘤の有無
-    if (recordData.abdominal) {
-        await createDailyReportRecordsTable(customizedPrisma.daily_report_Abdominal, dailyReportId, { abdominal_Scale_TypesId: recordData.abdominal });
-    }
+    await createDailyReportRecordsTable(customizedPrisma.daily_report_Abdominal, dailyReportId, { abdominal_Scale_TypesId: recordData.abdominal });
 
     // NOTE: ここでエラーが出たら取得できなかったという旨のものが投げられる。それでよい？
     // 返却用にもう一度daily_reportを取得。パフォーマンス悪すぎるなら他のやり方を考える
