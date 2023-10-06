@@ -3,6 +3,7 @@ import { customizedPrisma } from "@/services/prismaClients"
 import { sendMail } from "@/services/nodemailerService"
 import { compare } from "bcrypt"
 import { basicHttpResponce, basicHttpResponceIncludeData, internalServerErr } from "@/services/utilResponseService"
+import { findUniqueBowelMovementAbsoluteExist } from "@/services/prismaService/bowelMovements"
 import { COMPLETE_GET_PROFILE, COMPLETE_UPDATE_PASSWORD, WRONG_LOGIN_INFO } from "@/consts/responseConsts"
 import { findUniqueUserAbsoluteExist } from "@/services/prismaService"
 import { CustomLogger, LoggingObjType, maskConfInfoInReqBody } from "@/services/LoggerService"
@@ -143,6 +144,75 @@ export const changePassowrd = async (req: Request, res: Response, next: NextFunc
             updatedAt
         }
         basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, respondUser)
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
+        }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+    } catch (e) {
+        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
+    }
+}
+
+
+/**
+ * CDAI算出
+ * @param req userId, bristolStoolScale, blood, drainage, note, date
+ * @param res
+ * @param next
+ * @returns
+ */
+export const readCdai = async (req: Request, res: Response, next: NextFunction) => {
+    const { userId, bristolStoolScale, blood, drainage, note, date } = req.body
+
+    // logのために関数名を取得
+    const currentFuncName = readCdai.name
+    // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
+
+    try {
+        // userIdから排便記録を取得
+        const whereByUserId = { id: userId }
+        const bowelMovementData = await findUniqueBowelMovementAbsoluteExist(whereByUserId, res)
+
+        // 水様便、泥状便の数をカウント
+        
+
+        
+        // dateをDate型に変換
+        let dateForDb
+        if (!date) {
+            // dateが指定なしの場合、現在日時を入力
+            dateForDb = new Date()
+        } else {
+            // dateが指定されていた場合、指定のdate
+            dateForDb = new Date(date)
+        }
+
+        // 排便記録を追加
+        const bowelMovementDataeeee = await customizedPrisma.bowel_Movement.create({
+            data: {
+                userId,
+                day: dateForDb,
+                time: dateForDb,
+                blood,
+                drainage,
+                note,
+                bristolStoolScale
+            }
+        })
+
+        // レスポンスを返却
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = RECORD_BOWEL_MOVEMENT.message
+        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, bowelMovementData)
 
         // ログを出力
         const logBody: LoggingObjType = {
