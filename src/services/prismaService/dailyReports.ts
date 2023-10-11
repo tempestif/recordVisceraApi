@@ -1,10 +1,9 @@
 import { Prisma } from "@prisma/client"
 import { customizedPrisma } from "../prismaClients"
-import { basicHttpResponce } from "../utilResponseService"
 import { Response } from "express"
 import { DAILY_REPORT_NOT_FOUND } from "@/consts/responseConsts"
-import { DbRecordNotFoundError } from "."
-import { DynamicModelExtensionThis, Args_2 } from "@prisma/client/runtime/library"
+import { DbRecordNotFoundError } from "@/services/prismaService/index"
+import { DynamicModelExtensionThis, Args_2, DefaultArgs } from "@prisma/client/runtime/library"
 
 /**
  * DBより、今日の体調の存在確認、取得を行う。
@@ -121,23 +120,8 @@ export const createDailyReport = async (userId: number, date: Date, recordData: 
 }
 
 // レコード作成を行うテーブル名の文字列リテラル
-type AcceptedModelNames =
-    | "Daily_report_Temp"
-    | "Daily_report_Weight"
-    | "Daily_report_Stomachache"
-    | "Daily_report_Condition"
-    | "Daily_report_Arthritis"
-    | "Daily_report_Skin_Lesions"
-    | "Daily_report_Ocular_Lesitions"
-    | "Daily_report_Anorectal_Lesitions"
-    | "Daily_report_Abdominal";
-type PrismaArgType = {
-    result: {};
-    model: {};
-    query: {};
-    client: {};
-}
-type PrismaTypeMap = Prisma.TypeMap<Args_2 & PrismaArgType>
+type AcceptedModelNames = keyof Prisma.Daily_ReportInclude
+type PrismaTypeMap = Prisma.TypeMap<Args_2 & DefaultArgs>
 
 /**
  * テーブルを作成、dataの内容をレコードに記録する
@@ -145,7 +129,7 @@ type PrismaTypeMap = Prisma.TypeMap<Args_2 & PrismaArgType>
  * @param dailyReportId 今日の体調のid
  * @param data レコードに記録する内容
  */
-const createDailyReportRecordsTable = async (prismaTable: DynamicModelExtensionThis<PrismaTypeMap, AcceptedModelNames, PrismaArgType>, dailyReportId: number, data: any) => {
+const createDailyReportRecordsTable = async (prismaTable: DynamicModelExtensionThis<PrismaTypeMap, AcceptedModelNames, DefaultArgs>, dailyReportId: number, data: any) => {
     await prismaTable.create({
         data: {
             dailyReportId,
@@ -164,17 +148,15 @@ const updateDailyReport = async (dailyReportId: number, date: string, recordData
         include: DAYLY_REPORT_ALL_INCLUDE
     })
 
-    type TableType = keyof Prisma.Daily_ReportInclude
-    type testde = 'daily_Report' | 'daily_report_Temp' | 'daily_report_Weight' | 'daily_report_Stomachache' | 'daily_report_Condition' | 'daily_report_Arthritis' | 'daily_report_Skin_Lesions' | 'daily_report_Ocular_Lesitions' | 'daily_report_Anorectal_Lesitions' | 'daily_report_Abdominal'
     // for...inに型アノテーションは含められないらしい。(https://github.com/microsoft/TypeScript/issues/3500)
     for (const table in DAYLY_REPORT_ALL_INCLUDE) {
         // テーブルがある && 更新内容に含まれているの場合、テーブルを作成
-        const t = table as TableType
-        type type = Prisma.TypeMap
+        const t = table as AcceptedModelNames
         if (dailyReport[t] === null && data[t]) {
             // テーブル名はキャメルケース、prismaclientのプロパティはパスカルケース。
+            type hoge = Args_2["model"]
             // キャメルケースからパスカルケースへ変換
-            const prop = t[0].toLowerCase() + t.slice(1) as testde
+            const prop = t[0].toLowerCase() + t.slice(1) as DefaultArgs["model"]
             await customizedPrisma[prop].create({
 
             })
