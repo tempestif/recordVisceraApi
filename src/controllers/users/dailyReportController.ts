@@ -1,10 +1,10 @@
 import { PROCESS_FAILURE, PROCESS_SUCCESS } from "@/consts/logConsts";
-import { DAILY_REPORT_ACCESS_FORBIDDEN, EDIT_DAILY_REPORT, READ_DAILY_REPORT, RECORD_DAILY_REPORT } from "@/consts/responseConsts";
+import { DAILY_REPORT_ACCESS_FORBIDDEN, DELETE_DAILY_REPORT, EDIT_DAILY_REPORT, READ_DAILY_REPORT, RECORD_DAILY_REPORT } from "@/consts/responseConsts";
 import { CustomLogger, LoggingObjType, maskConfInfoInReqBody } from "@/services/LoggerService";
 import { createFilterForPrisma, createSortsForPrisma, filteringFields, FilterOptionsType } from "@/services/dataTransferService";
 import { ErrorHandleIncludeDbRecordNotFound } from "@/services/errorHandlingService";
 import { customizedPrisma } from "@/services/prismaClients";
-import { createDailyReport, findUniqueDailyReportAbsoluteExist, findUniqueUserAbsoluteExist } from "@/services/prismaService";
+import { DAYLY_REPORT_ALL_INCLUDE, createDailyReport, findUniqueDailyReportAbsoluteExist, findUniqueUserAbsoluteExist } from "@/services/prismaService";
 import { basicHttpResponce, basicHttpResponceIncludeData } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
 import { Prisma } from "@prisma/client"
@@ -187,7 +187,8 @@ export const readDailyReport = async (req: Request, res: Response, next: NextFun
             },
             orderBy: sorts,
             skip: offset ? Number(offset) : DAILY_REPORT_DEFAULT_DATA_INFO.offset,
-            take: limit ? Number(limit) : DAILY_REPORT_DEFAULT_DATA_INFO.limit
+            take: limit ? Number(limit) : DAILY_REPORT_DEFAULT_DATA_INFO.limit,
+            include: DAYLY_REPORT_ALL_INCLUDE
         })
 
         // NOTE: ひとまずもう一度全検索でallCountを取る。もっといい方法を考える。
@@ -371,6 +372,7 @@ export const editDailyReport = async (req: Request, res: Response, next: NextFun
     try {
         // idから今日の体調を取得
         const whereByDailyReportId = { id }
+        console.log(whereByDailyReportId)
         const dailyReport = await customizedPrisma.daily_Report.findUniqueOrThrow({ where: whereByDailyReportId })
         // 指定した今日の体調がユーザー本人のものか確認
         const isSelfUser = (dailyReport.userId === userId)
@@ -439,84 +441,90 @@ export const editDailyReport = async (req: Request, res: Response, next: NextFun
     }
 }
 
-const createUpdateData = (date: string, temp: string, weight: string, stomachach: string, condition: string, arthritis: string, skinLesitions: string, ocularLesitions: string, anirectalLesitions: string, anirectalOtherLesitions: string, abdominal: string) => {
-    const data: Prisma.Daily_ReportUpdateInput = {}
-    if (date) {
-        data.day = new Date(date)
-        data.time = new Date(date)
-    }
-    if (temp) {
-        data.Daily_report_Temp = {
-            update: {
-                result: Number(temp)
-            }
-        }
-    }
-    if (weight) {
-        data.Daily_report_Weight = {
-            update: {
-                result: Number(weight)
-            }
-        }
-    }
-    if (stomachach) {
-        data.Daily_report_Stomachache = {
-            update: {
-                stomachache_Scale_TypesId: Number(stomachach)
-            }
-        }
-    }
-    if (condition) {
-        data.Daily_report_Condition = {
-            update: {
-                condition_Scale_TypesId: Number(condition)
-            }
-        }
-    }
-    if (arthritis) {
-        data.Daily_report_Arthritis = {
-            update: {
-                result: Number(arthritis)
-            }
-        }
-    }
-    if (skinLesitions) {
-        data.Daily_report_Skin_Lesions = {
-            update: {
-                result: Number(skinLesitions)
-            }
-        }
-    }
-    if (ocularLesitions) {
-        data.Daily_report_Ocular_Lesitions = {
-            update: {
-                result: Number(ocularLesitions)
-            }
-        }
-    }
-    if (anirectalLesitions) {
-        data.Daily_report_Anorectal_Lesitions = {
-            update: {
-                fistula: Number(anirectalLesitions)
-            }
-        }
-    }
-    if (anirectalOtherLesitions) {
-        data.Daily_report_Anorectal_Lesitions = {
-            update: {
-                others: Number(anirectalOtherLesitions)
-            }
-        }
-    }
-    if (abdominal) {
-        data.Daily_report_Abdominal = {
-            update: {
-                abdominal_Scale_TypesId: Number(abdominal)
-            }
-        }
-    }
 
-    return data
+/**
+ * 今日の体調を削除
+ * jwtのuserIdと指定した今日の体調のuserIdが合致するときのみ削除可能
+ * 今日の体調は、daily_reportのidをパラメータに挿入し指定する
+ * @param req
+ * @param res
+ * @param next
+ */
+export const deleteDailyReport = async (req: Request, res: Response, next: NextFunction) => {
+    // daily_reportのid
+    const id = Number(req.params.id)
+    const { userId } = req.body
+
+    // logのために関数名を取得
+    const currentFuncName = deleteDailyReport.name
+
+    // TODO: バリデーション
+
+    try {
+        // idから今日の体調を削除
+        const whereByDailyReportId = { id }
+        const dailyReport = await customizedPrisma.daily_Report.findUniqueOrThrow({
+            where: whereByDailyReportId
+        })
+
+        // 指定した今日の体調が本人のものか確認
+        const isSelfUser = (dailyReport.userId === userId)
+        // ユーザー本人のものではない場合、403を返す
+        if (!isSelfUser) {
+            const HttpStatus = 403
+            const responseStatus = false
+            const responseMsg = DAILY_REPORT_ACCESS_FORBIDDEN.message
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+
+            // ログを出力
+            const logBody: LoggingObjType = {
+                userId,
+                ipAddress: req.ip,
+                method: req.method,
+                path: req.originalUrl,
+                body: maskConfInfoInReqBody(req).body,
+                status: String(HttpStatus),
+                responseMsg
+            }
+            logger.error(PROCESS_FAILURE.message(currentFuncName), logBody)
+
+            return
+        }
+
+        // 今日の体調を削除
+        const newDailyReport = await customizedPrisma.daily_Report.delete({
+            where: whereByDailyReportId,
+            include: {
+                Daily_report_Temp: true,
+                Daily_report_Weight: true,
+                Daily_report_Stomachache: true,
+                Daily_report_Condition: true,
+                Daily_report_Arthritis: true,
+                Daily_report_Skin_Lesions: true,
+                Daily_report_Ocular_Lesitions: true,
+                Daily_report_Anorectal_Lesitions: true,
+                Daily_report_Abdominal: true
+            }
+        })
+
+        // レスポンスを返却
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = DELETE_DAILY_REPORT.message
+        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, newDailyReport)
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
+        }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+    } catch (e) {
+        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
+    }
 }
-
-export const deleteDailyReport = async (req: Request, res: Response, next: NextFunction) => { }
