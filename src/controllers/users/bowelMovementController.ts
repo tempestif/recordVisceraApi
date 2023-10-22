@@ -261,6 +261,8 @@ export const editBowelMovement = async (req: Request, res: Response, next: NextF
         }
 
         // 編集するdataを成型
+        // NOTE: Prisma.$Bowel_MovementPayload['scalars']; これ使えるかも
+        // TODO: どれが必須であるべきか要検討。blood,drainage, bristolStoolScaleも必須じゃないのでは？
         type BowelMovementData = {
             blood: number,
             drainage: number,
