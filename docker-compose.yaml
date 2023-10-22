@@ -18,6 +18,7 @@ services:
     volumes:
       - ./mysql/seed:/docker-entrypoint-initdb.d # 初回データ実行
       - ./mysql/db:/var/lib/mysql # データ永続化
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf
     environment:
       MYSQL_DATABASE: record-viscera-api
       MYSQL_ROOT_PASSWORD: password # パスワード設定
