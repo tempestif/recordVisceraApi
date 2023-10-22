@@ -59,26 +59,44 @@ export const createDailyReport = async (userId: number, date: Date, recordData: 
 
     // 紐づく記録テーブルを追加
     // 体温
-    await createDailyReportRecordsTable(customizedPrisma.daily_report_Temp, dailyReportId, { result: recordData.temp });
+    if (recordData.temp) {
+        await createDailyReportRecordsTable(customizedPrisma.daily_report_Temp, dailyReportId, { result: recordData.temp });
+    }
     // 体重
-    await createDailyReportRecordsTable(customizedPrisma.daily_report_Weight, dailyReportId, { result: recordData.weight });
+    if (recordData.weight) {
+        await createDailyReportRecordsTable(customizedPrisma.daily_report_Weight, dailyReportId, { result: recordData.weight });
+    }
     // 腹痛
-    await createDailyReportRecordsTable(customizedPrisma.daily_report_Stomachache, dailyReportId, { result: recordData.stomachach });
+    if (recordData.stomachach) {
+        await createDailyReportRecordsTable(customizedPrisma.daily_report_Stomachache, dailyReportId, { stomachache_Scale_TypesId: recordData.stomachach });
+    }
     // 体調
-    await createDailyReportRecordsTable(customizedPrisma.daily_report_Condition, dailyReportId, { conditionScaleId: recordData.condition });
+    if (recordData.condition) {
+        await createDailyReportRecordsTable(customizedPrisma.daily_report_Condition, dailyReportId, { condition_Scale_TypesId: recordData.condition });
+    }
     // 関節痛の有無
-    await createDailyReportRecordsTable(customizedPrisma.daily_report_Arthritis, dailyReportId, { result: recordData.arthritis });
+    if (recordData.arthritis) {
+        await createDailyReportRecordsTable(customizedPrisma.daily_report_Arthritis, dailyReportId, { result: recordData.arthritis });
+    }
     // 皮膚病変の有無
-    await createDailyReportRecordsTable(customizedPrisma.daily_report_Skin_Lesions, dailyReportId, { result: recordData.skinLesitions });
+    if (recordData.skinLesitions) {
+        await createDailyReportRecordsTable(customizedPrisma.daily_report_Skin_Lesions, dailyReportId, { result: recordData.skinLesitions });
+    }
     // 眼病変の有無
-    await createDailyReportRecordsTable(customizedPrisma.daily_report_Ocular_Lesitions, dailyReportId, { result: recordData.ocularLesitions });
+    if (recordData.ocularLesitions) {
+        await createDailyReportRecordsTable(customizedPrisma.daily_report_Ocular_Lesitions, dailyReportId, { result: recordData.ocularLesitions });
+    }
     // 肛門病変の有無
-    await createDailyReportRecordsTable(customizedPrisma.daily_report_Anorectal_Lesitions, dailyReportId, {
-        fistula: recordData.anirectalLesitions,
-        others: recordData.anirectalOtherLesitions
-    });
+    if (recordData.anirectalLesitions) {
+        await createDailyReportRecordsTable(customizedPrisma.daily_report_Anorectal_Lesitions, dailyReportId, {
+            fistula: recordData.anirectalLesitions,
+            others: recordData.anirectalOtherLesitions
+        });
+    }
     // 腹部腫瘤の有無
-    await createDailyReportRecordsTable(customizedPrisma.daily_report_Abdominal, dailyReportId, { abdominal_Scale_TypesId: recordData.abdominal });
+    if (recordData.abdominal) {
+        await createDailyReportRecordsTable(customizedPrisma.daily_report_Abdominal, dailyReportId, { abdominal_Scale_TypesId: recordData.abdominal });
+    }
 
     // NOTE: ここでエラーが出たら取得できなかったという旨のものが投げられる。それでよい？
     // 返却用にもう一度daily_reportを取得。パフォーマンス悪すぎるなら他のやり方を考える
@@ -127,7 +145,7 @@ type PrismaTypeMap = Prisma.TypeMap<Args_2 & PrismaArgType>
  * @param dailyReportId 今日の体調のid
  * @param data レコードに記録する内容
  */
-export const createDailyReportRecordsTable = async (prismaTable: DynamicModelExtensionThis<PrismaTypeMap, AcceptedModelNames, PrismaArgType>, dailyReportId: number, data: any) => {
+const createDailyReportRecordsTable = async (prismaTable: DynamicModelExtensionThis<PrismaTypeMap, AcceptedModelNames, PrismaArgType>, dailyReportId: number, data: any) => {
     await prismaTable.create({
         data: {
             dailyReportId,
@@ -135,3 +153,157 @@ export const createDailyReportRecordsTable = async (prismaTable: DynamicModelExt
         }
     });
 }
+
+const updateDailyReport = async (dailyReportId: number, date: string, recordData: RecordDataType) => {
+    const { include, data } = createUpdateData(date, recordData)
+    const whereByDailyReportId = { id: dailyReportId }
+
+    // テーブルの存在確認
+    const dailyReport = await customizedPrisma.daily_Report.findUniqueOrThrow({
+        where: whereByDailyReportId,
+        include: DAYLY_REPORT_ALL_INCLUDE
+    })
+
+    type TableType = keyof Prisma.Daily_ReportInclude
+    type testde = 'daily_Report' | 'daily_report_Temp' | 'daily_report_Weight' | 'daily_report_Stomachache' | 'daily_report_Condition' | 'daily_report_Arthritis' | 'daily_report_Skin_Lesions' | 'daily_report_Ocular_Lesitions' | 'daily_report_Anorectal_Lesitions' | 'daily_report_Abdominal'
+    // for...inに型アノテーションは含められないらしい。(https://github.com/microsoft/TypeScript/issues/3500)
+    for (const table in DAYLY_REPORT_ALL_INCLUDE) {
+        // テーブルがある && 更新内容に含まれているの場合、テーブルを作成
+        const t = table as TableType
+        type type = Prisma.TypeMap
+        if (dailyReport[t] === null && data[t]) {
+            // テーブル名はキャメルケース、prismaclientのプロパティはパスカルケース。
+            // キャメルケースからパスカルケースへ変換
+            const prop = t[0].toLowerCase() + t.slice(1) as testde
+            await customizedPrisma[prop].create({
+
+            })
+            await customizedPrisma.user_Medical_History
+        }
+    }
+
+    // 更新処理
+    const newDailyReport = await customizedPrisma.daily_Report.update({
+        where: whereByDailyReportId,
+        data,
+        include
+    })
+}
+
+/**
+ * updateに使うデータを成型
+ * @param date
+ * @param temp
+ * @param weight
+ * @param stomachach
+ * @param condition
+ * @param arthritis
+ * @param skinLesitions
+ * @param ocularLesitions
+ * @param anirectalLesitions
+ * @param anirectalOtherLesitions
+ * @param abdominal
+ * @returns
+ */
+const createUpdateData = (date: string, recordData: RecordDataType) => {
+    const data: Prisma.Daily_ReportUpdateInput = {}
+    const include: Prisma.Daily_ReportInclude = {}
+    if (date) {
+        data.day = new Date(date)
+        data.time = new Date(date)
+    }
+    if (recordData.temp) {
+        data.Daily_report_Temp = {
+            update: {
+                result: Number(recordData.temp)
+            }
+        }
+        include.Daily_report_Temp = true
+    }
+    if (recordData.weight) {
+        data.Daily_report_Weight = {
+            update: {
+                result: Number(recordData.weight)
+            }
+        }
+        include.Daily_report_Weight = true
+    }
+    if (recordData.stomachach) {
+        data.Daily_report_Stomachache = {
+            update: {
+                stomachache_Scale_TypesId: Number(recordData.stomachach)
+            }
+        }
+        include.Daily_report_Stomachache = true
+    }
+    if (recordData.condition) {
+        data.Daily_report_Condition = {
+            update: {
+                condition_Scale_TypesId: Number(recordData.condition)
+            }
+        }
+        include.Daily_report_Condition = true
+    }
+    if (recordData.arthritis) {
+        data.Daily_report_Arthritis = {
+            update: {
+                result: Number(recordData.arthritis)
+            }
+        }
+        include.Daily_report_Arthritis = true
+    }
+    if (recordData.skinLesitions) {
+        data.Daily_report_Skin_Lesions = {
+            update: {
+                result: Number(recordData.skinLesitions)
+            }
+        }
+        include.Daily_report_Skin_Lesions = true
+    }
+    if (recordData.ocularLesitions) {
+        data.Daily_report_Ocular_Lesitions = {
+            update: {
+                result: Number(recordData.ocularLesitions)
+            }
+        }
+        include.Daily_report_Ocular_Lesitions = true
+    }
+    if (recordData.anirectalLesitions) {
+        data.Daily_report_Anorectal_Lesitions = {
+            update: {
+                fistula: Number(recordData.anirectalLesitions)
+            }
+        }
+        include.Daily_report_Anorectal_Lesitions = true
+    }
+    if (recordData.anirectalOtherLesitions) {
+        data.Daily_report_Anorectal_Lesitions = {
+            update: {
+                others: Number(recordData.anirectalOtherLesitions)
+            }
+        }
+        include.Daily_report_Anorectal_Lesitions = true
+    }
+    if (recordData.abdominal) {
+        data.Daily_report_Abdominal = {
+            update: {
+                abdominal_Scale_TypesId: Number(recordData.abdominal)
+            }
+        }
+        include.Daily_report_Abdominal = true
+    }
+
+    return { data, include }
+}
+
+export const DAYLY_REPORT_ALL_INCLUDE: Prisma.Daily_ReportInclude = {
+    Daily_report_Temp: true,
+    Daily_report_Weight: true,
+    Daily_report_Stomachache: true,
+    Daily_report_Condition: true,
+    Daily_report_Arthritis: true,
+    Daily_report_Skin_Lesions: true,
+    Daily_report_Ocular_Lesitions: true,
+    Daily_report_Anorectal_Lesitions: true,
+    Daily_report_Abdominal: true,
+} as const

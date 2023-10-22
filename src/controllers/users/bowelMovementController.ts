@@ -357,7 +357,7 @@ export const deleteBowelMovement = async (req: Request, res: Response, next: Nex
                 status: String(HttpStatus),
                 responseMsg
             }
-            logger.error(PROCESS_FAILURE.message(deleteBowelMovement.name), logBody)
+            logger.error(PROCESS_FAILURE.message(currentFuncName), logBody)
 
             return
         }
