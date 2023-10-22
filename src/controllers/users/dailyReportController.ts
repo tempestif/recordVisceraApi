@@ -9,7 +9,6 @@ import { basicHttpResponce, basicHttpResponceIncludeData } from "@/services/util
 import type { Request, Response, NextFunction } from "express";
 import { Prisma } from "@prisma/client"
 import { DAILY_REPORT_DEFAULT_DATA_INFO } from "@/consts/db/dailyReport";
-
 const logger = new CustomLogger()
 
 /**
