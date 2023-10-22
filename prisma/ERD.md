@@ -2,302 +2,302 @@
 erDiagram
 
   "users" {
-    String email 
-    String name 
-    String password 
+    String email
+    String name
+    String password
     String verifyEmailHash "❓"
     String passResetHash "❓"
-    Int verified 
+    Int verified
     Int id "🗝️"
-    DateTime createdAt 
-    DateTime updatedAt 
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "profiles" {
     Int sex "❓"
     Float height "❓"
     DateTime birthday "❓"
     Int id "🗝️"
-    Int userId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int userId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "user_medical_history" {
-    Int ileostomy 
+    Int ileostomy
     Int id "🗝️"
-    Int userId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int userId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "user_setting" {
-    Int themeColor 
+    Int themeColor
     Int id "🗝️"
-    Int userId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int userId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "bowel_movements" {
-    DateTime day 
-    DateTime time 
-    Int bristolStoolScale 
-    Int blood 
-    Int drainage 
+    DateTime day
+    DateTime time
+    Int bristolStoolScale
+    Int blood
+    Int drainage
     String note "❓"
     Int id "🗝️"
-    Int userId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int userId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "bristol_stool_scales" {
     Int id "🗝️"
-    String typeName 
+    String typeName
     }
-  
+
 
   "daily_report" {
-    DateTime day 
-    DateTime time 
+    DateTime day
+    DateTime time
     Int id "🗝️"
-    Int userId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int userId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "daily_report_temp" {
     Float result "❓"
     Int id "🗝️"
-    Int dailyReportId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int dailyReportId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "daily_report_weight" {
     Float result "❓"
     Int id "🗝️"
-    Int dailyReportId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int dailyReportId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "daily_report_stomachache" {
-    Int stomachache_Scale_TypesId 
+    Int stomachache_Scale_TypesId
     Int id "🗝️"
-    Int dailyReportId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int dailyReportId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "stomachache_scale_types" {
     Int id "🗝️"
-    String typeName 
-    Int score 
+    String typeName
+    Int score
     }
-  
+
 
   "daily_report_condition" {
-    Int condition_Scale_TypesId 
+    Int condition_Scale_TypesId
     Int id "🗝️"
-    Int dailyReportId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int dailyReportId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "condition_scale_types" {
     Int id "🗝️"
-    String typeName 
-    Int score 
+    String typeName
+    Int score
     }
-  
+
 
   "daily_report_arthritis" {
     Int result "❓"
     Int id "🗝️"
-    Int dailyReportId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int dailyReportId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "daily_report_skin_lesions" {
     Int result "❓"
     Int id "🗝️"
-    Int dailyReportId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int dailyReportId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "daily_report_ocular_lesions" {
     Int result "❓"
     Int id "🗝️"
-    Int dailyReportId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int dailyReportId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "daily_report_anorectal_lesions" {
     Int fistula "❓"
     Int others "❓"
     Int id "🗝️"
-    Int dailyReportId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int dailyReportId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "daily_report_abdominal" {
-    Int abdominal_Scale_TypesId 
+    Int abdominal_Scale_TypesId
     Int id "🗝️"
-    Int dailyReportId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int dailyReportId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "abdominal_scale_types" {
     Int id "🗝️"
-    String typeName 
-    Int score 
+    String typeName
+    Int score
     }
-  
+
 
   "clinic_report" {
-    DateTime day 
-    DateTime time 
+    DateTime day
+    DateTime time
     Int id "🗝️"
-    Int userId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int userId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "checkup" {
     Int id "🗝️"
-    Int clinicReportId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int clinicReportId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "checkup_blood" {
     Int hematocrit "❓"
     Int crp "❓"
     Int id "🗝️"
-    Int checkupId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int checkupId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "checkup_blood_additional" {
-    String itemName 
+    String itemName
     String result "❓"
     String unit "❓"
     Int id "🗝️"
-    Int checkupBloodId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int checkupBloodId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "checkup_mri" {
-    String result 
+    String result
     Int id "🗝️"
-    Int checkupId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int checkupId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "checkup_ct" {
-    String result 
+    String result
     Int id "🗝️"
-    Int checkupId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int checkupId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "checkup_custom" {
-    String checkupName 
+    String checkupName
     String result "❓"
     Int id "🗝️"
-    Int checkupId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int checkupId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "clinic_note" {
-    String note 
+    String note
     Int id "🗝️"
-    Int clinicReportId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int clinicReportId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "medication_info_user" {
-    Int medicationId 
+    Int medicationId
     Float count "❓"
     Int id "🗝️"
-    Int userId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int userId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "medication_info_master" {
-    String name 
-    String yjCode 
-    String specification 
+    String name
+    String yjCode
+    String specification
     Int id "🗝️"
-    DateTime createdAt 
-    DateTime updatedAt 
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "medication_schedule" {
-    Int timing 
-    Int medicationInfoId 
+    Int timing
+    Int medicationInfoId
     Int id "🗝️"
-    Int userId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int userId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
 
   "medication_timing_types" {
     Int id "🗝️"
-    String typeName 
+    String typeName
     }
-  
+
 
   "medication_result" {
-    DateTime day 
-    DateTime time 
-    Int medicationInfoId 
+    DateTime day
+    DateTime time
+    Int medicationInfoId
     Int id "🗝️"
-    Int userId 
-    DateTime createdAt 
-    DateTime updatedAt 
+    Int userId
+    DateTime createdAt
+    DateTime updatedAt
     }
-  
+
     "users" o{--}o "bowel_movements" : "bowelMovement"
     "users" o{--}o "profiles" : "profile"
     "users" o{--}o "user_medical_history" : "User_Medical_History"
