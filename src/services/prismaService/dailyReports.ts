@@ -138,7 +138,7 @@ const createDailyReportRecordsTable = async (prismaTable: DynamicModelExtensionT
     });
 }
 
-const updateDailyReport = async (dailyReportId: number, date: string, recordData: RecordDataType) => {
+export const updateDailyReport = async (dailyReportId: number, date: string, recordData: RecordDataType) => {
     const { include, data } = createUpdateData(date, recordData)
     const whereByDailyReportId = { id: dailyReportId }
 
@@ -156,8 +156,10 @@ const updateDailyReport = async (dailyReportId: number, date: string, recordData
             // テーブル名はキャメルケース、prismaclientのプロパティはパスカルケース。
             // キャメルケースからパスカルケースへ変換
             const prop = `${t[0].toLowerCase()}${t.slice(1)}` as Prisma.TypeMap['meta']['modelProps']
+            // @ts-ignore
             await customizedPrisma[prop].create({
-                data: data[t]
+                dailyReportId,
+                data: data[t]?.update
             })
         }
     }
@@ -168,6 +170,8 @@ const updateDailyReport = async (dailyReportId: number, date: string, recordData
         data,
         include
     })
+
+    return newDailyReport
 }
 
 /**
