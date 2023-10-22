@@ -145,9 +145,9 @@ model Daily_Report {
   // 関節痛の有無
   Daily_report_Arthritis           Daily_report_Arthritis?
   // 皮膚病変の有無
-  Daily_report_Skin_Lesions         Daily_report_Skin_Lesions?
+  Daily_report_Skin_Lesions        Daily_report_Skin_Lesions?
   // 眼病変の有無
-  Daily_report_Ocular_Lesitions     Daily_report_Ocular_Lesitions?
+  Daily_report_Ocular_Lesitions    Daily_report_Ocular_Lesitions?
   // 肛門病変の有無
   Daily_report_Anorectal_Lesitions Daily_report_Anorectal_Lesitions?
   // 腹部腫瘤の有無
@@ -193,14 +193,14 @@ model Daily_report_Weight {
 // 腹痛
 model Daily_report_Stomachache {
   // 結果
-  Stomachache_Scale_Types Stomachache_Scale_Types @relation(fields: [result], references: [id])
-  result                  Int
+  Stomachache_Scale_Types   Stomachache_Scale_Types @relation(fields: [stomachache_Scale_TypesId], references: [id])
+  stomachache_Scale_TypesId Int
   // id, 今日の体調紐づけ, 作成日時, 更新日時
-  id                      Int                     @id @default(autoincrement())
-  Daily_Report            Daily_Report            @relation(fields: [dailyReportId], references: [id])
-  dailyReportId           Int                     @unique
-  createdAt               DateTime                @default(dbgenerated("NOW()")) @db.DateTime
-  updatedAt               DateTime                @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
+  id                        Int                     @id @default(autoincrement())
+  Daily_Report              Daily_Report            @relation(fields: [dailyReportId], references: [id])
+  dailyReportId             Int                     @unique
+  createdAt                 DateTime                @default(dbgenerated("NOW()")) @db.DateTime
+  updatedAt                 DateTime                @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
   @@map("daily_report_stomachache")
 }
@@ -218,14 +218,14 @@ model Stomachache_Scale_Types {
 // 体調
 model Daily_report_Condition {
   // 結果
-  Condition_Scale_Types Condition_Scale_Types @relation(fields: [conditionScaleId], references: [id])
-  conditionScaleId      Int
+  Condition_Scale_Types   Condition_Scale_Types @relation(fields: [condition_Scale_TypesId], references: [id])
+  condition_Scale_TypesId Int
   // id, 今日の体調紐づけ, 作成日時, 更新日時
-  id                    Int                   @id @default(autoincrement())
-  Daily_Report          Daily_Report          @relation(fields: [dailyReportId], references: [id])
-  dailyReportId         Int                   @unique
-  createdAt             DateTime              @default(dbgenerated("NOW()")) @db.DateTime
-  updatedAt             DateTime              @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
+  id                      Int                   @id @default(autoincrement())
+  Daily_Report            Daily_Report          @relation(fields: [dailyReportId], references: [id])
+  dailyReportId           Int                   @unique
+  createdAt               DateTime              @default(dbgenerated("NOW()")) @db.DateTime
+  updatedAt               DateTime              @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
   @@map("daily_report_condition")
 }
