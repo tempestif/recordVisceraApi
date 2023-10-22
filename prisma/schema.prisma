@@ -145,9 +145,9 @@ model Daily_Report {
   // 関節痛の有無
   Daily_report_Arthritis           Daily_report_Arthritis?
   // 皮膚病変の有無
-  Daily_report_Skin_Lesions        Daily_report_Skin_Lesions?
+  Daily_report_Skin_Lesions         Daily_report_Skin_Lesions?
   // 眼病変の有無
-  Daily_report_Ocular_Lesitions    Daily_report_Ocular_Lesitions?
+  Daily_report_Ocular_Lesitions     Daily_report_Ocular_Lesitions?
   // 肛門病変の有無
   Daily_report_Anorectal_Lesitions Daily_report_Anorectal_Lesitions?
   // 腹部腫瘤の有無
