@@ -8,6 +8,7 @@ import { DAILY_REPORT_ALL_INCLUDE, createDailyReport, findUniqueUserAbsoluteExis
 import { basicHttpResponce, basicHttpResponceIncludeData } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
 import { DAILY_REPORT_DEFAULT_DATA_INFO } from "@/consts/db/dailyReport";
+import { Prisma } from "@prisma/client";
 const logger = new CustomLogger()
 
 /**
