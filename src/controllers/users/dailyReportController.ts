@@ -372,6 +372,7 @@ export const editDailyReport = async (req: Request, res: Response, next: NextFun
     try {
         // idから今日の体調を取得
         const whereByDailyReportId = { id }
+        console.log(whereByDailyReportId)
         const dailyReport = await customizedPrisma.daily_Report.findUniqueOrThrow({ where: whereByDailyReportId })
         // 指定した今日の体調がユーザー本人のものか確認
         const isSelfUser = (dailyReport.userId === userId)
@@ -424,7 +425,6 @@ export const editDailyReport = async (req: Request, res: Response, next: NextFun
         ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
     }
 }
-
 
 /**
  * 今日の体調を削除
