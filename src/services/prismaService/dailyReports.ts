@@ -120,7 +120,7 @@ export const createDailyReport = async (userId: number, date: Date, recordData: 
 }
 
 // レコード作成を行うテーブル名の文字列リテラル
-type AcceptedModelNames = keyof Prisma.Daily_ReportInclude
+type AcceptedTableNames = keyof Prisma.Daily_ReportInclude
 type PrismaTypeMap = Prisma.TypeMap<Args_2 & DefaultArgs>
 
 /**
@@ -129,7 +129,7 @@ type PrismaTypeMap = Prisma.TypeMap<Args_2 & DefaultArgs>
  * @param dailyReportId 今日の体調のid
  * @param data レコードに記録する内容
  */
-const createDailyReportRecordsTable = async (prismaTable: DynamicModelExtensionThis<PrismaTypeMap, AcceptedModelNames, DefaultArgs>, dailyReportId: number, data: any) => {
+const createDailyReportRecordsTable = async (prismaTable: DynamicModelExtensionThis<PrismaTypeMap, AcceptedTableNames, DefaultArgs>, dailyReportId: number, data: any) => {
     await prismaTable.create({
         data: {
             dailyReportId,
@@ -137,6 +137,21 @@ const createDailyReportRecordsTable = async (prismaTable: DynamicModelExtensionT
         }
     });
 }
+
+type AcceptedModelNames = 'daily_Report'
+    | 'daily_report_Temp'
+    | 'daily_report_Weight'
+    | 'daily_report_Stomachache'
+    | 'stomachache_Scale_Types'
+    | 'daily_report_Condition'
+    | 'condition_Scale_Types'
+    | 'daily_report_Arthritis'
+    | 'daily_report_Skin_Lesions'
+    | 'daily_report_Ocular_Lesitions'
+    | 'daily_report_Anorectal_Lesitions'
+    | 'daily_report_Abdominal'
+    | 'abdominal_Scale_Types'
+
 
 const updateDailyReport = async (dailyReportId: number, date: string, recordData: RecordDataType) => {
     const { include, data } = createUpdateData(date, recordData)
@@ -151,12 +166,11 @@ const updateDailyReport = async (dailyReportId: number, date: string, recordData
     // for...inに型アノテーションは含められないらしい。(https://github.com/microsoft/TypeScript/issues/3500)
     for (const table in DAYLY_REPORT_ALL_INCLUDE) {
         // テーブルがある && 更新内容に含まれているの場合、テーブルを作成
-        const t = table as AcceptedModelNames
+        const t = table as AcceptedTableNames
         if (dailyReport[t] === null && data[t]) {
             // テーブル名はキャメルケース、prismaclientのプロパティはパスカルケース。
-            type hoge = Args_2["model"]
             // キャメルケースからパスカルケースへ変換
-            const prop = t[0].toLowerCase() + t.slice(1) as DefaultArgs["model"]
+            const prop = t[0].toLowerCase() + t.slice(1) as AcceptedModelNames
             await customizedPrisma[prop].create({
 
             })
