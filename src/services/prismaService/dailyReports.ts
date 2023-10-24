@@ -290,4 +290,5 @@ export const DAILY_REPORT_ALL_INCLUDE: Prisma.Daily_ReportInclude = {
     Daily_report_Ocular_Lesitions: true,
     Daily_report_Anorectal_Lesitions: true,
     Daily_report_Abdominal: true,
+    User: true
 } as const
