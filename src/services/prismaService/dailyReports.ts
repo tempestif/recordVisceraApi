@@ -39,7 +39,7 @@ export type RecordDataType = {
 
 /**
  * daily_reportテーブルとそれに紐づく記録テーブルを作成する。
- * 記録が入力されていないテーブルも作成する。
+ * 記録が入力されていないテーブルは作成しない。
  * @param userId ユーザーID
  * @param date 作成する記録のdate
  * @param recordData 記録内容
@@ -86,7 +86,7 @@ export const createDailyReport = async (userId: number, date: Date, recordData: 
         await createDailyReportRecordsTable(customizedPrisma.daily_report_Ocular_Lesitions, dailyReportId, { result: recordData.ocularLesitions });
     }
     // 肛門病変の有無
-    if (recordData.anirectalLesitions) {
+    if (recordData.anirectalLesitions || recordData.anirectalOtherLesitions) {
         await createDailyReportRecordsTable(customizedPrisma.daily_report_Anorectal_Lesitions, dailyReportId, {
             fistula: recordData.anirectalLesitions,
             others: recordData.anirectalOtherLesitions

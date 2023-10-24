@@ -7,7 +7,6 @@ import { customizedPrisma } from "@/services/prismaClients";
 import { DAILY_REPORT_ALL_INCLUDE, createDailyReport, findUniqueUserAbsoluteExist, updateDailyReport } from "@/services/prismaService";
 import { basicHttpResponce, basicHttpResponceIncludeData } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
-import { Prisma } from "@prisma/client"
 import { DAILY_REPORT_DEFAULT_DATA_INFO } from "@/consts/db/dailyReport";
 const logger = new CustomLogger()
 
