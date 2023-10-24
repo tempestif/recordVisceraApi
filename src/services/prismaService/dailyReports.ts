@@ -138,21 +138,6 @@ const createDailyReportRecordsTable = async (prismaTable: DynamicModelExtensionT
     });
 }
 
-type AcceptedModelNames = 'daily_Report'
-    | 'daily_report_Temp'
-    | 'daily_report_Weight'
-    | 'daily_report_Stomachache'
-    | 'stomachache_Scale_Types'
-    | 'daily_report_Condition'
-    | 'condition_Scale_Types'
-    | 'daily_report_Arthritis'
-    | 'daily_report_Skin_Lesions'
-    | 'daily_report_Ocular_Lesitions'
-    | 'daily_report_Anorectal_Lesitions'
-    | 'daily_report_Abdominal'
-    | 'abdominal_Scale_Types'
-
-
 const updateDailyReport = async (dailyReportId: number, date: string, recordData: RecordDataType) => {
     const { include, data } = createUpdateData(date, recordData)
     const whereByDailyReportId = { id: dailyReportId }
@@ -160,21 +145,20 @@ const updateDailyReport = async (dailyReportId: number, date: string, recordData
     // テーブルの存在確認
     const dailyReport = await customizedPrisma.daily_Report.findUniqueOrThrow({
         where: whereByDailyReportId,
-        include: DAYLY_REPORT_ALL_INCLUDE
+        include: DAILY_REPORT_ALL_INCLUDE
     })
 
     // for...inに型アノテーションは含められないらしい。(https://github.com/microsoft/TypeScript/issues/3500)
-    for (const table in DAYLY_REPORT_ALL_INCLUDE) {
-        // テーブルがある && 更新内容に含まれているの場合、テーブルを作成
+    for (const table in DAILY_REPORT_ALL_INCLUDE) {
         const t = table as AcceptedTableNames
+        // テーブルがない && 更新内容に含まれているの場合、テーブルを作成
         if (dailyReport[t] === null && data[t]) {
             // テーブル名はキャメルケース、prismaclientのプロパティはパスカルケース。
             // キャメルケースからパスカルケースへ変換
-            const prop = t[0].toLowerCase() + t.slice(1) as AcceptedModelNames
+            const prop = `${t[0].toLowerCase()}${t.slice(1)}` as Prisma.TypeMap['meta']['modelProps']
             await customizedPrisma[prop].create({
-
+                data: data[t]
             })
-            await customizedPrisma.user_Medical_History
         }
     }
 
@@ -292,7 +276,7 @@ const createUpdateData = (date: string, recordData: RecordDataType) => {
     return { data, include }
 }
 
-export const DAYLY_REPORT_ALL_INCLUDE: Prisma.Daily_ReportInclude = {
+export const DAILY_REPORT_ALL_INCLUDE: Prisma.Daily_ReportInclude = {
     Daily_report_Temp: true,
     Daily_report_Weight: true,
     Daily_report_Stomachache: true,
@@ -302,4 +286,5 @@ export const DAYLY_REPORT_ALL_INCLUDE: Prisma.Daily_ReportInclude = {
     Daily_report_Ocular_Lesitions: true,
     Daily_report_Anorectal_Lesitions: true,
     Daily_report_Abdominal: true,
+    User: true
 } as const
