@@ -35,8 +35,8 @@ build/Release
 # Dependency directories
 node_modules/
 jspm_packages/
-mysql/db
-prisma/migrations
+mysql/
+# prisma/migrations
 
 # Typescript v1 declaration files
 typings/
