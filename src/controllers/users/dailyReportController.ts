@@ -4,11 +4,12 @@ import { CustomLogger, LoggingObjType, maskConfInfoInReqBody } from "@/services/
 import { createFilterForPrisma, createSortsForPrisma, filteringFields, FilterOptionsType } from "@/services/dataTransferService";
 import { ErrorHandleIncludeDbRecordNotFound } from "@/services/errorHandlingService";
 import { customizedPrisma } from "@/services/prismaClients";
-import { createDailyReport, findUniqueDailyReportAbsoluteExist, findUniqueUserAbsoluteExist } from "@/services/prismaService";
+import { createDailyReport, findUniqueUserAbsoluteExist } from "@/services/prismaService";
 import { basicHttpResponce, basicHttpResponceIncludeData } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
 import { Prisma } from "@prisma/client"
 import { DAILY_REPORT_DEFAULT_DATA_INFO } from "@/consts/db/dailyReport";
+
 const logger = new CustomLogger()
 
 /**
