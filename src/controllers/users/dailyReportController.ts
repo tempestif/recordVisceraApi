@@ -179,6 +179,8 @@ export const readDailyReport = async (req: Request, res: Response, next: NextFun
             dateForDb = new Date(`${year}-${month}-${day}`)
         }
         // 今日の体調を取得
+        const includeFields = DAILY_REPORT_ALL_INCLUDE
+        delete includeFields.User
         const dailyReports = await customizedPrisma.daily_Report.findMany({
             where: {
                 userId,
@@ -188,7 +190,7 @@ export const readDailyReport = async (req: Request, res: Response, next: NextFun
             orderBy: sorts,
             skip: offset ? Number(offset) : DAILY_REPORT_DEFAULT_DATA_INFO.offset,
             take: limit ? Number(limit) : DAILY_REPORT_DEFAULT_DATA_INFO.limit,
-            include: DAILY_REPORT_ALL_INCLUDE
+            include: includeFields
         })
 
         // NOTE: ひとまずもう一度全検索でallCountを取る。もっといい方法を考える。
