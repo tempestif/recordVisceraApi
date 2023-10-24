@@ -74,7 +74,7 @@ erDiagram
   
 
   "daily_report_temp" {
-    Float result 
+    Float result "❓"
     Int id "🗝️"
     Int dailyReportId 
     DateTime createdAt 
@@ -83,7 +83,7 @@ erDiagram
   
 
   "daily_report_weight" {
-    Float result 
+    Float result "❓"
     Int id "🗝️"
     Int dailyReportId 
     DateTime createdAt 
@@ -92,7 +92,7 @@ erDiagram
   
 
   "daily_report_stomachache" {
-    Int result 
+    Int stomachache_Scale_TypesId 
     Int id "🗝️"
     Int dailyReportId 
     DateTime createdAt 
@@ -108,7 +108,7 @@ erDiagram
   
 
   "daily_report_condition" {
-    Int conditionScaleId 
+    Int condition_Scale_TypesId 
     Int id "🗝️"
     Int dailyReportId 
     DateTime createdAt 
@@ -124,7 +124,7 @@ erDiagram
   
 
   "daily_report_arthritis" {
-    Int result 
+    Int result "❓"
     Int id "🗝️"
     Int dailyReportId 
     DateTime createdAt 
@@ -133,7 +133,7 @@ erDiagram
   
 
   "daily_report_skin_lesions" {
-    Int result 
+    Int result "❓"
     Int id "🗝️"
     Int dailyReportId 
     DateTime createdAt 
@@ -142,7 +142,7 @@ erDiagram
   
 
   "daily_report_ocular_lesions" {
-    Int result 
+    Int result "❓"
     Int id "🗝️"
     Int dailyReportId 
     DateTime createdAt 
@@ -151,8 +151,8 @@ erDiagram
   
 
   "daily_report_anorectal_lesions" {
-    Int fistula 
-    Int others 
+    Int fistula "❓"
+    Int others "❓"
     Int id "🗝️"
     Int dailyReportId 
     DateTime createdAt 
@@ -318,8 +318,8 @@ erDiagram
     "daily_report" o{--}o "daily_report_stomachache" : "Daily_report_Stomachache"
     "daily_report" o{--}o "daily_report_condition" : "Daily_report_Condition"
     "daily_report" o{--}o "daily_report_arthritis" : "Daily_report_Arthritis"
-    "daily_report" o{--}o "daily_report_skin_lesions" : "Daily_report_SkinLesions"
-    "daily_report" o{--}o "daily_report_ocular_lesions" : "Daily_report_OcularLesitions"
+    "daily_report" o{--}o "daily_report_skin_lesions" : "Daily_report_Skin_Lesions"
+    "daily_report" o{--}o "daily_report_ocular_lesions" : "Daily_report_Ocular_Lesitions"
     "daily_report" o{--}o "daily_report_anorectal_lesions" : "Daily_report_Anorectal_Lesitions"
     "daily_report" o{--}o "daily_report_abdominal" : "Daily_report_Abdominal"
     "daily_report" o|--|| "users" : "User"
