@@ -154,7 +154,6 @@ export const updateDailyReport = async (dailyReportId: number, date: string, rec
         // テーブルがない && 更新内容に含まれているの場合、テーブルを作成
         if (dailyReport[t] === null && data[t]) {
             // テーブル名はキャメルケース、prismaclientのプロパティはパスカルケース。
-            type hoge = Args_2["model"]
             // キャメルケースからパスカルケースへ変換
             const prop = `${t[0].toLowerCase()}${t.slice(1)}` as Prisma.TypeMap['meta']['modelProps']
             // @ts-ignore
