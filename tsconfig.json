@@ -3,6 +3,7 @@
     // コンパイル対象とするファイルのパスをここに列挙します
     "src/**/*.ts",
   ],
+  "exclude": ["node_modules", "dist"],
   "ts-node": {
     "require": [
       "tsconfig-paths/register"
