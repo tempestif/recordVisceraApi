@@ -4,7 +4,7 @@ import { CustomLogger, LoggingObjType, maskConfInfoInReqBody } from "@/services/
 import { createFilterForPrisma, createSortsForPrisma, filteringFields, FilterOptionsType } from "@/services/dataTransferService";
 import { ErrorHandleIncludeDbRecordNotFound } from "@/services/errorHandlingService";
 import { customizedPrisma } from "@/services/prismaClients";
-import { DAYLY_REPORT_ALL_INCLUDE, createDailyReport, findUniqueDailyReportAbsoluteExist, findUniqueUserAbsoluteExist } from "@/services/prismaService";
+import { DAILY_REPORT_ALL_INCLUDE, createDailyReport, findUniqueUserAbsoluteExist, updateDailyReport } from "@/services/prismaService";
 import { basicHttpResponce, basicHttpResponceIncludeData } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
 import { Prisma } from "@prisma/client"
@@ -188,7 +188,7 @@ export const readDailyReport = async (req: Request, res: Response, next: NextFun
             orderBy: sorts,
             skip: offset ? Number(offset) : DAILY_REPORT_DEFAULT_DATA_INFO.offset,
             take: limit ? Number(limit) : DAILY_REPORT_DEFAULT_DATA_INFO.limit,
-            include: DAYLY_REPORT_ALL_INCLUDE
+            include: DAILY_REPORT_ALL_INCLUDE
         })
 
         // NOTE: ひとまずもう一度全検索でallCountを取る。もっといい方法を考える。
@@ -399,24 +399,9 @@ export const editDailyReport = async (req: Request, res: Response, next: NextFun
         }
 
         // 編集するdataを成型
-        const dailyReportData = createUpdateData(date, temp, weight, stomachach, condition, arthritis, skinLesitions, ocularLesitions, anirectalLesitions, anirectalOtherLesitions, abdominal)
-
+        const recordData = { date, temp, weight, stomachach, condition, arthritis, skinLesitions, ocularLesitions, anirectalLesitions, anirectalOtherLesitions, abdominal }
         // 編集
-        const newDailyReport = await customizedPrisma.daily_Report.update({
-            where: whereByDailyReportId,
-            data: dailyReportData,
-            include: {
-                Daily_report_Temp: true,
-                Daily_report_Weight: true,
-                Daily_report_Stomachache: true,
-                Daily_report_Condition: true,
-                Daily_report_Arthritis: true,
-                Daily_report_Skin_Lesions: true,
-                Daily_report_Ocular_Lesitions: true,
-                Daily_report_Anorectal_Lesitions: true,
-                Daily_report_Abdominal: true
-            }
-        })
+        const newDailyReport = await updateDailyReport(id, date, recordData)
 
         // レスポンスを返却
         const HttpStatus = 200
