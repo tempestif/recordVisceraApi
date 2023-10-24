@@ -40,13 +40,13 @@ app.use(express.static(path.join("public")));//__dirNameと書いてある箇所
 app.use(express.static("public"));
 
 app.use("/", indexRouter);
+app.use("/reset-passwords", resetPasswordsRouter);
 app.use("/users", usersRouter);
 app.use("/users/bowel-movements", bowelMovementsRouter);
 app.use("/users/daily-reports", dailyReportsRouter);
 app.use("/users/medical-histories", medicalHistoriesRouter);
 app.use("/users/settings", settingsRouter);
 app.use("/users/profiles", profilesRouter);
-app.use("/reset-passwords", resetPasswordsRouter);
 app.use("/users/medications/lists", medicationsListsRouter);
 app.use("/users/medications/schedules", medicationsSchedulesRouter);
 app.use("/users/medications/logs", medicationslogsRouter);
