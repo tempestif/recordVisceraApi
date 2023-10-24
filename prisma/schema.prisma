@@ -195,8 +195,8 @@ model Daily_report_Weight {
 // 腹痛
 model Daily_report_Stomachache {
   // 結果
-  Stomachache_Scale_Types   Stomachache_Scale_Types @relation(fields: [stomachache_Scale_TypesId], references: [id])
-  stomachache_Scale_TypesId Int
+  Stomachache_Scale_Types   Stomachache_Scale_Types? @relation(fields: [stomachache_Scale_TypesId], references: [id])
+  stomachache_Scale_TypesId Int?
   // id, 今日の体調紐づけ, 作成日時, 更新日時
   id                        Int                     @id @default(autoincrement())
   Daily_Report              Daily_Report            @relation(fields: [dailyReportId], references: [id])
@@ -220,8 +220,8 @@ model Stomachache_Scale_Types {
 // 体調
 model Daily_report_Condition {
   // 結果
-  Condition_Scale_Types   Condition_Scale_Types @relation(fields: [condition_Scale_TypesId], references: [id])
-  condition_Scale_TypesId Int
+  Condition_Scale_Types   Condition_Scale_Types? @relation(fields: [condition_Scale_TypesId], references: [id])
+  condition_Scale_TypesId Int?
   // id, 今日の体調紐づけ, 作成日時, 更新日時
   id                      Int                   @id @default(autoincrement())
   Daily_Report            Daily_Report          @relation(fields: [dailyReportId], references: [id])
