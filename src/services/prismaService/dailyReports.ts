@@ -158,8 +158,11 @@ export const updateDailyReport = async (dailyReportId: number, date: string, rec
             const prop = `${t[0].toLowerCase()}${t.slice(1)}` as Prisma.TypeMap['meta']['modelProps']
             // @ts-ignore
             await customizedPrisma[prop].create({
-                dailyReportId,
-                data: data[t]?.update
+                // @ts-ignore
+                data: {
+                    ...data[t]?.update,
+                    dailyReportId
+                }
             })
         }
     }

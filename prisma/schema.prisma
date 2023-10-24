@@ -170,7 +170,7 @@ model Daily_report_Temp {
   result        Float?
   // id, 今日の体調紐づけ, 作成日時, 更新日時
   id            Int          @id @default(autoincrement())
-  Daily_Report  Daily_Report @relation(fields: [dailyReportId], references: [id])
+  Daily_Report  Daily_Report @relation(fields: [dailyReportId], references: [id], onDelete: Cascade)
   dailyReportId Int          @unique
   createdAt     DateTime     @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt     DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
@@ -184,7 +184,7 @@ model Daily_report_Weight {
   result        Float?
   // id, 今日の体調紐づけ, 作成日時, 更新日時
   id            Int          @id @default(autoincrement())
-  Daily_Report  Daily_Report @relation(fields: [dailyReportId], references: [id])
+  Daily_Report  Daily_Report @relation(fields: [dailyReportId], references: [id], onDelete: Cascade)
   dailyReportId Int          @unique
   createdAt     DateTime     @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt     DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
@@ -199,7 +199,7 @@ model Daily_report_Stomachache {
   stomachache_Scale_TypesId Int
   // id, 今日の体調紐づけ, 作成日時, 更新日時
   id                        Int                     @id @default(autoincrement())
-  Daily_Report              Daily_Report            @relation(fields: [dailyReportId], references: [id])
+  Daily_Report              Daily_Report            @relation(fields: [dailyReportId], references: [id], onDelete: Cascade)
   dailyReportId             Int                     @unique
   createdAt                 DateTime                @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt                 DateTime                @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
@@ -224,7 +224,7 @@ model Daily_report_Condition {
   condition_Scale_TypesId Int
   // id, 今日の体調紐づけ, 作成日時, 更新日時
   id                      Int                   @id @default(autoincrement())
-  Daily_Report            Daily_Report          @relation(fields: [dailyReportId], references: [id])
+  Daily_Report            Daily_Report          @relation(fields: [dailyReportId], references: [id], onDelete: Cascade)
   dailyReportId           Int                   @unique
   createdAt               DateTime              @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt               DateTime              @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
@@ -248,7 +248,7 @@ model Daily_report_Arthritis {
   result        Int?
   // id, 今日の体調紐づけ, 作成日時, 更新日時
   id            Int          @id @default(autoincrement())
-  Daily_Report  Daily_Report @relation(fields: [dailyReportId], references: [id])
+  Daily_Report  Daily_Report @relation(fields: [dailyReportId], references: [id], onDelete: Cascade)
   dailyReportId Int          @unique
   createdAt     DateTime     @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt     DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
@@ -262,7 +262,7 @@ model Daily_report_Skin_Lesions {
   result        Int?
   // id, 今日の体調紐づけ, 作成日時, 更新日時
   id            Int          @id @default(autoincrement())
-  Daily_Report  Daily_Report @relation(fields: [dailyReportId], references: [id])
+  Daily_Report  Daily_Report @relation(fields: [dailyReportId], references: [id], onDelete: Cascade)
   dailyReportId Int          @unique
   createdAt     DateTime     @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt     DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
@@ -276,7 +276,7 @@ model Daily_report_Ocular_Lesitions {
   result        Int?
   // id, 今日の体調紐づけ, 作成日時, 更新日時
   id            Int          @id @default(autoincrement())
-  Daily_Report  Daily_Report @relation(fields: [dailyReportId], references: [id])
+  Daily_Report  Daily_Report @relation(fields: [dailyReportId], references: [id], onDelete: Cascade)
   dailyReportId Int          @unique
   createdAt     DateTime     @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt     DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
@@ -292,7 +292,7 @@ model Daily_report_Anorectal_Lesitions {
   others        Int?
   // id, 今日の体調紐づけ, 作成日時, 更新日時
   id            Int          @id @default(autoincrement())
-  Daily_Report  Daily_Report @relation(fields: [dailyReportId], references: [id])
+  Daily_Report  Daily_Report @relation(fields: [dailyReportId], references: [id], onDelete: Cascade)
   dailyReportId Int          @unique
   createdAt     DateTime     @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt     DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
@@ -307,7 +307,7 @@ model Daily_report_Abdominal {
   abdominal_Scale_TypesId Int
   // id, 今日の体調紐づけ, 作成日時, 更新日時
   id                      Int                   @id @default(autoincrement())
-  Daily_Report            Daily_Report          @relation(fields: [dailyReportId], references: [id])
+  Daily_Report            Daily_Report          @relation(fields: [dailyReportId], references: [id], onDelete: Cascade)
   dailyReportId           Int                   @unique
   createdAt               DateTime              @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt               DateTime              @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
