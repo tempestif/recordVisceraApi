@@ -1,6 +1,7 @@
+import { USER_LOGIN_STATUS } from "@/consts/db"
 import { UNSPECIFIED_USER_ID, PROCESS_FAILURE, PROCESS_SUCCESS } from "@/consts/logConsts"
 import { TITLE_VALID_MAIL, TEXT_VALID_MAIL } from "@/consts/mailConsts"
-import { ALREADY_USED_MAILADDLESS, SEND_MAIL_FOR_USER_VALID, WRONG_LOGIN_INFO, COMPLETE_LOGIN } from "@/consts/responseConsts"
+import { ALREADY_USED_MAILADDLESS, SEND_MAIL_FOR_USER_VALID, WRONG_LOGIN_INFO, COMPLETE_LOGIN, COMPLETE_LOOUT } from "@/consts/responseConsts"
 import { CustomLogger, LoggingObjType, maskConfInfoInReqBody } from "@/services/LoggerService"
 import { internalServerErrorHandle, ErrorHandleIncludeDbRecordNotFound } from "@/services/errorHandlingService"
 import { generateAuthToken } from "@/services/jwtService"
@@ -201,6 +202,16 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         // jwt発行
         const jwt = generateAuthToken(userId);
 
+        // loginStatusをloginに変更
+        await customizedPrisma.user.update({
+            where: {
+                id: userId
+            },
+            data: {
+                loginStatus: USER_LOGIN_STATUS.login
+            }
+        })
+
         // レスポンスを返却
         const HttpStatus = 200
         const responseStatus = true
@@ -224,6 +235,42 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
     } catch (e: unknown) {
         ErrorHandleIncludeDbRecordNotFound(e, UNSPECIFIED_USER_ID.message, req, res, currentFuncName)
+    }
+}
+
+export const logout = async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.body
+    const currentFuncName = logout.name
+
+    try {
+        // loginStatusをlogoutに変更
+        await customizedPrisma.user.update({
+            where: {
+                id: userId
+            },
+            data: {
+                loginStatus: USER_LOGIN_STATUS.logout
+            }
+        })
+        // レスポンスを返却
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = COMPLETE_LOOUT.message
+        basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId: userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
+        }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+    } catch (e: unknown) {
+        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
     }
 }
 

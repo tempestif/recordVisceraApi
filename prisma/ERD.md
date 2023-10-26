@@ -8,6 +8,7 @@ erDiagram
     String verifyEmailHash "❓"
     String passResetHash "❓"
     Int verified 
+    Int loginStatus 
     Int id "🗝️"
     DateTime createdAt 
     DateTime updatedAt 
