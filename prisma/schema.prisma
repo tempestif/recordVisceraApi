@@ -32,6 +32,8 @@ model User {
   passResetHash        String?
   // メールアドレス認証有無
   verified             Int                    @default(0)
+  // ログインステータス
+  loginStatus          Int                    @default(0)
   // 紐づけ
   bowelMovement        Bowel_Movement[]
   profile              Profile?

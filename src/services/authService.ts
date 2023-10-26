@@ -1,9 +1,10 @@
-import { TOKEN_NOT_DISCREPANCY, TOKEN_NOT_FOUND } from "@/consts/responseConsts";
+import { TOKEN_NOT_DISCREPANCY, TOKEN_NOT_FOUND, USER_LOGOUT } from "@/consts/responseConsts";
 import type { Request, Response, NextFunction } from "express"
 import { verify } from "jsonwebtoken"
 import type { JwtPayload } from "jsonwebtoken"
 import { basicHttpResponce } from "./utilResponseService";
 import { findUniqueUserAbsoluteExist } from "./prismaService";
+import { USER_LOGIN_STATUS } from "@/consts/db";
 
 /**
  * トークン認証
@@ -41,6 +42,14 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
 
         // userの有無を確認
         const user = await findUniqueUserAbsoluteExist({ id: decoded.id }, res)
+
+        // ログアウトしている場合、400エラー
+        if (user.loginStatus === USER_LOGIN_STATUS.logout) {
+            const HttpStatus = 400
+            const responseStatus = false
+            const responseMsg = USER_LOGOUT.message
+            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        }
 
         if (user) {
             // reqのbodyにuserIdを追加

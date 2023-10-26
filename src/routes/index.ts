@@ -1,5 +1,6 @@
-import { registUser, login } from "@/controllers/accountController";
+import { registUser, login, logout } from "@/controllers/accountController";
 import { verifyMailadress } from "@/controllers/users/verifyController";
+import { auth } from "@/services/authService";
 import express from "express";
 const router = express.Router();
 
@@ -13,6 +14,9 @@ router.post("/register", registUser)
 
 /** ログイン */
 router.post("/login", login)
+
+/** ログアウト */
+router.post("/logout", auth, logout)
 
 /** メールアドレスを認証 */
 router.post("/email-verify", verifyMailadress)
