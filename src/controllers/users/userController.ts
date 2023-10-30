@@ -3,11 +3,14 @@ import { customizedPrisma } from "@/services/prismaClients"
 import { sendMail } from "@/services/nodemailerService"
 import { compare } from "bcrypt"
 import { basicHttpResponce, basicHttpResponceIncludeData, internalServerErr } from "@/services/utilResponseService"
-import { COMPLETE_GET_PROFILE, COMPLETE_UPDATE_PASSWORD, WRONG_LOGIN_INFO } from "@/consts/responseConsts"
+import { COMPLETE_GET_PROFILE, COMPLETE_UPDATE_PASSWORD, DELETE_USER, WRONG_LOGIN_INFO } from "@/consts/responseConsts"
 import { findUniqueUserAbsoluteExist } from "@/services/prismaService"
 import { CustomLogger, LoggingObjType, maskConfInfoInReqBody } from "@/services/LoggerService"
 import { PROCESS_FAILURE, PROCESS_SUCCESS } from "@/consts/logConsts"
 import { ErrorHandleIncludeDbRecordNotFound } from "@/services/errorHandlingService"
+import { USER_LOGIN_STATUS } from "@/consts/db"
+import { Prisma } from "@prisma/client"
+import { transformNameTableToModel } from "@/services/prismaService/format"
 const logger = new CustomLogger()
 
 /**
@@ -67,6 +70,93 @@ export const readUser = async (req: Request, res: Response, next: NextFunction) 
         // ログを出力
         const logBody: LoggingObjType = {
             userId: userId,
+            ipAddress: req.ip,
+            method: req.method,
+            path: req.originalUrl,
+            body: maskConfInfoInReqBody(req).body,
+            status: String(HttpStatus),
+            responseMsg
+        }
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+    } catch (e: unknown) {
+        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
+    }
+}
+
+const userInclude: Prisma.UserInclude = {
+    Bowel_Movement: true,
+    Profile: true,
+    User_Medical_History: true,
+    User_Setting: true,
+    Daily_Report: true,
+    Clinic_Report: true,
+    Medication_Info_User: true,
+    Medication_Schedule: true,
+    Medication_Result: true,
+}
+
+/**
+ * ユーザー削除
+ * Userテーブルは論理削除、紐づくテーブルは物理削除
+ * @param req
+ * @param res
+ * @param next
+ */
+export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.body
+    const currentFuncName = deleteUser.name
+    try {
+        // userテーブルを論理削除
+        const user = await customizedPrisma.user.update({
+            where: {
+                id: userId
+            },
+            data: {
+                loginStatus: USER_LOGIN_STATUS.deactived
+            },
+            include: userInclude
+        })
+
+        // userに紐づくテーブルを削除
+        type AcceptedTableNames = keyof Prisma.$UserPayload["objects"]
+        for (const table in userInclude) {
+            const t = table as AcceptedTableNames
+            const prop = transformNameTableToModel(t)
+            // 消すテーブルとのリレーションが1対多かどうか確認
+            const includeTable = user[t]
+            const isOneToMany = Array.isArray(includeTable)
+
+            // 1対多の場合、配列内の全てのレコードを消す
+            if (isOneToMany) {
+                for (const record of includeTable) {
+                    // @ts-ignore
+                    await customizedPrisma[prop].delete({
+                        // @ts-ignore
+                        where: {
+                            id: record.id
+                        }
+                    })
+                }
+            } else if (includeTable) {
+                // @ts-ignore
+                await customizedPrisma[prop].delete({
+                    // @ts-ignore
+                    where: {
+                        id: includeTable?.id
+                    }
+                })
+            }
+        }
+
+        // レスポンスを返却
+        const HttpStatus = 200
+        const responseStatus = true
+        const responseMsg = DELETE_USER.message
+        basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+
+        // ログを出力
+        const logBody: LoggingObjType = {
+            userId,
             ipAddress: req.ip,
             method: req.method,
             path: req.originalUrl,

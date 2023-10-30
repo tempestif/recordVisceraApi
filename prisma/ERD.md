@@ -299,8 +299,8 @@ erDiagram
     DateTime updatedAt 
     }
   
-    "users" o{--}o "bowel_movements" : "bowelMovement"
-    "users" o{--}o "profiles" : "profile"
+    "users" o{--}o "bowel_movements" : "Bowel_Movement"
+    "users" o{--}o "profiles" : "Profile"
     "users" o{--}o "user_medical_history" : "User_Medical_History"
     "users" o{--}o "user_setting" : "User_Setting"
     "users" o{--}o "daily_report" : "Daily_Report"

@@ -21,7 +21,7 @@ generator erd {
 // ユーザー
 model User {
   // メールアドレス
-  email                String                 @unique
+  email                String
   // ユーザーネーム
   name                 String
   // パスワード
@@ -35,8 +35,8 @@ model User {
   // ログインステータス
   loginStatus          Int                    @default(0)
   // 紐づけ
-  bowelMovement        Bowel_Movement[]
-  profile              Profile?
+  Bowel_Movement        Bowel_Movement[]
+  Profile              Profile?
   User_Medical_History User_Medical_History?
   User_Setting         User_Setting?
   Daily_Report         Daily_Report[]

@@ -7,7 +7,7 @@ import { internalServerErrorHandle, ErrorHandleIncludeDbRecordNotFound } from "@
 import { generateAuthToken } from "@/services/jwtService"
 import { sendMail } from "@/services/nodemailerService"
 import { customizedPrisma } from "@/services/prismaClients"
-import { findUniqueUserAbsoluteExist } from "@/services/prismaService"
+import { findActivedUser } from "@/services/prismaService"
 import { basicHttpResponce } from "@/services/utilResponseService"
 import { compare } from "bcrypt"
 import { randomBytes } from "crypto"
@@ -30,31 +30,34 @@ export const registUser = async (req: Request, res: Response, next: NextFunction
 
     try {
         // emailでユーザーを取得
-        const user = await customizedPrisma.user.findUnique({
+        const users = await customizedPrisma.user.findMany({
             where: {
                 email: email
             }
         })
-        // ユーザーが存在していたら400エラー
-        if (user) {
-            const HttpStatus = 400
-            const responseStatus = false
-            const responseMsg = ALREADY_USED_MAILADDLESS.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        // ユーザーが存在 && 全てのユーザーが退会済じゃない場合400エラー
+        if (users) {
+            for (const user of users) {
+                if (user.loginStatus !== USER_LOGIN_STATUS.deactived) {
+                    const HttpStatus = 400
+                    const responseStatus = false
+                    const responseMsg = ALREADY_USED_MAILADDLESS.message
+                    basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
 
-            // ログを出力
-            const logBody: LoggingObjType = {
-                userId: UNSPECIFIED_USER_ID.message,
-                ipAddress: req.ip,
-                method: req.method,
-                path: req.originalUrl,
-                body: maskConfInfoInReqBody(req).body,
-                status: String(HttpStatus),
-                responseMsg
+                    // ログを出力
+                    const logBody: LoggingObjType = {
+                        userId: UNSPECIFIED_USER_ID.message,
+                        ipAddress: req.ip,
+                        method: req.method,
+                        path: req.originalUrl,
+                        body: maskConfInfoInReqBody(req).body,
+                        status: String(HttpStatus),
+                        responseMsg
+                    }
+                    logger.error(PROCESS_FAILURE.message(currentFuncName), logBody)
+                    return
+                }
             }
-            logger.error(PROCESS_FAILURE.message(currentFuncName), logBody)
-
-            return
         }
 
         // 認証トークン作成
@@ -120,7 +123,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     try {
         // emailが一致するユーザーを取得
         const whereByEmail = { email }
-        const user = await findUniqueUserAbsoluteExist(whereByEmail, res)
+        const user = await findActivedUser(whereByEmail)
         const userId = user.id
 
         // パスワードを比較

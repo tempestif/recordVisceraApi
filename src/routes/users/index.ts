@@ -1,4 +1,4 @@
-import { readUser, sendMailTest, changePassowrd } from "@/controllers/users/userController";
+import { readUser, sendMailTest, changePassowrd, deleteUser } from "@/controllers/users/userController";
 import express from "express";
 import { auth } from "@/services/authService";
 import type { Request, Response, NextFunction } from "express"
@@ -9,6 +9,8 @@ const router = express.Router();
 router.get("/", auth, readUser)
 /** ユーザーパスワード変更 */
 router.post("/change-password", auth, changePassowrd)
+/** ユーザー削除 */
+router.post("/delete", auth, deleteUser)
 
 // TODO: 本番前に消す
 // メール送信テスト
