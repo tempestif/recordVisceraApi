@@ -21,7 +21,7 @@ services:
       - ./my.cnf:/etc/mysql/conf.d/my.cnf
     environment:
       MYSQL_DATABASE: record-viscera-api
-      MYSQL_ROOT_PASSWORD: password # パスワード設定
+      MYSQL_ROOT_PASSWORD: webapp:${MYSQL_ROOT_PASSWORD} # パスワード設定
       TZ: "Asia/Tokyo"
     ports:
       - "3333:3306"
