@@ -4,6 +4,7 @@ import { Response } from "express"
 import { DAILY_REPORT_NOT_FOUND } from "@/consts/responseConsts"
 import { DbRecordNotFoundError } from "@/services/prismaService/index"
 import { DynamicModelExtensionThis, Args_2, DefaultArgs } from "@prisma/client/runtime/library"
+import { transformNameTableToModel } from "./format"
 
 /**
  * DBより、今日の体調の存在確認、取得を行う。
@@ -153,9 +154,8 @@ export const updateDailyReport = async (dailyReportId: number, date: string, rec
         const t = table as AcceptedTableNames
         // テーブルがない && 更新内容に含まれているの場合、テーブルを作成
         if (dailyReport[t] === null && data[t]) {
-            // テーブル名はキャメルケース、prismaclientのプロパティはパスカルケース。
-            // キャメルケースからパスカルケースへ変換
-            const prop = `${t[0].toLowerCase()}${t.slice(1)}` as Prisma.TypeMap['meta']['modelProps']
+            // テーブル名をモデル名に変更
+            const prop = transformNameTableToModel(t)
             // @ts-ignore
             await customizedPrisma[prop].create({
                 // @ts-ignore

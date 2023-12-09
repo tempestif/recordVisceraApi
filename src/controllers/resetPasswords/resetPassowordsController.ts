@@ -5,7 +5,7 @@ import { CustomLogger, LoggingObjType, maskConfInfoInReqBody } from "@/services/
 import { ErrorHandleIncludeDbRecordNotFound } from "@/services/errorHandlingService";
 import { sendMail } from "@/services/nodemailerService";
 import { customizedPrisma } from "@/services/prismaClients";
-import { findUniqueUserAbsoluteExist } from "@/services/prismaService";
+import { findActivedUser, findUniqueUserAbsoluteExist } from "@/services/prismaService";
 import { basicHttpResponce } from "@/services/utilResponseService";
 import { randomBytes } from "crypto";
 import type { Request, Response, NextFunction } from "express";
@@ -28,14 +28,16 @@ export const requestResettingPassword = async (req: Request, res: Response, next
     try {
         // emailからuserを取得
         const whereByEmail = { email }
-        await findUniqueUserAbsoluteExist(whereByEmail, res)
+        const user = await findActivedUser(whereByEmail)
 
         // 認証トークン作成
         const passResetHash = randomBytes(32).toString("hex")
 
         // DBに保存
         const newUser = await customizedPrisma.user.update({
-            where: whereByEmail,
+            where: {
+                id: user.id
+            },
             data: {
                 passResetHash
             }
