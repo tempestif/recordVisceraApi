@@ -169,7 +169,7 @@ export const readDailyReport = async (req: Request, res: Response, next: NextFun
     // bodyからuserIdを取得
     const userId = req.body.userId
     // paramから年月日を取得
-    const { year, month, day } = req.params
+    const { year, month, day } = req.query
 
     try {
         // bodyの年月日をDate型に変換

@@ -344,6 +344,7 @@ model Clinic_Report {
   updatedAt   DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
   @@map("clinic_report")
+  @@unique(fields: [userId, day, time], name: "report_identifier")
 }
 
 // 検査予定/結果
@@ -405,7 +406,7 @@ model Checkup_Blood_Additional {
 // MRIの検査結果
 model Checkup_Mri {
   // 結果
-  result    String
+  result    String?
   // id, 検査予定/結果, 作成日時, 更新日時
   id        Int      @id @default(autoincrement())
   Checkup   Checkup  @relation(fields: [checkupId], references: [id])
@@ -419,7 +420,7 @@ model Checkup_Mri {
 // CTの検査結果
 model Checkup_Ct {
   // 結果
-  result    String
+  result    String?
   // id, 検査予定/結果, 作成日時, 更新日時
   id        Int      @id @default(autoincrement())
   Checkup   Checkup  @relation(fields: [checkupId], references: [id])
@@ -449,7 +450,7 @@ model Checkup_Custom {
 // 通院ノート
 model Clinic_Note {
   // ノート
-  note           String
+  note           String?
   // id, 通院記録, 作成日時, 更新日時
   id             Int           @id @default(autoincrement())
   Clinic_Report  Clinic_Report @relation(fields: [clinicReportId], references: [id])
