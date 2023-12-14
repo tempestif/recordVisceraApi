@@ -234,7 +234,7 @@ export const editBowelMovement = async (req: Request, res: Response, next: NextF
     try {
         // idから排便記録を取得
         const whereByBowelMovementId = { id }
-        const bowelMoventData = await findUniqueBowelMovementAbsoluteExist(whereByBowelMovementId, res)
+        const bowelMoventData = await findUniqueBowelMovementAbsoluteExist(whereByBowelMovementId, customizedPrisma)
 
         // 指定した体温記録がユーザー本人のものか確認
         const isSelfUser = (bowelMoventData.userId === userId)
@@ -336,7 +336,7 @@ export const deleteBowelMovement = async (req: Request, res: Response, next: Nex
     try {
         // idから排便記録を取得
         const whereByBowelMoventId = { id }
-        const bowelMoventData = await findUniqueBowelMovementAbsoluteExist(whereByBowelMoventId, res)
+        const bowelMoventData = await findUniqueBowelMovementAbsoluteExist(whereByBowelMoventId, customizedPrisma)
 
         // 指定した排便記録がユーザー本人のものか確認
         const isSelfUser = (bowelMoventData.userId === userId)
