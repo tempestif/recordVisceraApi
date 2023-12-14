@@ -55,7 +55,7 @@ describe("findUniqueBowelMovementAbsoluteExistの単体テスト", () => {
         mockPrisma.bowel_Movement.findUnique.mockResolvedValue(null);
 
         await expect(
-            findUniqueBowelMovementAbsoluteExist({ id: 9 }, customizedPrisma)
+            findUniqueBowelMovementAbsoluteExist({ id: 9 }, mockPrisma)
         ).rejects.toThrow(
             new DbRecordNotFoundError("排便記録が見つかりません。")
         );
