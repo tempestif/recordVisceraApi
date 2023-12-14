@@ -1,14 +1,35 @@
 import { DEFAULT_DATA_INFO } from "@/consts/db";
 import { PROCESS_SUCCESS } from "@/consts/logConsts";
-import { DELETE_WEIGHT, EDIT_WEIGHT, READ_WEIGHT, RECORD_WEIGHT, WEIGHT_ACCESS_FORBIDDEN } from "@/consts/responseConsts";
-import { CustomLogger, LoggingObjType, maskConfInfoInReqBody } from "@/services/LoggerService";
-import { FilterOptionsType, createFilterForPrisma, createSortsForPrisma, filteringFields } from "@/services/dataTransferService";
+import {
+    DELETE_WEIGHT,
+    EDIT_WEIGHT,
+    READ_WEIGHT,
+    RECORD_WEIGHT,
+    WEIGHT_ACCESS_FORBIDDEN,
+} from "@/consts/responseConsts";
+import {
+    CustomLogger,
+    LoggingObjType,
+    maskConfInfoInReqBody,
+} from "@/services/LoggerService";
+import {
+    FilterOptionsType,
+    createFilterForPrisma,
+    createSortsForPrisma,
+    filteringFields,
+} from "@/services/dataTransferService";
 import { ErrorHandleIncludeDbRecordNotFound } from "@/services/errorHandlingService";
 import { customizedPrisma } from "@/services/prismaClients";
-import { findUniqueDailyReportAbsoluteExist, findUniqueUserWeightAbsoluteExist } from "@/services/prismaService";
-import { basicHttpResponce, basicHttpResponceIncludeData } from "@/services/utilResponseService";
+import {
+    findUniqueDailyReportAbsoluteExist,
+    findUniqueUserWeightAbsoluteExist,
+} from "@/services/prismaService";
+import {
+    basicHttpResponce,
+    basicHttpResponceIncludeData,
+} from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
-const logger = new CustomLogger()
+const logger = new CustomLogger();
 
 // TODO: このコントローラ自体は廃止。dailyReportControllerに移行する。
 
@@ -20,33 +41,46 @@ const logger = new CustomLogger()
  * @param next
  * @returns
  */
-export const registWeight = async (req: Request, res: Response, next: NextFunction) => {
-    const { userId, weight } = req.body
+export const registWeight = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    const { userId, weight } = req.body;
 
     // logのために関数名を取得
-    const currentFuncName = registWeight.name
+    const currentFuncName = registWeight.name;
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
         // userIdから今日の体調を取得
         // FIXME: 「今日」を判別してdailyReportを取得する必要がある。これではuserに紐づくdailyReportが取れてるだけ
         // 多分、findOrCreateにするべきな気がする。
-        const whereByUserId = { id: userId }
-        const dailyReport = await findUniqueDailyReportAbsoluteExist(whereByUserId, res)
+        const whereByUserId = { id: userId };
+        const dailyReport = await findUniqueDailyReportAbsoluteExist(
+            whereByUserId,
+            customizedPrisma
+        );
 
         // 体重を追加
         const weightData = await customizedPrisma.daily_report_Weight.create({
             data: {
                 dailyReportId: dailyReport.id,
-                result: weight
-            }
-        })
+                result: weight,
+            },
+        });
 
         // レスポンスを返却
-        const HttpStatus = 200
-        const responseStatus = true
-        const responseMsg = RECORD_WEIGHT.message
-        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, weightData)
+        const HttpStatus = 200;
+        const responseStatus = true;
+        const responseMsg = RECORD_WEIGHT.message;
+        basicHttpResponceIncludeData(
+            res,
+            HttpStatus,
+            responseStatus,
+            responseMsg,
+            weightData
+        );
 
         // ログを出力
         const logBody: LoggingObjType = {
@@ -56,13 +90,19 @@ export const registWeight = async (req: Request, res: Response, next: NextFuncti
             path: req.originalUrl,
             body: maskConfInfoInReqBody(req).body,
             status: String(HttpStatus),
-            responseMsg
-        }
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+            responseMsg,
+        };
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
+        ErrorHandleIncludeDbRecordNotFound(
+            e,
+            userId,
+            req,
+            res,
+            currentFuncName
+        );
     }
-}
+};
 
 /**
  * 体重のリストを取得
@@ -76,98 +116,111 @@ export const registWeight = async (req: Request, res: Response, next: NextFuncti
  * @param res
  * @param next
  */
-export const readWeights = async (req: Request, res: Response, next: NextFunction) => {
+export const readWeights = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
     // logのために関数名を取得
-    const currentFuncName = readWeights.name
+    const currentFuncName = readWeights.name;
 
     // クエリのデータを扱いやすくするための型を定義
     type Query = {
-        sort: string | undefined
-        fields: string | undefined
-        limit: string | undefined
-        offset: string | undefined
-    }
+        sort: string | undefined;
+        fields: string | undefined;
+        limit: string | undefined;
+        offset: string | undefined;
+    };
     // フィルター以外の条件を取得
-    const { sort, fields, limit, offset } = req.query as Query
+    const { sort, fields, limit, offset } = req.query as Query;
 
     // bodyからuserIdを取得
-    const userId = req.body.userId
+    const userId = req.body.userId;
 
     // 指定されたソートの内容をprismaに渡せるように成型
-    const sorts = createSortsForPrisma(sort)
+    const sorts = createSortsForPrisma(sort);
 
     //  クエリで指定されたフィルターの内容を連想配列にまとめる
-    const { id, weight, createdAt, updatedAt } = req.query
+    const { id, weight, createdAt, updatedAt } = req.query;
     const filterOptions: FilterOptionsType = {
         id: {
             data: id,
-            constructor: (i) => Number(i)
+            constructor: (i) => Number(i),
         },
         weight: {
             data: weight,
-            constructor: (i) => Number(i)
+            constructor: (i) => Number(i),
         },
         createdAt: {
             data: createdAt,
-            constructor: (i) => new Date(i)
+            constructor: (i) => new Date(i),
         },
         updatedAt: {
             data: updatedAt,
-            constructor: (i) => new Date(i)
+            constructor: (i) => new Date(i),
         },
-    }
+    };
     // 指定されたフィールドのみのオブジェクトを作成
-    const filter = createFilterForPrisma(filterOptions)
+    const filter = createFilterForPrisma(filterOptions);
 
     // userIdからdailyReportIdを取得
-    const whereByUserId = { id: userId }
-    const dailyReport = await findUniqueDailyReportAbsoluteExist(whereByUserId, res)
-    const dailyReportId = dailyReport.id
+    const whereByUserId = { id: userId };
+    const dailyReport = await findUniqueDailyReportAbsoluteExist(
+        whereByUserId,
+        customizedPrisma
+    );
+    const dailyReportId = dailyReport.id;
     try {
         // 体重を取得
         const weights = await customizedPrisma.daily_report_Weight.findMany({
             orderBy: sorts,
             where: {
                 dailyReportId,
-                ...filter
+                ...filter,
             },
             skip: offset ? Number(offset) : DEFAULT_DATA_INFO.offset,
-            take: limit ? Number(limit) : DEFAULT_DATA_INFO.limit
-        })
+            take: limit ? Number(limit) : DEFAULT_DATA_INFO.limit,
+        });
 
         // NOTE: ひとまずもう一度全検索でallCountを取る。もっといい方法を考える。
         const allCount = await customizedPrisma.daily_report_Weight.count({
-            where: { dailyReportId }
-        })
+            where: { dailyReportId },
+        });
 
         // 指定されたフィールドでフィルター
-        const filteredWeights = filteringFields(fields, weights)
+        const filteredWeights = filteringFields(fields, weights);
 
         // レスポンス
-        const HttpStatus = 200
-        const responseStatus = true
-        const responseMsg = READ_WEIGHT.message
+        const HttpStatus = 200;
+        const responseStatus = true;
+        const responseMsg = READ_WEIGHT.message;
         res.status(HttpStatus).json({
-            "status": responseStatus,
-            "message": responseMsg,
-            "allCount": allCount,
-            "count": filteredWeights.length,
-            "sort": sort ?? '',
-            "fields": fields ?? '',
-            "limit": limit ?? '',
-            "offset": offset ?? '',
-            "filter": {
-                "id": id ?? '',
-                "weight": weight ?? '',
-                "createdAt": createdAt ?? '',
-                "updatedAt": updatedAt ?? ''
+            status: responseStatus,
+            message: responseMsg,
+            allCount: allCount,
+            count: filteredWeights.length,
+            sort: sort ?? "",
+            fields: fields ?? "",
+            limit: limit ?? "",
+            offset: offset ?? "",
+            filter: {
+                id: id ?? "",
+                weight: weight ?? "",
+                createdAt: createdAt ?? "",
+                updatedAt: updatedAt ?? "",
             },
-            "weights": filteredWeights
+            weights: filteredWeights,
         });
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
+        ErrorHandleIncludeDbRecordNotFound(
+            e,
+            userId,
+            req,
+            res,
+            currentFuncName
+        );
     }
-}
+};
 
 /**
  * 指定した体重の記録を編集する
@@ -179,46 +232,66 @@ export const readWeights = async (req: Request, res: Response, next: NextFunctio
  * @param res
  * @param next
  */
-export const editWeight = async (req: Request, res: Response, next: NextFunction) => {
-    const id = Number(req.params.id)
-    const { userId, weight } = req.body
+export const editWeight = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    const id = Number(req.params.id);
+    const { userId, weight } = req.body;
 
     // logのために関数名を取得
-    const currentFuncName = editWeight.name
+    const currentFuncName = editWeight.name;
 
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
         // idから体重記録を取得
-        const whereByWeightId = { id }
-        const weightData = await findUniqueUserWeightAbsoluteExist(whereByWeightId, res)
+        const whereByWeightId = { id };
+        const weightData = await findUniqueUserWeightAbsoluteExist(
+            whereByWeightId,
+            res
+        );
 
         // 指定した体重記録がユーザー本人のものか確認
-        const dailyReport = await findUniqueDailyReportAbsoluteExist({ id: weightData.dailyReportId }, res)
-        const isSelfUser = (dailyReport.userId === userId)
+        const dailyReport = await findUniqueDailyReportAbsoluteExist(
+            { id: weightData.dailyReportId },
+            customizedPrisma
+        );
+        const isSelfUser = dailyReport.userId === userId;
         // ユーザー本人のものではない場合、403を返す
         if (!isSelfUser) {
-            const HttpStatus = 403
-            const responseStatus = false
-            const responseMsg = WEIGHT_ACCESS_FORBIDDEN.message
-            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+            const HttpStatus = 403;
+            const responseStatus = false;
+            const responseMsg = WEIGHT_ACCESS_FORBIDDEN.message;
+            return basicHttpResponce(
+                res,
+                HttpStatus,
+                responseStatus,
+                responseMsg
+            );
         }
-
 
         const data = {
-            result: weight
-        }
+            result: weight,
+        };
         // 体重記録を編集
         const newWeight = await customizedPrisma.daily_report_Weight.update({
             where: { id },
-            data: data
-        })
+            data: data,
+        });
 
         // レスポンスを返却
-        const HttpStatus = 200
-        const responseStatus = true
-        const responseMsg = EDIT_WEIGHT.message
-        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, newWeight)
+        const HttpStatus = 200;
+        const responseStatus = true;
+        const responseMsg = EDIT_WEIGHT.message;
+        basicHttpResponceIncludeData(
+            res,
+            HttpStatus,
+            responseStatus,
+            responseMsg,
+            newWeight
+        );
 
         // ログを出力
         const logBody: LoggingObjType = {
@@ -228,13 +301,19 @@ export const editWeight = async (req: Request, res: Response, next: NextFunction
             path: req.originalUrl,
             body: maskConfInfoInReqBody(req).body,
             status: String(HttpStatus),
-            responseMsg
-        }
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+            responseMsg,
+        };
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
+        ErrorHandleIncludeDbRecordNotFound(
+            e,
+            userId,
+            req,
+            res,
+            currentFuncName
+        );
     }
-}
+};
 
 /**
  * 指定した体重の記録を削除する
@@ -246,41 +325,62 @@ export const editWeight = async (req: Request, res: Response, next: NextFunction
  * @param next
  * @returns
  */
-export const deleteWeight = async (req: Request, res: Response, next: NextFunction) => {
-    const id = Number(req.params.id)
-    const { userId } = req.body
+export const deleteWeight = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    const id = Number(req.params.id);
+    const { userId } = req.body;
 
     // logのために関数名を取得
-    const currentFuncName = deleteWeight.name
+    const currentFuncName = deleteWeight.name;
 
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
         // idから体重記録を取得
-        const whereByWeightId = { id }
-        const weightData = await findUniqueUserWeightAbsoluteExist(whereByWeightId, res)
+        const whereByWeightId = { id };
+        const weightData = await findUniqueUserWeightAbsoluteExist(
+            whereByWeightId,
+            res
+        );
 
         // 指定した体重記録がユーザー本人のものか確認
-        const dailyReport = await findUniqueDailyReportAbsoluteExist({ id: weightData.dailyReportId }, res)
-        const isSelfUser = (dailyReport.userId === userId)
+        const dailyReport = await findUniqueDailyReportAbsoluteExist(
+            { id: weightData.dailyReportId },
+            customizedPrisma
+        );
+        const isSelfUser = dailyReport.userId === userId;
         // ユーザー本人のものではない場合、403を返す
         if (!isSelfUser) {
-            const HttpStatus = 403
-            const responseStatus = false
-            const responseMsg = WEIGHT_ACCESS_FORBIDDEN.message
-            return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+            const HttpStatus = 403;
+            const responseStatus = false;
+            const responseMsg = WEIGHT_ACCESS_FORBIDDEN.message;
+            return basicHttpResponce(
+                res,
+                HttpStatus,
+                responseStatus,
+                responseMsg
+            );
         }
 
         // 体重記録を削除
         const newWeight = await customizedPrisma.daily_report_Weight.delete({
-            where: { id }
-        })
+            where: { id },
+        });
 
         // レスポンスを返却
-        const HttpStatus = 200
-        const responseStatus = true
-        const responseMsg = DELETE_WEIGHT.message
-        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, newWeight)
+        const HttpStatus = 200;
+        const responseStatus = true;
+        const responseMsg = DELETE_WEIGHT.message;
+        basicHttpResponceIncludeData(
+            res,
+            HttpStatus,
+            responseStatus,
+            responseMsg,
+            newWeight
+        );
 
         // ログを出力
         const logBody: LoggingObjType = {
@@ -290,10 +390,16 @@ export const deleteWeight = async (req: Request, res: Response, next: NextFuncti
             path: req.originalUrl,
             body: maskConfInfoInReqBody(req).body,
             status: String(HttpStatus),
-            responseMsg
-        }
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+            responseMsg,
+        };
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
+        ErrorHandleIncludeDbRecordNotFound(
+            e,
+            userId,
+            req,
+            res,
+            currentFuncName
+        );
     }
-}
+};
