@@ -10,7 +10,7 @@ const mockPrisma = {
     },
 } as unknown as jest.MockedObject<typeof customizedPrisma>;
 
-describe("排便記録の取得テスト", () => {
+describe("findUniqueBowelMovementAbsoluteExistの単体テスト", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
