@@ -10,14 +10,19 @@ import { DbRecordNotFoundError } from ".";
  * @param res
  * @returns
  */
-export const findUniqueBowelMovementAbsoluteExist = async (where: Prisma.Bowel_MovementWhereUniqueInput, prismaClient: typeof customizedPrisma) => {
+export const findUniqueBowelMovementAbsoluteExist = async (
+    where: Prisma.Bowel_MovementWhereUniqueInput,
+    prismaClient: typeof customizedPrisma
+) => {
     // idから排便記録を取得
-    const bowelMovementData = await prismaClient.bowel_Movement.findUnique({ where })
+    const bowelMovementData = await prismaClient.bowel_Movement.findUnique({
+        where,
+    });
     // 排便記録が無かったらDbRecordNotFoundErrorを投げる
     if (!bowelMovementData) {
-        const responseMsg = BOWEL_MOVEMENT_NOT_FOUND.message
-        throw new DbRecordNotFoundError(responseMsg)
+        const responseMsg = BOWEL_MOVEMENT_NOT_FOUND.message;
+        throw new DbRecordNotFoundError(responseMsg);
     }
 
-    return bowelMovementData
-}
+    return bowelMovementData;
+};
