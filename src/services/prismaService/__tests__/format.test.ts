@@ -1,8 +1,4 @@
-import {
-    describe,
-    expect,
-    test,
-} from "@jest/globals";
+import { describe, expect, test } from "@jest/globals";
 import { transformNameTableToModel } from "@/services/prismaService/format";
 
 describe("transformNameTableToModelの単体テスト", () => {
