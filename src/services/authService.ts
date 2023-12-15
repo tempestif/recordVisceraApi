@@ -5,6 +5,7 @@ import type { JwtPayload } from "jsonwebtoken"
 import { basicHttpResponce } from "./utilResponseService";
 import { findUniqueUserAbsoluteExist } from "./prismaService";
 import { USER_LOGIN_STATUS } from "@/consts/db";
+import { customizedPrisma } from "./prismaClients";
 
 /**
  * トークン認証
@@ -41,7 +42,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
         const decoded = await verify(jwt, privateKey) as JwtPayload
 
         // userの有無を確認
-        const user = await findUniqueUserAbsoluteExist({ id: decoded.id }, res)
+        const user = await findUniqueUserAbsoluteExist({ id: decoded.id }, customizedPrisma)
 
         // ログアウトしている場合、400エラー
         if (user.loginStatus === USER_LOGIN_STATUS.logout) {

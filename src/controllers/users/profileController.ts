@@ -1,12 +1,19 @@
 import { PROCESS_SUCCESS } from "@/consts/logConsts";
-import { COMPLETE_GET_PROFILE, COMPLETE_UPDATE_PROFILE } from "@/consts/responseConsts";
-import { CustomLogger, LoggingObjType, maskConfInfoInReqBody } from "@/services/LoggerService";
-import { ErrorHandleIncludeDbRecordNotFound } from "@/services/errorHandlingService";
+import {
+    COMPLETE_GET_PROFILE,
+    COMPLETE_UPDATE_PROFILE,
+} from "@/consts/responseConsts";
+import {
+    CustomLogger,
+    LoggingObjType,
+    maskConfInfoInReqBody,
+} from "@/services/LoggerService";
+import { errorResponseHandler } from "@/services/errorHandlingService";
 import { customizedPrisma } from "@/services/prismaClients";
 import { findUniqueProfileAbsoluteExist } from "@/services/prismaService";
 import { basicHttpResponceIncludeData } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
-const logger = new CustomLogger()
+const logger = new CustomLogger();
 
 /**
  * ユーザーのプロフィールを取得
@@ -16,21 +23,34 @@ const logger = new CustomLogger()
  * @param next
  * @returns
  */
-export const readProfile = async (req: Request, res: Response, next: NextFunction) => {
-    const { userId } = req.body
+export const readProfile = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    const { userId } = req.body;
 
     // logのために関数名を取得
-    const currentFuncName = readProfile.name
+    const currentFuncName = readProfile.name;
     try {
         // userIdでプロフィールを取得
-        const whereByUserId = { userId: userId }
-        const profile = await findUniqueProfileAbsoluteExist(whereByUserId, res)
+        const whereByUserId = { userId: userId };
+        const profile = await findUniqueProfileAbsoluteExist(
+            whereByUserId,
+            customizedPrisma
+        );
 
         // レスポンスを返却
-        const HttpStatus = 200
-        const responseStatus = true
-        const responseMsg = COMPLETE_GET_PROFILE.message
-        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, profile)
+        const HttpStatus = 200;
+        const responseStatus = true;
+        const responseMsg = COMPLETE_GET_PROFILE.message;
+        basicHttpResponceIncludeData(
+            res,
+            HttpStatus,
+            responseStatus,
+            responseMsg,
+            profile
+        );
 
         // ログを出力
         const logBody: LoggingObjType = {
@@ -40,13 +60,13 @@ export const readProfile = async (req: Request, res: Response, next: NextFunctio
             path: req.originalUrl,
             body: maskConfInfoInReqBody(req).body,
             status: String(HttpStatus),
-            responseMsg
-        }
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+            responseMsg,
+        };
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(e, userId.message, req, res, currentFuncName)
+        errorResponseHandler(e, userId.message, req, res, currentFuncName);
     }
-}
+};
 
 /**
  * ユーザーのプロフィール編集
@@ -55,17 +75,21 @@ export const readProfile = async (req: Request, res: Response, next: NextFunctio
  * @param res
  * @param next
  */
-export const editProfile = async (req: Request, res: Response, next: NextFunction) => {
-    const { userId, sex, height, birthday } = req.body
+export const editProfile = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    const { userId, sex, height, birthday } = req.body;
 
     // logのために関数名を取得
-    const currentFuncName = editProfile.name
+    const currentFuncName = editProfile.name;
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
         // userIdでプロフィールを検索
-        const whereByUserId = { userId }
-        await findUniqueProfileAbsoluteExist(whereByUserId, res)
+        const whereByUserId = { userId };
+        await findUniqueProfileAbsoluteExist(whereByUserId, customizedPrisma);
 
         // プロフィールを更新
         const updatedProfile = await customizedPrisma.profile.update({
@@ -73,15 +97,21 @@ export const editProfile = async (req: Request, res: Response, next: NextFunctio
             data: {
                 sex,
                 height,
-                birthday
-            }
-        })
+                birthday,
+            },
+        });
 
         // レスポンスを返却
-        const HttpStatus = 200
-        const responseStatus = true
-        const responseMsg = COMPLETE_UPDATE_PROFILE.message
-        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, updatedProfile)
+        const HttpStatus = 200;
+        const responseStatus = true;
+        const responseMsg = COMPLETE_UPDATE_PROFILE.message;
+        basicHttpResponceIncludeData(
+            res,
+            HttpStatus,
+            responseStatus,
+            responseMsg,
+            updatedProfile
+        );
 
         // ログを出力
         const logBody: LoggingObjType = {
@@ -91,11 +121,10 @@ export const editProfile = async (req: Request, res: Response, next: NextFunctio
             path: req.originalUrl,
             body: maskConfInfoInReqBody(req).body,
             status: String(HttpStatus),
-            responseMsg
-        }
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
-
+            responseMsg,
+        };
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(e, userId.message, req, res, currentFuncName)
+        errorResponseHandler(e, userId.message, req, res, currentFuncName);
     }
-}
+};

@@ -1,10 +1,10 @@
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
-export * from './users'
-export * from './temps'
-export * from './profiles'
-export * from './weights'
-export * from './dailyReports'
+export * from "./users";
+export * from "./temps";
+export * from "./profiles";
+export * from "./weights";
+export * from "./dailyReports";
 
 export class DbRecordNotFoundError extends Error {
     constructor(...args: any[]) {
@@ -12,7 +12,7 @@ export class DbRecordNotFoundError extends Error {
 
         // this.name = this.constructor.name; でも問題ないが、
         // enumerable を false にしたほうがビルトインエラーに近づく、
-        Object.defineProperty(this, 'name', {
+        Object.defineProperty(this, "name", {
             configurable: true,
             enumerable: false,
             value: this.constructor.name,
@@ -28,9 +28,26 @@ export class DbRecordNotFoundError extends Error {
     // findUniqueOrThrowで投げられるエラーでもinstanceofでtrueを返すようにしておく。
     static [Symbol.hasInstance](e: unknown) {
         if (e instanceof PrismaClientKnownRequestError) {
-            return true
+            return true;
         } else {
-            return false
+            return false;
+        }
+    }
+}
+
+export class MultipleActiveUserError extends Error {
+    constructor(...args: any[]) {
+        super(...args);
+
+        Object.defineProperty(this, "name", {
+            configurable: true,
+            enumerable: false,
+            value: this.constructor.name,
+            writable: true,
+        });
+
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, MultipleActiveUserError);
         }
     }
 }

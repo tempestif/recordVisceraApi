@@ -1,38 +1,55 @@
-import { type Request, type Response, type NextFunction } from "express"
-import { customizedPrisma } from "@/services/prismaClients"
-import { sendMail } from "@/services/nodemailerService"
-import { compare } from "bcrypt"
-import { basicHttpResponce, basicHttpResponceIncludeData, internalServerErr } from "@/services/utilResponseService"
-import { COMPLETE_GET_PROFILE, COMPLETE_UPDATE_PASSWORD, DELETE_USER, WRONG_LOGIN_INFO } from "@/consts/responseConsts"
-import { findUniqueUserAbsoluteExist } from "@/services/prismaService"
-import { CustomLogger, LoggingObjType, maskConfInfoInReqBody } from "@/services/LoggerService"
-import { PROCESS_FAILURE, PROCESS_SUCCESS } from "@/consts/logConsts"
-import { ErrorHandleIncludeDbRecordNotFound } from "@/services/errorHandlingService"
-import { USER_LOGIN_STATUS } from "@/consts/db"
-import { Prisma } from "@prisma/client"
-import { transformNameTableToModel } from "@/services/prismaService/format"
-const logger = new CustomLogger()
+import { type Request, type Response, type NextFunction } from "express";
+import { customizedPrisma } from "@/services/prismaClients";
+import { sendMail } from "@/services/nodemailerService";
+import { compare } from "bcrypt";
+import {
+    basicHttpResponce,
+    basicHttpResponceIncludeData,
+    internalServerErr,
+} from "@/services/utilResponseService";
+import {
+    COMPLETE_GET_PROFILE,
+    COMPLETE_UPDATE_PASSWORD,
+    DELETE_USER,
+    WRONG_LOGIN_INFO,
+} from "@/consts/responseConsts";
+import { findUniqueUserAbsoluteExist } from "@/services/prismaService";
+import {
+    CustomLogger,
+    LoggingObjType,
+    maskConfInfoInReqBody,
+} from "@/services/LoggerService";
+import { PROCESS_FAILURE, PROCESS_SUCCESS } from "@/consts/logConsts";
+import { errorResponseHandler } from "@/services/errorHandlingService";
+import { USER_LOGIN_STATUS } from "@/consts/db";
+import { Prisma } from "@prisma/client";
+import { transformNameTableToModel } from "@/services/prismaService/format";
+const logger = new CustomLogger();
 
 /**
  * メール送信テスト
  * TODO: 本番前に消す
  */
-export const sendMailTest = async (req: Request, res: Response, next: NextFunction) => {
+export const sendMailTest = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
     try {
         // メールを送信
-        const mail = process.env.MAIL_ACCOUNT ?? ""
-        await sendMail(mail, "test", "test mail")
+        const mail = process.env.MAIL_ACCOUNT ?? "";
+        await sendMail(mail, "test", "test mail");
 
         // レスポンス
         res.status(200).json({
-            "status": true,
-            "message": "[テスト]メールを送信しました。",
+            status: true,
+            message: "[テスト]メールを送信しました。",
         });
     } catch (e) {
         // エラーの時のレスポンス
-        internalServerErr(res, e)
+        internalServerErr(res, e);
     }
-}
+};
 
 /**
  * tokenのuserIdからユーザー情報を取得
@@ -41,31 +58,44 @@ export const sendMailTest = async (req: Request, res: Response, next: NextFuncti
  * @param next
  * @returns
  */
-export const readUser = async (req: Request, res: Response, next: NextFunction) => {
+export const readUser = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
     // TODO: バリデーション
-    const { userId } = req.body
+    const { userId } = req.body;
 
     // logのために関数名を取得
-    const currentFuncName = readUser.name
+    const currentFuncName = readUser.name;
     try {
         // userIdでユーザーを取得
-        const whereByUserId = { id: userId }
-        const user = await findUniqueUserAbsoluteExist(whereByUserId, res)
+        const whereByUserId = { id: userId };
+        const user = await findUniqueUserAbsoluteExist(
+            whereByUserId,
+            customizedPrisma
+        );
 
         // レスポンスを返却
-        const HttpStatus = 200
-        const responseStatus = true
-        const responseMsg = COMPLETE_GET_PROFILE.message
+        const HttpStatus = 200;
+        const responseStatus = true;
+        const responseMsg = COMPLETE_GET_PROFILE.message;
         // password, authCode, verified以外を返却する。
-        const { id, email, name, createdAt, updatedAt } = user
+        const { id, email, name, createdAt, updatedAt } = user;
         const respondUser = {
             id,
             email,
             name,
             createdAt,
-            updatedAt
-        }
-        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, respondUser)
+            updatedAt,
+        };
+        basicHttpResponceIncludeData(
+            res,
+            HttpStatus,
+            responseStatus,
+            responseMsg,
+            respondUser
+        );
 
         // ログを出力
         const logBody: LoggingObjType = {
@@ -75,13 +105,13 @@ export const readUser = async (req: Request, res: Response, next: NextFunction) 
             path: req.originalUrl,
             body: maskConfInfoInReqBody(req).body,
             status: String(HttpStatus),
-            responseMsg
-        }
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+            responseMsg,
+        };
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e: unknown) {
-        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
+        errorResponseHandler(e, userId, req, res, currentFuncName);
     }
-}
+};
 
 const userInclude: Prisma.UserInclude = {
     Bowel_Movement: true,
@@ -93,7 +123,7 @@ const userInclude: Prisma.UserInclude = {
     Medication_Info_User: true,
     Medication_Schedule: true,
     Medication_Result: true,
-}
+};
 
 /**
  * ユーザー削除
@@ -102,29 +132,33 @@ const userInclude: Prisma.UserInclude = {
  * @param res
  * @param next
  */
-export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
-    const { userId } = req.body
-    const currentFuncName = deleteUser.name
+export const deleteUser = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    const { userId } = req.body;
+    const currentFuncName = deleteUser.name;
     try {
         // userテーブルを論理削除
         const user = await customizedPrisma.user.update({
             where: {
-                id: userId
+                id: userId,
             },
             data: {
-                loginStatus: USER_LOGIN_STATUS.deactived
+                loginStatus: USER_LOGIN_STATUS.deactived,
             },
-            include: userInclude
-        })
+            include: userInclude,
+        });
 
         // userに紐づくテーブルを削除
-        type AcceptedTableNames = keyof Prisma.$UserPayload["objects"]
+        type AcceptedTableNames = keyof Prisma.$UserPayload["objects"];
         for (const table in userInclude) {
-            const t = table as AcceptedTableNames
-            const prop = transformNameTableToModel(t)
+            const t = table as AcceptedTableNames;
+            const prop = transformNameTableToModel(t);
             // 消すテーブルとのリレーションが1対多かどうか確認
-            const includeTable = user[t]
-            const isOneToMany = Array.isArray(includeTable)
+            const includeTable = user[t];
+            const isOneToMany = Array.isArray(includeTable);
 
             // 1対多の場合、配列内の全てのレコードを消す
             if (isOneToMany) {
@@ -133,26 +167,26 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
                     await customizedPrisma[prop].delete({
                         // @ts-ignore
                         where: {
-                            id: record.id
-                        }
-                    })
+                            id: record.id,
+                        },
+                    });
                 }
             } else if (includeTable) {
                 // @ts-ignore
                 await customizedPrisma[prop].delete({
                     // @ts-ignore
                     where: {
-                        id: includeTable?.id
-                    }
-                })
+                        id: includeTable?.id,
+                    },
+                });
             }
         }
 
         // レスポンスを返却
-        const HttpStatus = 200
-        const responseStatus = true
-        const responseMsg = DELETE_USER.message
-        basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        const HttpStatus = 200;
+        const responseStatus = true;
+        const responseMsg = DELETE_USER.message;
+        basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 
         // ログを出力
         const logBody: LoggingObjType = {
@@ -162,13 +196,13 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
             path: req.originalUrl,
             body: maskConfInfoInReqBody(req).body,
             status: String(HttpStatus),
-            responseMsg
-        }
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+            responseMsg,
+        };
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e: unknown) {
-        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
+        errorResponseHandler(e, userId, req, res, currentFuncName);
     }
-}
+};
 
 /**
  * ユーザーパスワードを変更
@@ -177,25 +211,32 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
  * @param res
  * @param next
  */
-export const changePassowrd = async (req: Request, res: Response, next: NextFunction) => {
-    const { userId, oldPassword, newPassword } = req.body
+export const changePassowrd = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    const { userId, oldPassword, newPassword } = req.body;
 
     // logのために関数名を取得
-    const currentFuncName = changePassowrd.name
+    const currentFuncName = changePassowrd.name;
     // TODO: バリデーション
     try {
         // userIdでユーザーを取得
-        const whereByUserId = { id: userId }
-        const user = await findUniqueUserAbsoluteExist(whereByUserId, res)
+        const whereByUserId = { id: userId };
+        const user = await findUniqueUserAbsoluteExist(
+            whereByUserId,
+            customizedPrisma
+        );
 
         // 旧パスワードの一致を確認
-        const isValidPassword = await compare(oldPassword, user.password)
+        const isValidPassword = await compare(oldPassword, user.password);
         // 合致しなかったら401エラー
         if (!isValidPassword) {
-            const HttpStatus = 401
-            const responseStatus = false
-            const responseMsg = WRONG_LOGIN_INFO.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+            const HttpStatus = 401;
+            const responseStatus = false;
+            const responseMsg = WRONG_LOGIN_INFO.message;
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 
             // ログを出力
             const logBody: LoggingObjType = {
@@ -205,34 +246,40 @@ export const changePassowrd = async (req: Request, res: Response, next: NextFunc
                 path: req.originalUrl,
                 body: maskConfInfoInReqBody(req).body,
                 status: String(HttpStatus),
-                responseMsg
-            }
-            logger.error(PROCESS_FAILURE.message(currentFuncName), logBody)
+                responseMsg,
+            };
+            logger.error(PROCESS_FAILURE.message(currentFuncName), logBody);
 
-            return
+            return;
         }
 
         // パスワードを更新
         const newUser = await customizedPrisma.user.update({
             where: whereByUserId,
             data: {
-                password: newPassword
-            }
-        })
+                password: newPassword,
+            },
+        });
 
         // レスポンスを返却
-        const HttpStatus = 200
-        const responseStatus = true
-        const responseMsg = COMPLETE_UPDATE_PASSWORD.message
-        const { id, email, name, createdAt, updatedAt } = newUser
+        const HttpStatus = 200;
+        const responseStatus = true;
+        const responseMsg = COMPLETE_UPDATE_PASSWORD.message;
+        const { id, email, name, createdAt, updatedAt } = newUser;
         const respondUser = {
             id,
             email,
             name,
             createdAt,
-            updatedAt
-        }
-        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, respondUser)
+            updatedAt,
+        };
+        basicHttpResponceIncludeData(
+            res,
+            HttpStatus,
+            responseStatus,
+            responseMsg,
+            respondUser
+        );
 
         // ログを出力
         const logBody: LoggingObjType = {
@@ -242,10 +289,10 @@ export const changePassowrd = async (req: Request, res: Response, next: NextFunc
             path: req.originalUrl,
             body: maskConfInfoInReqBody(req).body,
             status: String(HttpStatus),
-            responseMsg
-        }
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+            responseMsg,
+        };
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
+        errorResponseHandler(e, userId, req, res, currentFuncName);
     }
-}
+};

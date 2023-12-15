@@ -1,15 +1,35 @@
-import { PROCESS_FAILURE, PROCESS_SUCCESS, UNSPECIFIED_USER_ID } from "@/consts/logConsts";
-import { TITLE_VALID_RESET_PASS, TEXT_VALID_RESET_PASS } from "@/consts/mailConsts";
-import { COMPLETE_VALID_RESET_PASS, SEND_MAIL_FOR_RESET_PASS_VALID, TOKEN_NOT_FOUND } from "@/consts/responseConsts";
-import { CustomLogger, LoggingObjType, maskConfInfoInReqBody } from "@/services/LoggerService";
-import { ErrorHandleIncludeDbRecordNotFound } from "@/services/errorHandlingService";
+import {
+    PROCESS_FAILURE,
+    PROCESS_SUCCESS,
+    UNSPECIFIED_USER_ID,
+} from "@/consts/logConsts";
+import {
+    TITLE_VALID_RESET_PASS,
+    TEXT_VALID_RESET_PASS,
+} from "@/consts/mailConsts";
+import {
+    COMPLETE_VALID_RESET_PASS,
+    MULTIPLE_ACTIVE_USERS,
+    SEND_MAIL_FOR_RESET_PASS_VALID,
+    TOKEN_NOT_FOUND,
+} from "@/consts/responseConsts";
+import {
+    CustomLogger,
+    LoggingObjType,
+    maskConfInfoInReqBody,
+} from "@/services/LoggerService";
+import { errorResponseHandler } from "@/services/errorHandlingService";
 import { sendMail } from "@/services/nodemailerService";
 import { customizedPrisma } from "@/services/prismaClients";
-import { findActivedUser, findUniqueUserAbsoluteExist } from "@/services/prismaService";
+import {
+    MultipleActiveUserError,
+    findActivedUser,
+    findUniqueUserAbsoluteExist,
+} from "@/services/prismaService";
 import { basicHttpResponce } from "@/services/utilResponseService";
 import { randomBytes } from "crypto";
 import type { Request, Response, NextFunction } from "express";
-const logger = new CustomLogger()
+const logger = new CustomLogger();
 
 /**
  * パスワード再設定のリクエストを行う
@@ -18,41 +38,50 @@ const logger = new CustomLogger()
  * @param res
  * @param next
  */
-export const requestResettingPassword = async (req: Request, res: Response, next: NextFunction) => {
-    const { email } = req.body
+export const requestResettingPassword = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    const { email } = req.body;
 
     // logのために関数名を取得
-    const currentFuncName = requestResettingPassword.name
+    const currentFuncName = requestResettingPassword.name;
     // TODO: バリデーション
 
     try {
         // emailからuserを取得
-        const whereByEmail = { email }
-        const user = await findActivedUser(whereByEmail)
+        const whereByEmail = { email };
+        const users = await findActivedUser(whereByEmail, customizedPrisma);
+        if (users.length !== 0) {
+            throw new MultipleActiveUserError(MULTIPLE_ACTIVE_USERS.message);
+        }
+
+        const user = users[0];
 
         // 認証トークン作成
-        const passResetHash = randomBytes(32).toString("hex")
+        const passResetHash = randomBytes(32).toString("hex");
 
         // DBに保存
         const newUser = await customizedPrisma.user.update({
             where: {
-                id: user.id
+                id: user.id,
             },
             data: {
-                passResetHash
-            }
-        })
+                passResetHash,
+            },
+        });
 
         // メール送信
         // TODO: ここはフロント側のページのURLを送信するべき。フロントを実装したら修正する。
-        const verifyUrl = `${process.env.BASE_URL}/reset-password/${newUser.id}/execute/${newUser.passResetHash}`
-        await sendMailForResetPasswordVerify(email, verifyUrl)
+        const verifyUrl = `${process.env.BASE_URL}/reset-password/${newUser.id}/execute/${newUser.passResetHash}`;
+        await sendMailForResetPasswordVerify(email, verifyUrl);
 
         // レスポンスを返却
-        const HttpStatus = 201
-        const responseStatus = true
-        const responseMsg = SEND_MAIL_FOR_RESET_PASS_VALID.message
-        basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        const HttpStatus = 201;
+        const responseStatus = true;
+        const responseMsg = SEND_MAIL_FOR_RESET_PASS_VALID.message;
+        basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 
         // ログを出力
         const logBody: LoggingObjType = {
@@ -62,13 +91,19 @@ export const requestResettingPassword = async (req: Request, res: Response, next
             path: req.originalUrl,
             body: maskConfInfoInReqBody(req).body,
             status: String(HttpStatus),
-            responseMsg
-        }
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+            responseMsg,
+        };
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(e, UNSPECIFIED_USER_ID.message, req, res, currentFuncName)
+        errorResponseHandler(
+            e,
+            UNSPECIFIED_USER_ID.message,
+            req,
+            res,
+            currentFuncName
+        );
     }
-}
+};
 
 /**
  * パスワード再設定を実行する
@@ -78,26 +113,30 @@ export const requestResettingPassword = async (req: Request, res: Response, next
  * @param res
  * @param next
  */
-export const ExecuteResettingPassword = async (req: Request, res: Response, next: NextFunction) => {
-    const id = Number(req.body.id)
-    const { token, newPassword } = req.body
+export const ExecuteResettingPassword = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    const id = Number(req.body.id);
+    const { token, newPassword } = req.body;
 
     // logのために関数名を取得
-    const currentFuncName = ExecuteResettingPassword.name
+    const currentFuncName = ExecuteResettingPassword.name;
 
     // TODO: バリデーション
 
     try {
         // idからユーザーを検索
-        const whereByUserId = { id }
-        const user = await findUniqueUserAbsoluteExist(whereByUserId, res)
+        const whereByUserId = { id };
+        const user = await findUniqueUserAbsoluteExist(whereByUserId, customizedPrisma);
 
         // tokenが見つからなかったら400エラー
         if (!user.passResetHash) {
-            const HttpStatus = 400
-            const responseStatus = false
-            const responseMsg = TOKEN_NOT_FOUND.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+            const HttpStatus = 400;
+            const responseStatus = false;
+            const responseMsg = TOKEN_NOT_FOUND.message;
+            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 
             // ログを出力
             const logBody: LoggingObjType = {
@@ -107,10 +146,10 @@ export const ExecuteResettingPassword = async (req: Request, res: Response, next
                 path: req.originalUrl,
                 body: maskConfInfoInReqBody(req).body,
                 status: String(HttpStatus),
-                responseMsg
-            }
-            logger.error(PROCESS_FAILURE.message(currentFuncName), logBody)
-            return
+                responseMsg,
+            };
+            logger.error(PROCESS_FAILURE.message(currentFuncName), logBody);
+            return;
         }
 
         // tokenが一致していたらパスワードを更新
@@ -119,16 +158,16 @@ export const ExecuteResettingPassword = async (req: Request, res: Response, next
                 where: whereByUserId,
                 data: {
                     passResetHash: "",
-                    password: newPassword
-                }
-            })
+                    password: newPassword,
+                },
+            });
         }
 
         // レスポンス
-        const HttpStatus = 200
-        const responseStatus = true
-        const responseMsg = COMPLETE_VALID_RESET_PASS.message
-        basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+        const HttpStatus = 200;
+        const responseStatus = true;
+        const responseMsg = COMPLETE_VALID_RESET_PASS.message;
+        basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 
         // ログを出力
         const logBody: LoggingObjType = {
@@ -138,14 +177,20 @@ export const ExecuteResettingPassword = async (req: Request, res: Response, next
             path: req.originalUrl,
             body: maskConfInfoInReqBody(req).body,
             status: String(HttpStatus),
-            responseMsg
-        }
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+            responseMsg,
+        };
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
         // エラーの時のレスポンス
-        ErrorHandleIncludeDbRecordNotFound(e, UNSPECIFIED_USER_ID.message, req, res, currentFuncName)
+        errorResponseHandler(
+            e,
+            UNSPECIFIED_USER_ID.message,
+            req,
+            res,
+            currentFuncName
+        );
     }
-}
+};
 
 /**
  * email認証確認用のメールを送信する。
@@ -154,8 +199,8 @@ export const ExecuteResettingPassword = async (req: Request, res: Response, next
  */
 const sendMailForResetPasswordVerify = async (email: string, url: string) => {
     // 件名
-    const mailSubject = TITLE_VALID_RESET_PASS.message
+    const mailSubject = TITLE_VALID_RESET_PASS.message;
     // 本文
-    const text = TEXT_VALID_RESET_PASS.message(url)
-    await sendMail(email, mailSubject, text)
-}
+    const text = TEXT_VALID_RESET_PASS.message(url);
+    await sendMail(email, mailSubject, text);
+};

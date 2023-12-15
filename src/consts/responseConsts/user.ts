@@ -3,6 +3,10 @@ export const USER_NOT_FOUND = {
     message: "ユーザーが見つかりません。"
 } as const
 
+export const MULTIPLE_ACTIVE_USERS= {
+    message: "登録済みユーザーが複数います"
+} as const
+
 // パスワードの更新
 export const WRONG_OLD_PASSWORD = {
     message: "旧パスワードが間違っています。"

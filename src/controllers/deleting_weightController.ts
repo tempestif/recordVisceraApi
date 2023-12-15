@@ -18,7 +18,7 @@ import {
     createSortsForPrisma,
     filteringFields,
 } from "@/services/dataTransferService";
-import { ErrorHandleIncludeDbRecordNotFound } from "@/services/errorHandlingService";
+import { errorResponseHandler } from "@/services/errorHandlingService";
 import { customizedPrisma } from "@/services/prismaClients";
 import {
     findUniqueDailyReportAbsoluteExist,
@@ -94,7 +94,7 @@ export const registWeight = async (
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(
+        errorResponseHandler(
             e,
             userId,
             req,
@@ -212,7 +212,7 @@ export const readWeights = async (
             weights: filteredWeights,
         });
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(
+        errorResponseHandler(
             e,
             userId,
             req,
@@ -305,7 +305,7 @@ export const editWeight = async (
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(
+        errorResponseHandler(
             e,
             userId,
             req,
@@ -394,7 +394,7 @@ export const deleteWeight = async (
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(
+        errorResponseHandler(
             e,
             userId,
             req,

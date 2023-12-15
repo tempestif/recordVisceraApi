@@ -19,10 +19,7 @@ import {
     createSortsForPrisma,
     filteringFields,
 } from "@/services/dataTransferService";
-import {
-    ErrorHandleIncludeDbRecordNotFound,
-    internalServerErrorHandle,
-} from "@/services/errorHandlingService";
+import { errorResponseHandler } from "@/services/errorHandlingService";
 import { customizedPrisma } from "@/services/prismaClients";
 import { findUniqueUserAbsoluteExist } from "@/services/prismaService";
 import { findUniqueBowelMovementAbsoluteExist } from "@/services/prismaService/bowelMovements";
@@ -55,7 +52,7 @@ export const registBowelMovement = async (
     try {
         // userIdからユーザーを取得
         const whereByUserId = { id: userId };
-        await findUniqueUserAbsoluteExist(whereByUserId, res);
+        await findUniqueUserAbsoluteExist(whereByUserId, customizedPrisma);
 
         // dateをDate型に変換
         let dateForDb;
@@ -104,13 +101,7 @@ export const registBowelMovement = async (
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(
-            e,
-            userId,
-            req,
-            res,
-            currentFuncName
-        );
+        errorResponseHandler(e, userId, req, res, currentFuncName);
     }
 };
 
@@ -259,7 +250,7 @@ export const readBowelMovements = async (
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        internalServerErrorHandle(e, userId, req, res, currentFuncName);
+        errorResponseHandler(e, userId, req, res, currentFuncName);
     }
 };
 
@@ -377,13 +368,7 @@ export const editBowelMovement = async (
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(
-            e,
-            userId,
-            req,
-            res,
-            currentFuncName
-        );
+        errorResponseHandler(e, userId, req, res, currentFuncName);
     }
 };
 
@@ -471,13 +456,7 @@ export const deleteBowelMovement = async (
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(
-            e,
-            userId,
-            req,
-            res,
-            currentFuncName
-        );
+        errorResponseHandler(e, userId, req, res, currentFuncName);
     }
 };
 
@@ -501,7 +480,7 @@ export const countBowelMovementsPerDay = async (
     try {
         // userIdからユーザーの存在を確認
         const whereByUserId = { id: userId };
-        await findUniqueUserAbsoluteExist(whereByUserId, res);
+        await findUniqueUserAbsoluteExist(whereByUserId, customizedPrisma);
 
         // groupBy()で日付毎にカウント。
         const groupBowelMovements =
@@ -548,12 +527,6 @@ export const countBowelMovementsPerDay = async (
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(
-            e,
-            userId,
-            req,
-            res,
-            currentFuncName
-        );
+        errorResponseHandler(e, userId, req, res, currentFuncName);
     }
 };
