@@ -1,4 +1,3 @@
-import { customizedPrisma } from "@/services/prismaClients";
 import {
     describe,
     expect,
@@ -7,19 +6,14 @@ import {
     beforeEach,
     afterEach,
 } from "@jest/globals";
-import { Profile } from "@prisma/client";
+import { Profile, User } from "@prisma/client";
 import {
     DbRecordNotFoundError,
     findUniqueProfileAbsoluteExist,
 } from "@/services/prismaService/index";
+import { customizedPrisma } from "@/services/prismaClients";
 
-const mockPrisma = {
-    profile: {
-        findUnique: jest.fn(),
-    },
-} as unknown as jest.MockedObject<typeof customizedPrisma>;
-
-describe("findUniqueBowelMovementAbsoluteExistの単体テスト", () => {
+describe("findUniqueProfileAbsoluteExistの単体テスト", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -29,30 +23,63 @@ describe("findUniqueBowelMovementAbsoluteExistの単体テスト", () => {
     });
 
     test("プロフィールが存在する場合、データを返す", async () => {
+        // テストデータ
+        const mockUser: User = {
+            email: "petaxa@gmail.com",
+            name: "petaxa",
+            password: "$12365gjoiwe",
+            verifyEmailHash: null,
+            passResetHash: null,
+            loginStatus: 1,
+            verified: 1,
+            id: 1,
+            createdAt: new Date("2023-09-05T10:00:00Z"),
+            updatedAt: new Date("2023-09-05T11:00:00Z"),
+        };
         const mockProfile: Profile = {
             sex: 1,
             height: 150,
             birthday: new Date("2023-09-05T10:00:00Z"),
             id: 1,
-            userId: 2,
+            userId: 1,
             createdAt: new Date("2023-09-05T10:00:00Z"),
             updatedAt: new Date("2023-09-05T11:00:00Z"),
         };
 
-        mockPrisma.profile.findUnique.mockResolvedValue(mockProfile);
+        // テストデータをDBに格納
+        const jestPrismaClient = jestPrisma.client;
+        await jestPrismaClient.user.create({
+            data: mockUser,
+        });
+        await jestPrismaClient.profile.create({
+            data: mockProfile,
+        });
 
+        // 想定されるデータ
+        const expestProfile: Profile = {
+            sex: 1,
+            height: 150,
+            birthday: new Date("2023-09-05T00:00:00Z"),
+            id: 1,
+            userId: 1,
+            createdAt: new Date("2023-09-05T19:00:00Z"),
+            updatedAt: new Date("2023-09-05T20:00:00Z"),
+        };
+
+        // テスト実行
         const result = await findUniqueProfileAbsoluteExist(
             { id: 1 },
-            mockPrisma
+            jestPrismaClient
         );
-        expect(result).toEqual(mockProfile);
+        expect(result).toEqual(expestProfile);
     });
 
     test("プロフィールが存在しない場合、DbRecordNotFoundErrorを投げる", async () => {
-        mockPrisma.profile.findUnique.mockResolvedValue(null);
+        // テスト用PrismaClient作成
+        const jestPrismaClient = jestPrisma.client;
 
         await expect(
-            findUniqueProfileAbsoluteExist({ id: 1 }, mockPrisma)
+            findUniqueProfileAbsoluteExist({ id: 1 }, jestPrismaClient)
         ).rejects.toThrow(
             new DbRecordNotFoundError("プロフィールが見つかりません。")
         );
