@@ -15,13 +15,6 @@ import {
 } from "@/services/prismaService/index";
 import { USER_LOGIN_STATUS } from "@/consts/db";
 
-const mockPrisma = {
-    user: {
-        findUnique: jest.fn(),
-        findMany: jest.fn(),
-    },
-} as unknown as jest.MockedObject<typeof customizedPrisma>;
-
 describe("findUniqueUserAbsoluteExistの単体テスト", () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -32,6 +25,7 @@ describe("findUniqueUserAbsoluteExistの単体テスト", () => {
     });
 
     test("ユーザーが存在する場合、データを返す", async () => {
+        // テストデータ
         const mockUser: User = {
             email: "petaxa@gmail.com",
             name: "petaxa",
@@ -45,12 +39,14 @@ describe("findUniqueUserAbsoluteExistの単体テスト", () => {
             updatedAt: new Date("2023-09-05T11:00:00Z"),
         };
 
+        // テスト用PrismaClient作成
         const jestPrismaClient = jestPrisma.client as typeof customizedPrisma;
-
+        // テストデータをDBに格納
         await jestPrismaClient.user.create({
             data: mockUser,
         });
 
+        // テスト実行
         const result = await findUniqueUserAbsoluteExist(
             { id: 1 },
             jestPrismaClient
@@ -59,8 +55,10 @@ describe("findUniqueUserAbsoluteExistの単体テスト", () => {
     });
 
     test("ユーザーが存在しない場合、DbRecordNotFoundErrorを投げる", async () => {
+        // テスト用PrismaClient作成
         const jestPrismaClient = jestPrisma.client as typeof customizedPrisma;
 
+        // テスト実行
         await expect(
             findUniqueUserAbsoluteExist({ id: 1 }, jestPrismaClient)
         ).rejects.toThrow(
@@ -79,6 +77,7 @@ describe("findActivedUserの単体テスト", () => {
     });
 
     test("退会済み以外のユーザーが存在する場合、データを返す", async () => {
+        // テストデータ
         const mockUsers: User[] = [
             {
                 email: "petaxa_one@gmail.com",
@@ -117,11 +116,15 @@ describe("findActivedUserの単体テスト", () => {
                 updatedAt: new Date("2023-09-05T11:00:00Z"),
             },
         ];
+
+        // テスト用PrismaClient作成
         const jestPrismaClient = jestPrisma.client as typeof customizedPrisma;
+        // テストデータをDBに格納
         await jestPrismaClient.user.createMany({
             data: mockUsers,
         });
 
+        // 想定されるデータ
         const expectUsers: User[] = [
             {
                 email: "petaxa_one@gmail.com",
@@ -149,11 +152,13 @@ describe("findActivedUserの単体テスト", () => {
             },
         ];
 
+        // テスト実行
         const result = await findActivedUser({}, jestPrismaClient);
         expect(result).toEqual(expectUsers);
     });
 
     test("退会済みユーザーのみの場合、DbRecordNotFoundErrorを投げる", async () => {
+        // テストデータ
         const mockUsers: User[] = [
             {
                 email: "petaxa_three@gmail.com",
@@ -168,11 +173,15 @@ describe("findActivedUserの単体テスト", () => {
                 updatedAt: new Date("2023-09-05T11:00:00Z"),
             },
         ];
+
+        // テスト用PrismaClient作成
         const jestPrismaClient = jestPrisma.client as typeof customizedPrisma;
+        // テストデータをDBに格納
         await jestPrismaClient.user.createMany({
             data: mockUsers,
         });
 
+        // テスト実行
         await expect(
             findActivedUser({ id: 9 }, jestPrismaClient)
         ).rejects.toThrow(
@@ -181,8 +190,10 @@ describe("findActivedUserの単体テスト", () => {
     });
 
     test("ユーザーが存在しない場合、DbRecordNotFoundErrorを投げる", async () => {
+        // テスト用PrismaClient作成
         const jestPrismaClient = jestPrisma.client as typeof customizedPrisma;
 
+        // テスト実行
         await expect(
             findActivedUser({ id: 1 }, jestPrismaClient)
         ).rejects.toThrow(

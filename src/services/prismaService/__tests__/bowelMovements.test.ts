@@ -11,12 +11,6 @@ import { findUniqueBowelMovementAbsoluteExist } from "@/services/prismaService/b
 import { DbRecordNotFoundError } from "@/services/prismaService/index";
 import { customizedPrisma } from "@/services/prismaClients";
 
-const mockPrisma = {
-    bowel_Movement: {
-        findUnique: jest.fn(),
-    },
-} as unknown as jest.MockedObject<typeof customizedPrisma>;
-
 describe("findUniqueBowelMovementAbsoluteExistの単体テスト", () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -39,14 +33,14 @@ describe("findUniqueBowelMovementAbsoluteExistの単体テスト", () => {
             createdAt: new Date("2023-09-05T10:00:00Z"),
             updatedAt: new Date("2023-09-05T11:00:00Z"),
         };
-
-        mockPrisma.bowel_Movement.findUnique.mockResolvedValue(
-            mockBowelMovement
-        );
+        const jestPrismaClient = jestPrisma.client as typeof customizedPrisma;
+        jestPrismaClient.bowel_Movement.create({
+            data: mockBowelMovement,
+        });
 
         const result = await findUniqueBowelMovementAbsoluteExist(
             { id: 9 },
-            mockPrisma
+            jestPrismaClient
         );
         expect(result).toEqual(mockBowelMovement);
     });
