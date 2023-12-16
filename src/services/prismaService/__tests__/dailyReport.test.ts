@@ -1,4 +1,3 @@
-import { customizedPrisma } from "@/services/prismaClients";
 import {
     describe,
     expect,

@@ -13,7 +13,6 @@ import {
     findUniqueUserAbsoluteExist,
 } from "@/services/prismaService/index";
 import { USER_LOGIN_STATUS } from "@/consts/db";
-import { createHashedPass } from "@/services/bcryptService";
 import * as bcryptService from "@/services/bcryptService";
 
 describe("findUniqueUserAbsoluteExistの単体テスト", () => {

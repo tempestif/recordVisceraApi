@@ -11,7 +11,6 @@ import {
     DbRecordNotFoundError,
     findUniqueProfileAbsoluteExist,
 } from "@/services/prismaService/index";
-import { customizedPrisma } from "@/services/prismaClients";
 
 describe("findUniqueProfileAbsoluteExistの単体テスト", () => {
     beforeEach(() => {

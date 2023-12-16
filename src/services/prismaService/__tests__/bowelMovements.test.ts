@@ -9,7 +9,6 @@ import {
 import { Bowel_Movement, User } from "@prisma/client";
 import { findUniqueBowelMovementAbsoluteExist } from "@/services/prismaService/bowelMovements";
 import { DbRecordNotFoundError } from "@/services/prismaService/index";
-import { customizedPrisma } from "@/services/prismaClients";
 
 describe("findUniqueBowelMovementAbsoluteExistの単体テスト", () => {
     beforeEach(() => {
