@@ -12,6 +12,9 @@ import {
     findUniqueUserWeightAbsoluteExist,
 } from "@/services/prismaService/index";
 
+// テスト用PrismaClient作成
+const jestPrismaClient = jestPrisma.client;
+
 describe("findUniqueUserWeightAbsoluteExistの単体テスト", () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -52,7 +55,6 @@ describe("findUniqueUserWeightAbsoluteExistの単体テスト", () => {
         };
 
         // テストデータをDBに格納
-        const jestPrismaClient = jestPrisma.client;
         await jestPrismaClient.user.create({
             data: mockUser,
         });
@@ -63,29 +65,19 @@ describe("findUniqueUserWeightAbsoluteExistの単体テスト", () => {
             data: mockDailyReportWeight,
         });
 
-        // 想定されるデータ
-        const expectDailyReportWeight: Daily_report_Weight = {
-            result: 55.5,
-            id: 1,
-            dailyReportId: 1,
-            createdAt: new Date("2023-09-05T19:00:00Z"),
-            updatedAt: new Date("2023-09-05T20:00:00Z"),
-        };
-
         // テスト実行
         const result = await findUniqueUserWeightAbsoluteExist(
             { id: 1 },
             jestPrismaClient
         );
-        expect(result).toEqual(expectDailyReportWeight);
+        expect(result).toEqual(mockDailyReportWeight);
     });
 
     test("体温が存在しない場合、DbRecordNotFoundErrorを投げる", async () => {
-        // テストデータをDBに格納
-        const jestPrismaClient = jestPrisma.client;
-
         await expect(
             findUniqueUserWeightAbsoluteExist({ id: 1 }, jestPrismaClient)
-        ).rejects.toThrow(new DbRecordNotFoundError("体重記録が見つかりません。"));
+        ).rejects.toThrow(
+            new DbRecordNotFoundError("体重記録が見つかりません。")
+        );
     });
 });

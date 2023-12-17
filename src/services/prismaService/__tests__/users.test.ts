@@ -15,6 +15,9 @@ import {
 import { USER_LOGIN_STATUS } from "@/consts/db";
 import * as bcryptService from "@/services/bcryptService";
 
+// テスト用PrismaClient作成
+const jestPrismaClient = jestPrisma.client;
+
 describe("findUniqueUserAbsoluteExistの単体テスト", () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -44,8 +47,6 @@ describe("findUniqueUserAbsoluteExistの単体テスト", () => {
             async () => "[hashed_value -createHashedPass]"
         );
 
-        // テスト用PrismaClient作成
-        const jestPrismaClient = jestPrisma.client;
         // テストデータをDBに格納
         await jestPrismaClient.user.create({
             data: mockUser,
@@ -61,8 +62,8 @@ describe("findUniqueUserAbsoluteExistの単体テスト", () => {
             loginStatus: 1,
             verified: 1,
             id: 1,
-            createdAt: new Date("2023-09-05T19:00:00Z"),
-            updatedAt: new Date("2023-09-05T20:00:00Z"),
+            createdAt: new Date("2023-09-05T10:00:00Z"),
+            updatedAt: new Date("2023-09-05T11:00:00Z"),
         };
 
         // テスト実行
@@ -74,9 +75,6 @@ describe("findUniqueUserAbsoluteExistの単体テスト", () => {
     });
 
     test("ユーザーが存在しない場合、DbRecordNotFoundErrorを投げる", async () => {
-        // テスト用PrismaClient作成
-        const jestPrismaClient = jestPrisma.client;
-
         // テスト実行
         await expect(
             findUniqueUserAbsoluteExist({ id: 1 }, jestPrismaClient)
@@ -141,8 +139,6 @@ describe("findActivedUserの単体テスト", () => {
             async () => "[hashed_value -createHashedPass]"
         );
 
-        // テスト用PrismaClient作成
-        const jestPrismaClient = jestPrisma.client;
         // テストデータをDBに格納
         await jestPrismaClient.user.createMany({
             data: mockUsers,
@@ -159,8 +155,8 @@ describe("findActivedUserの単体テスト", () => {
                 loginStatus: USER_LOGIN_STATUS.login,
                 verified: 1,
                 id: 1,
-                createdAt: new Date("2023-09-05T19:00:00Z"),
-                updatedAt: new Date("2023-09-05T20:00:00Z"),
+                createdAt: new Date("2023-09-05T10:00:00Z"),
+                updatedAt: new Date("2023-09-05T11:00:00Z"),
             },
             {
                 email: "petaxa_two@gmail.com",
@@ -171,8 +167,8 @@ describe("findActivedUserの単体テスト", () => {
                 loginStatus: USER_LOGIN_STATUS.logout,
                 verified: 1,
                 id: 2,
-                createdAt: new Date("2023-09-05T19:00:00Z"),
-                updatedAt: new Date("2023-09-05T20:00:00Z"),
+                createdAt: new Date("2023-09-05T10:00:00Z"),
+                updatedAt: new Date("2023-09-05T11:00:00Z"),
             },
         ];
 
@@ -198,8 +194,6 @@ describe("findActivedUserの単体テスト", () => {
             },
         ];
 
-        // テスト用PrismaClient作成
-        const jestPrismaClient = jestPrisma.client;
         // テストデータをDBに格納
         await jestPrismaClient.user.createMany({
             data: mockUsers,
@@ -214,9 +208,6 @@ describe("findActivedUserの単体テスト", () => {
     });
 
     test("ユーザーが存在しない場合、DbRecordNotFoundErrorを投げる", async () => {
-        // テスト用PrismaClient作成
-        const jestPrismaClient = jestPrisma.client;
-
         // テスト実行
         await expect(
             findActivedUser({ id: 1 }, jestPrismaClient)

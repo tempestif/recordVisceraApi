@@ -8,18 +8,6 @@ const extention = Prisma.defineExtension({
     name: "customizedPrisma",
     query: {
         // PrismaClientを拡張
-        // タイムゾーンをJSTに変更する。
-        // JSTで入力→入力+9:00(UTC)でDBに書き込み→DBのデータ(入力+9:00(UTC))で返却
-        $allModels: {
-            async $allOperations({ model, operation, args, query }) {
-                const offsetTime = 9 * 60 * 60 * 1000;
-
-                setOffsetTime(args, offsetTime);
-                const result = await query(args);
-
-                return result;
-            },
-        },
 
         // user.create時にpasswordをhash化する。
         user: {

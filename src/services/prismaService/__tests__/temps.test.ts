@@ -12,6 +12,9 @@ import {
     findUniqueUserTempAbsoluteExist,
 } from "@/services/prismaService/index";
 
+// テスト用PrismaClient作成
+const jestPrismaClient = jestPrisma.client;
+
 describe("findUniqueUserTempAbsoluteExistの単体テスト", () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -52,7 +55,6 @@ describe("findUniqueUserTempAbsoluteExistの単体テスト", () => {
         };
 
         // テストデータをDBに格納
-        const jestPrismaClient = jestPrisma.client;
         await jestPrismaClient.user.create({
             data: mockUser,
         });
@@ -63,27 +65,15 @@ describe("findUniqueUserTempAbsoluteExistの単体テスト", () => {
             data: mockDailyReportTemp,
         });
 
-        // 想定されるデータ
-        const expectDailyReportTemp: Daily_report_Temp = {
-            result: 36.5,
-            id: 1,
-            dailyReportId: 1,
-            createdAt: new Date("2023-09-05T19:00:00Z"),
-            updatedAt: new Date("2023-09-05T20:00:00Z"),
-        };
-
         // テスト実行
         const result = await findUniqueUserTempAbsoluteExist(
             { id: 1 },
             jestPrismaClient
         );
-        expect(result).toEqual(expectDailyReportTemp);
+        expect(result).toEqual(mockDailyReportTemp);
     });
 
     test("体温が存在しない場合、DbRecordNotFoundErrorを投げる", async () => {
-        // テストデータをDBに格納
-        const jestPrismaClient = jestPrisma.client;
-
         await expect(
             findUniqueUserTempAbsoluteExist({ id: 1 }, jestPrismaClient)
         ).rejects.toThrow(new DbRecordNotFoundError("体温が見つかりません。"));

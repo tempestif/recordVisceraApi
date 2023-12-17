@@ -12,6 +12,9 @@ import {
     findUniqueProfileAbsoluteExist,
 } from "@/services/prismaService/index";
 
+// テスト用PrismaClient作成
+const jestPrismaClient = jestPrisma.client;
+
 describe("findUniqueProfileAbsoluteExistの単体テスト", () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -46,7 +49,6 @@ describe("findUniqueProfileAbsoluteExistの単体テスト", () => {
         };
 
         // テストデータをDBに格納
-        const jestPrismaClient = jestPrisma.client;
         await jestPrismaClient.user.create({
             data: mockUser,
         });
@@ -54,15 +56,14 @@ describe("findUniqueProfileAbsoluteExistの単体テスト", () => {
             data: mockProfile,
         });
 
-        // 想定されるデータ
-        const expestProfile: Profile = {
+        const expectProfile = {
             sex: 1,
             height: 150,
             birthday: new Date("2023-09-05T00:00:00Z"),
             id: 1,
             userId: 1,
-            createdAt: new Date("2023-09-05T19:00:00Z"),
-            updatedAt: new Date("2023-09-05T20:00:00Z"),
+            createdAt: new Date("2023-09-05T10:00:00Z"),
+            updatedAt: new Date("2023-09-05T11:00:00Z"),
         };
 
         // テスト実行
@@ -70,13 +71,10 @@ describe("findUniqueProfileAbsoluteExistの単体テスト", () => {
             { id: 1 },
             jestPrismaClient
         );
-        expect(result).toEqual(expestProfile);
+        expect(result).toEqual(expectProfile);
     });
 
     test("プロフィールが存在しない場合、DbRecordNotFoundErrorを投げる", async () => {
-        // テスト用PrismaClient作成
-        const jestPrismaClient = jestPrisma.client;
-
         await expect(
             findUniqueProfileAbsoluteExist({ id: 1 }, jestPrismaClient)
         ).rejects.toThrow(
