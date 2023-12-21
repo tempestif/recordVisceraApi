@@ -62,14 +62,14 @@ const extention = Prisma.defineExtension({
                 const updatedPasswordData = args.update.password;
                 const createdPasswordData = args.create.password;
 
-                if (updatedPasswordData === "string") {
+                if (typeof updatedPasswordData === "string") {
                     args.update.password = await createHashedPass(
                         updatedPasswordData
                     );
                 }
 
-                if (createdPasswordData === "string") {
-                    args.update.password = await createHashedPass(
+                if (typeof createdPasswordData === "string") {
+                    args.create.password = await createHashedPass(
                         createdPasswordData
                     );
                 }
