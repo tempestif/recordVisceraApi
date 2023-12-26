@@ -7,11 +7,22 @@ import { CustomLogger, LoggingObjType } from "./LoggerService";
 import {
     DbRecordNotFoundError,
     MultipleActiveUserError,
+    TokenNotFoundError,
 } from "./prismaService";
 import { basicHttpResponce, internalServerErr } from "./utilResponseService";
 import { type Request, type Response } from "express";
 
 const logger = new CustomLogger();
+
+/**
+ * インターナルサーバーエラー
+ * 汎用
+ * @param e
+ * @param userId
+ * @param req
+ * @param res
+ * @param funcName
+ */
 export const internalServerErrorHandle = (
     e: unknown,
     userId: number | UNSPECIFIED_USER_ID_TYPE,
@@ -50,6 +61,14 @@ export const internalServerErrorHandle = (
     }
 };
 
+/**
+ * DBから対象のレコードが見つからない
+ * @param e
+ * @param userId
+ * @param req
+ * @param res
+ * @param funcName
+ */
 export const dbRecordNotFoundErrorHandle = (
     e: DbRecordNotFoundError,
     userId: number | UNSPECIFIED_USER_ID_TYPE,
@@ -74,6 +93,14 @@ export const dbRecordNotFoundErrorHandle = (
     basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 };
 
+/**
+ * アクティブユーザーが複数いる
+ * @param e
+ * @param userId
+ * @param req
+ * @param res
+ * @param funcName
+ */
 export const multipleActiveUsersErrorHandle = (
     e: MultipleActiveUserError,
     userId: number | UNSPECIFIED_USER_ID_TYPE,
@@ -99,6 +126,46 @@ export const multipleActiveUsersErrorHandle = (
     basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 };
 
+/**
+ * 認証トークンが見つからない
+ * @param e
+ * @param userId
+ * @param req
+ * @param res
+ * @param funcName
+ */
+export const tokenNotFoundErrorHandle = (
+    e: TokenNotFoundError,
+    userId: number | UNSPECIFIED_USER_ID_TYPE,
+    req: Request,
+    res: Response,
+    funcName: string
+) => {
+    const HttpStatus = 400;
+    const responseStatus = false;
+    const responseMsg = e.message;
+    const logBody: LoggingObjType = {
+        userId: userId,
+        ipAddress: req.ip,
+        method: req.method,
+        path: req.originalUrl,
+        body: req.body,
+        status: String(HttpStatus),
+        responseMsg,
+    };
+    logger.error(PROCESS_FAILURE.message(funcName), logBody);
+    basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
+};
+
+/**
+ * エラーハンドラー
+ * 各エラーハンドルをここに集約
+ * @param e
+ * @param userId
+ * @param req
+ * @param res
+ * @param funcName
+ */
 export const errorResponseHandler = (
     e: unknown,
     userId: number | UNSPECIFIED_USER_ID_TYPE,
@@ -110,6 +177,8 @@ export const errorResponseHandler = (
         dbRecordNotFoundErrorHandle(e, userId, req, res, funcName);
     } else if (e instanceof MultipleActiveUserError) {
         multipleActiveUsersErrorHandle(e, userId, req, res, funcName);
+    } else if (e instanceof TokenNotFoundError) {
+        tokenNotFoundErrorHandle(e, userId, req, res, funcName);
     } else {
         internalServerErrorHandle(e, userId, req, res, funcName);
     }

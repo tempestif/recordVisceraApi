@@ -22,3 +22,7 @@ export const TOKEN_NOT_DISCREPANCY = {
 export const USER_LOGOUT = {
     message: "ログアウト状態です。"
 } as const
+
+export const USER_DEACTIVED = {
+    message: "退会状態です。"
+} as const

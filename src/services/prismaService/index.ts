@@ -6,6 +6,9 @@ export * from "./profiles";
 export * from "./weights";
 export * from "./dailyReports";
 
+/**
+ * DBから対象のレコードが見つからない
+ */
 export class DbRecordNotFoundError extends Error {
     constructor(...args: any[]) {
         super(...args);
@@ -35,7 +38,30 @@ export class DbRecordNotFoundError extends Error {
     }
 }
 
+/**
+ * アクティブユーザーが複数いる
+ */
 export class MultipleActiveUserError extends Error {
+    constructor(...args: any[]) {
+        super(...args);
+
+        Object.defineProperty(this, "name", {
+            configurable: true,
+            enumerable: false,
+            value: this.constructor.name,
+            writable: true,
+        });
+
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, MultipleActiveUserError);
+        }
+    }
+}
+
+/**
+ * 認証トークンが見つからない
+ */
+export class TokenNotFoundError extends Error {
     constructor(...args: any[]) {
         super(...args);
 
