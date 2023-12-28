@@ -116,6 +116,7 @@ describe("authの単体テスト", () => {
         process.env.JWTPRIVATEKEY = undefined;
 
         // reject.throwだとうまく動かない
+        // https://zenn.dev/link/comments/bf4b7474f6d598
         try {
             // テスト実行
             await auth(
@@ -132,62 +133,6 @@ describe("authの単体テスト", () => {
             // 環境変数を元に戻す
             process.env.JWTPRIVATEKEY = originalEnvVar;
         }
-
-        // 動作しない
-        // try {
-        //     // テスト実行
-        //     await expect(
-        //         auth(
-        //             mockRequest as Request,
-        //             mockResponse as Response,
-        //             nextFunction
-        //         )
-        //     ).rejects.toThrow("auth: 環境変数が足りません");
-        // } finally {
-        //     // 環境変数を元に戻す
-        //     process.env.JWTPRIVATEKEY = originalEnvVar;
-        // }
-
-        // 動作する
-        // try {
-        //     // テスト実行
-        //     await expect(
-        //         auth(
-        //             mockRequest as Request,
-        //             mockResponse as Response,
-        //             nextFunction
-        //         )
-        //     ).rejects.toThrow("auth: 環境変数が足りません");
-        // } catch (e) {
-        // } finally {
-        //     // 環境変数を元に戻す
-        //     process.env.JWTPRIVATEKEY = originalEnvVar;
-        // }
-
-        // 動作しない
-        // await expect(
-        //     auth(mockRequest as Request, mockResponse as Response, nextFunction)
-        // ).rejects.toThrow("auth: 環境変数が足りません");
-        // process.env.JWTPRIVATEKEY = originalEnvVar;
-
-        // テスト結果
-        // ● authの単体テスト › PrivateKeyがない
-
-        // expect(received).rejects.toThrow()
-
-        // Received promise resolved instead of rejected
-        // Resolved to value: undefined
-
-        //   170 |
-        //   171 |         // テスト実行
-        // > 172 |         await expect(
-        //       |               ^
-        //   173 |             auth(mockRequest as Request, mockResponse as Response, nextFunction)
-        //   174 |         ).rejects.toThrow("auth: 環境変数が足りません");
-        //   175 |         process.env.JWTPRIVATEKEY = originalEnvVar;
-
-        //   at expect (node_modules/expect/build/index.js:113:15)
-        //   at Object.<anonymous> (src/services/__tests__/authService.test.ts:172:15)
     });
 
     test("userがlogoutしている", async () => {

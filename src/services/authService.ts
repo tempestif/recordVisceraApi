@@ -10,8 +10,10 @@ import { findUniqueUserAbsoluteExist } from "./prismaService";
 import { USER_LOGIN_STATUS } from "@/consts/db";
 import { customizedPrisma } from "./prismaClients";
 import { errorResponseHandler } from "./errorHandlingService";
-import { Prisma } from "@prisma/client";
-import { UNSPECIFIED_USER_ID } from "@/consts/logConsts";
+import {
+    UNSPECIFIED_USER_ID,
+    UNSPECIFIED_USER_ID_TYPE,
+} from "@/consts/logConsts";
 
 /**
  * トークン認証
@@ -44,7 +46,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
         throw new Error("auth: 環境変数が足りません");
     }
 
-    let userId: string = UNSPECIFIED_USER_ID.message;
+    let userId: number | UNSPECIFIED_USER_ID_TYPE = UNSPECIFIED_USER_ID.message;
 
     try {
         // tokenをデコード
@@ -55,7 +57,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
             { id: decoded.id },
             customizedPrisma
         );
-        userId = String(user.id);
+        userId = user.id;
 
         // ログアウトまたは退会済みの場合、400エラー
         if (
@@ -64,7 +66,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
         ) {
             const HttpStatus = 400;
             const responseStatus = false;
-            const responseMsg = TOKEN_NOT_DISCREPANCY.message
+            const responseMsg = TOKEN_NOT_DISCREPANCY.message;
             return basicHttpResponce(
                 res,
                 HttpStatus,
@@ -77,12 +79,6 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
         req.body.userId = decoded.id;
         next();
     } catch (e) {
-        errorResponseHandler(
-            e,
-            UNSPECIFIED_USER_ID.message,
-            req,
-            res,
-            funcName
-        );
+        errorResponseHandler(e, userId, req, res, funcName);
     }
 };
