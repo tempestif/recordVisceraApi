@@ -5,10 +5,13 @@ import { genSaltSync, hashSync } from "bcrypt";
  * @param password hash化するパスワード
  * @returns hash化されたパスワード
  */
-export const createHashedPass = async(password: string) => {
-    const rawPassword = password
-    const salt = genSaltSync();
-    const hashedPassword = await hashSync(rawPassword, salt)
+export const createHashedPass = (password: string) => {
+    if (!password) {
+        throw new Error("createHashedPass: passwordがありません");
+    }
 
-    return hashedPassword
-}
+    const salt = genSaltSync();
+    const hashedPassword = hashSync(password, salt);
+
+    return hashedPassword;
+};

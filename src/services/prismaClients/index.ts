@@ -1,5 +1,4 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { setOffsetTime } from "./date";
 import { createHashedPass } from "@/services/bcryptService";
 
 const prisma = new PrismaClient();
@@ -14,7 +13,7 @@ const extention = Prisma.defineExtension({
             // create, createMany
             async create({ model, operation, args, query }) {
                 const password = args.data.password;
-                args.data.password = await createHashedPass(password);
+                args.data.password = createHashedPass(password);
 
                 return query(args);
             },
@@ -22,13 +21,11 @@ const extention = Prisma.defineExtension({
                 if (Array.isArray(args.data)) {
                     for (let i = 0; i < args.data.length; i++) {
                         const password = args.data[i].password;
-                        args.data[i].password = await createHashedPass(
-                            password
-                        );
+                        args.data[i].password = createHashedPass(password);
                     }
                 } else {
                     const password = args.data.password;
-                    args.data.password = await createHashedPass(password);
+                    args.data.password = createHashedPass(password);
                 }
 
                 return query(args);
@@ -39,7 +36,7 @@ const extention = Prisma.defineExtension({
                 const password = args.data.password;
                 // updateするデータの中にpasswordがあったら
                 if (typeof password === "string") {
-                    args.data.password = await createHashedPass(password);
+                    args.data.password = createHashedPass(password);
                 }
 
                 return query(args);
@@ -51,7 +48,7 @@ const extention = Prisma.defineExtension({
                 const password = args.data.password;
                 // updateするデータの中にpasswordがあったら
                 if (typeof password === "string") {
-                    args.data.password = await createHashedPass(password);
+                    args.data.password = createHashedPass(password);
                 }
 
                 return query(args);
@@ -63,15 +60,13 @@ const extention = Prisma.defineExtension({
                 const createdPasswordData = args.create.password;
 
                 if (typeof updatedPasswordData === "string") {
-                    args.update.password = await createHashedPass(
-                        updatedPasswordData
-                    );
+                    args.update.password =
+                        createHashedPass(updatedPasswordData);
                 }
 
                 if (typeof createdPasswordData === "string") {
-                    args.create.password = await createHashedPass(
-                        createdPasswordData
-                    );
+                    args.create.password =
+                        createHashedPass(createdPasswordData);
                 }
 
                 return query(args);

@@ -44,7 +44,7 @@ describe("findUniqueUserAbsoluteExistの単体テスト", () => {
 
         // ハッシュ関数をモック化
         jest.spyOn(bcryptService, "createHashedPass").mockImplementation(
-            async () => "[hashed_value -createHashedPass]"
+            () => "[hashed_value -createHashedPass]"
         );
 
         // テストデータをDBに格納
@@ -136,7 +136,7 @@ describe("findActivedUserの単体テスト", () => {
 
         // ハッシュ関数をモック化
         jest.spyOn(bcryptService, "createHashedPass").mockImplementation(
-            async () => "[hashed_value -createHashedPass]"
+            () => "[hashed_value -createHashedPass]"
         );
 
         // テストデータをDBに格納

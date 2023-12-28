@@ -37,7 +37,7 @@ describe("customizedPrismaのテスト", () => {
         };
         // ハッシュ関数をモック化
         jest.spyOn(bcryptService, "createHashedPass").mockImplementation(
-            async () => "[hashed_value -createHashedPass]"
+            () => "[hashed_value -createHashedPass]"
         );
 
         // テストデータをDBに格納
@@ -86,7 +86,7 @@ describe("customizedPrismaのテスト", () => {
         };
         // ハッシュ関数をモック化
         jest.spyOn(bcryptService, "createHashedPass").mockImplementation(
-            async () => "[hashed_value -createHashedPass]"
+            () => "[hashed_value -createHashedPass]"
         );
 
         // テストデータをDBに格納
@@ -153,7 +153,7 @@ describe("customizedPrismaのテスト", () => {
 
         // ハッシュ関数をモック化
         jest.spyOn(bcryptService, "createHashedPass").mockImplementation(
-            async () => "[hashed_value -createHashedPass]"
+            () => "[hashed_value -createHashedPass]"
         );
         // テストデータでDBを更新
         await jestPrismaClient.user.update({
@@ -220,7 +220,7 @@ describe("customizedPrismaのテスト", () => {
 
         // ハッシュ関数をモック化
         jest.spyOn(bcryptService, "createHashedPass").mockImplementation(
-            async () => "[hashed_value -createHashedPass]"
+            () => "[hashed_value -createHashedPass]"
         );
         // テストデータでDBを更新
         await jestPrismaClient.user.updateMany({
@@ -281,7 +281,7 @@ describe("customizedPrismaのテスト", () => {
         };
         // ハッシュ関数をモック化
         jest.spyOn(bcryptService, "createHashedPass").mockImplementation(
-            async () => "[hashed_value -createHashedPass]"
+            () => "[hashed_value -createHashedPass]"
         );
 
         // テストデータをDBに格納
@@ -348,7 +348,7 @@ describe("customizedPrismaのテスト", () => {
 
         // ハッシュ関数をモック化
         jest.spyOn(bcryptService, "createHashedPass").mockImplementation(
-            async () => "[hashed_value -createHashedPass]"
+            () => "[hashed_value -createHashedPass]"
         );
 
         // テストデータをDBに格納
