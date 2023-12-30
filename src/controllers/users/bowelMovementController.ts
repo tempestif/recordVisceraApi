@@ -16,8 +16,8 @@ import {
 import {
     FilterOptionsType,
     createFilterForPrisma,
+    createSelectForPrisma,
     createSortsForPrisma,
-    filteringFields,
 } from "@/services/dataTransferService";
 import { errorResponseHandler } from "@/services/errorHandlingService";
 import { customizedPrisma } from "@/services/prismaClients";
@@ -139,6 +139,8 @@ export const readBowelMovements = async (
 
     // 指定されたソートの内容をprismaに渡せるように成型
     const sorts = createSortsForPrisma(sort);
+    // 指定されたフィールドのみ取得するように設定
+    const select = createSelectForPrisma(fields);
 
     //  クエリで指定されたフィルターの内容を連想配列にまとめる
     const {
@@ -202,10 +204,8 @@ export const readBowelMovements = async (
             },
             skip: offset ? Number(offset) : DEFAULT_DATA_INFO.offset,
             take: limit ? Number(limit) : DEFAULT_DATA_INFO.limit,
+            select,
         });
-
-        // 指定されたフィールドでフィルター
-        const filteredBowelMovents = filteringFields(fields, bowelMovents);
 
         // NOTE: ひとまずもう一度全検索でallCountを取る。もっといい方法を考える。
         const allCount = await customizedPrisma.bowel_Movement.count({
@@ -220,7 +220,7 @@ export const readBowelMovements = async (
             status: responseStatus,
             message: responseMsg,
             allCount: allCount,
-            count: filteredBowelMovents.length,
+            count: bowelMovents.length,
             sort: sort ?? "",
             fields: fields ?? "",
             limit: limit ?? "",
@@ -235,7 +235,7 @@ export const readBowelMovements = async (
                 createdAt: createdAt ?? "",
                 updatedAt: updatedAt ?? "",
             },
-            bowelMovements: filteredBowelMovents,
+            bowelMovements: bowelMovents,
         });
 
         // ログを出力

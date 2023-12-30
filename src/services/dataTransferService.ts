@@ -1,12 +1,12 @@
 export type FilterOptionsType = {
     [key: string]: {
-        data: any,
-        constructor: (i: string) => any
-    }
-}
+        data: any;
+        constructor: (i: string) => any;
+    };
+};
 
 /**
- * filterOptionsから、データがstring(=paramsにデータが素材する)のフィールドだけオブジェクトにして返す
+ * filterOptionsから、データがstringの(=paramsにデータが存在する)フィールドだけオブジェクトにして返す
  * filterOptionsのコンストラクタを用いてキャストも行う
  * @param filterOptions フィルターの値と型のコンストラクタ
  * @returns
@@ -14,15 +14,21 @@ export type FilterOptionsType = {
 export const createFilterForPrisma = (filterOptions: FilterOptionsType) => {
     // フィルターとして指定されたフィールドだけ、適するオブジェクトに変換してfilterに追加
     const filter: { [key: string]: any } = {};
-    Object.keys(filterOptions).forEach(key => {
+    Object.keys(filterOptions).forEach((key) => {
         // クエリから受け取った値
-        const data = filterOptions[key].data
-        // 値をfilterOptionsで設定したオブジェクトに変換したもの
-        const objForFilter = filterOptions[key].constructor(filterOptions[key].data)
-        if (typeof data === 'string') filter[key] = objForFilter
-    })
-    return filter
-}
+        const data = filterOptions[key].data;
+
+        // paramsにデータが存在することを確認
+        if (typeof data === "string") {
+            // 指定した型にキャスト
+            const objForFilter = filterOptions[key].constructor(
+                filterOptions[key].data
+            );
+            filter[key] = objForFilter;
+        }
+    });
+    return filter;
+};
 
 /**
  * paramsから渡されたソートの情報をPrismaのorderByで使えるオブジェクトに変換する
@@ -31,49 +37,40 @@ export const createFilterForPrisma = (filterOptions: FilterOptionsType) => {
  * @returns
  */
 export const createSortsForPrisma = (sort: string | undefined) => {
+    // NOTE: 引数の文字列のチェックはどうする？
     // 指定されたソートの内容をprismaに渡せるように成型
-    const sorts: { [key: string]: string }[] = []
-    sort?.split(',').forEach(s => {
-        if (s[0] === '-') {
-            const property = s.slice(1)
+    const sorts: { [key: string]: string }[] = [];
+    sort?.split(",").forEach((s) => {
+        if (s[0] === "-") {
+            const property = s.slice(1);
             sorts.push({
-                [property]: 'desc'
-            })
-        } else {
+                [property]: "desc",
+            });
+        } else if (s) {
             sorts.push({
-                [s]: 'asc'
-            })
+                [s]: "asc",
+            });
         }
-    })
-    return sorts
-}
+    });
+    return sorts;
+};
 
 /**
- * 取得したDBのデータをフィルターする
+ * paramsから渡された、返却してほしいフィールドの情報をPrismaのselectで使えるオブジェクトに変換する
+ * 指定されたものをキーに、値にtrueをセットしたオブジェクトを返却する
  * @param fields 必要なフィールド
- * @param DbObj DBのデータ
  * @returns
  */
-export const filteringFields = (fields: string | undefined, DbObj: { [key: string]: any }) => {
+export const createSelectForPrisma = (fields: string | undefined) => {
     // 指定されたフィールドを抽出
-    const fieldAry = fields?.split(',')
-    const filteredObj = DbObj.map((temp: { [key: string]: any }) => {
-        let ret
 
-        if (!fieldAry?.length) {
-            // 指定なしの場合は全フィールド返す
-            ret = temp
-        } else {
-            // retに必要なフィールドだけ格納
-            const filteredTemp: { [key: string]: any } = {}
-            fieldAry.forEach(field => {
-                const tempField = temp[field]
-                if (tempField) filteredTemp[field] = tempField
-            })
-            ret = filteredTemp
+    const select: { [key: string]: true } = {};
+
+    fields?.split(",").forEach((field) => {
+        if (field) {
+            select[field] = true;
         }
-        return ret
-    })
+    });
 
-    return filteredObj
-}
+    return select;
+};

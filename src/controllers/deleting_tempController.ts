@@ -16,7 +16,6 @@ import {
     FilterOptionsType,
     createFilterForPrisma,
     createSortsForPrisma,
-    filteringFields,
 } from "@/services/dataTransferService";
 import {
     errorResponseHandler,
@@ -188,9 +187,6 @@ export const readTemps = async (
             where: { dailyReportId },
         });
 
-        // 指定されたフィールドでフィルター
-        const filteredTemps = filteringFields(fields, temps);
-
         // レスポンス
         const HttpStatus = 200;
         const responseStatus = true;
@@ -199,7 +195,7 @@ export const readTemps = async (
             status: responseStatus,
             message: responseMsg,
             allCount: allCount,
-            count: filteredTemps.length,
+            count: temps.length,
             sort: sort ?? "",
             fields: fields ?? "",
             limit: limit ?? "",
@@ -210,7 +206,7 @@ export const readTemps = async (
                 createdAt: createdAt ?? "",
                 updatedAt: updatedAt ?? "",
             },
-            temps: filteredTemps,
+            temps,
         });
 
         // ログを出力

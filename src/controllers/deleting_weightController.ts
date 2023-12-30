@@ -16,7 +16,6 @@ import {
     FilterOptionsType,
     createFilterForPrisma,
     createSortsForPrisma,
-    filteringFields,
 } from "@/services/dataTransferService";
 import { errorResponseHandler } from "@/services/errorHandlingService";
 import { customizedPrisma } from "@/services/prismaClients";
@@ -94,13 +93,7 @@ export const registWeight = async (
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        errorResponseHandler(
-            e,
-            userId,
-            req,
-            res,
-            currentFuncName
-        );
+        errorResponseHandler(e, userId, req, res, currentFuncName);
     }
 };
 
@@ -187,9 +180,6 @@ export const readWeights = async (
             where: { dailyReportId },
         });
 
-        // 指定されたフィールドでフィルター
-        const filteredWeights = filteringFields(fields, weights);
-
         // レスポンス
         const HttpStatus = 200;
         const responseStatus = true;
@@ -198,7 +188,7 @@ export const readWeights = async (
             status: responseStatus,
             message: responseMsg,
             allCount: allCount,
-            count: filteredWeights.length,
+            count: weights.length,
             sort: sort ?? "",
             fields: fields ?? "",
             limit: limit ?? "",
@@ -209,16 +199,10 @@ export const readWeights = async (
                 createdAt: createdAt ?? "",
                 updatedAt: updatedAt ?? "",
             },
-            weights: filteredWeights,
+            weights,
         });
     } catch (e) {
-        errorResponseHandler(
-            e,
-            userId,
-            req,
-            res,
-            currentFuncName
-        );
+        errorResponseHandler(e, userId, req, res, currentFuncName);
     }
 };
 
@@ -250,7 +234,7 @@ export const editWeight = async (
         const whereByWeightId = { id };
         const weightData = await findUniqueUserWeightAbsoluteExist(
             whereByWeightId,
-            res
+            customizedPrisma
         );
 
         // 指定した体重記録がユーザー本人のものか確認
@@ -305,13 +289,7 @@ export const editWeight = async (
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        errorResponseHandler(
-            e,
-            userId,
-            req,
-            res,
-            currentFuncName
-        );
+        errorResponseHandler(e, userId, req, res, currentFuncName);
     }
 };
 
@@ -343,7 +321,7 @@ export const deleteWeight = async (
         const whereByWeightId = { id };
         const weightData = await findUniqueUserWeightAbsoluteExist(
             whereByWeightId,
-            res
+            customizedPrisma
         );
 
         // 指定した体重記録がユーザー本人のものか確認
@@ -394,12 +372,6 @@ export const deleteWeight = async (
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        errorResponseHandler(
-            e,
-            userId,
-            req,
-            res,
-            currentFuncName
-        );
+        errorResponseHandler(e, userId, req, res, currentFuncName);
     }
 };

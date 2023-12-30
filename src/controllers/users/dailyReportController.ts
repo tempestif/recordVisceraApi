@@ -13,8 +13,8 @@ import {
 } from "@/services/LoggerService";
 import {
     createFilterForPrisma,
+    createSelectForPrisma,
     createSortsForPrisma,
-    filteringFields,
     FilterOptionsType,
 } from "@/services/dataTransferService";
 import { errorResponseHandler } from "@/services/errorHandlingService";
@@ -180,6 +180,8 @@ export const readDailyReport = async (
     const { sort, fields, limit, offset } = req.query as Query;
     // 指定されたソートの内容をprismaに渡せるように成型
     const sorts = createSortsForPrisma(sort);
+    // 指定されたフィールドのみ取得するように設定
+    const select = createSelectForPrisma(fields);
 
     // クエリで指定されたフィルターの内容を連想配列にまとめる
     const {
@@ -241,6 +243,7 @@ export const readDailyReport = async (
                 : DAILY_REPORT_DEFAULT_DATA_INFO.offset,
             take: limit ? Number(limit) : DAILY_REPORT_DEFAULT_DATA_INFO.limit,
             include: includeFields,
+            select,
         });
 
         // NOTE: ひとまずもう一度全検索でallCountを取る。もっといい方法を考える。
@@ -250,9 +253,6 @@ export const readDailyReport = async (
             },
         });
 
-        // 指定されたフィールドのみ抜き出す
-        const fileteredDailyReports = filteringFields(fields, dailyReports);
-
         // レスポンス返却
         const HttpStatus = 200;
         const responseStatus = true;
@@ -261,7 +261,7 @@ export const readDailyReport = async (
             status: responseStatus,
             message: responseMsg,
             allCount: allCount,
-            count: fileteredDailyReports.length,
+            count: dailyReports.length,
             sort: sort ?? "",
             fields: fields ?? "",
             limit: limit ?? "",
@@ -281,7 +281,7 @@ export const readDailyReport = async (
                 createdAt: createdAt ?? "",
                 updatedAt: updatedAt ?? "",
             },
-            dailyReports: fileteredDailyReports,
+            dailyReports,
         });
 
         // ログを出力
