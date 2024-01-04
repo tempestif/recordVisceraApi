@@ -8,6 +8,7 @@ export * from "./dailyReports";
 
 /**
  * DBから対象のレコードが見つからない
+ * エラーメッセージはインスタンス化する時に引数として設定する
  */
 export class DbRecordNotFoundError extends Error {
     constructor(...args: any[]) {
