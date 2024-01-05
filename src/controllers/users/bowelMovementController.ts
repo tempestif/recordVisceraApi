@@ -19,7 +19,7 @@ import {
     createSelectForPrisma,
     createSortsForPrisma,
 } from "@/services/dataTransferService";
-import { errorResponseHandler } from "@/services/errorHandlingService";
+import { errorResponseHandler } from "@/services/errorHandle";
 import { customizedPrisma } from "@/services/prismaClients";
 import { findUniqueUserAbsoluteExist } from "@/services/prismaService";
 import { findUniqueBowelMovementAbsoluteExist } from "@/services/prismaService/bowelMovements";

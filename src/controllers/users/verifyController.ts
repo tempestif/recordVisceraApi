@@ -16,7 +16,7 @@ import {
     LoggingObjType,
     maskConfInfoInReqBody,
 } from "@/services/LoggerService";
-import { errorResponseHandler } from "@/services/errorHandlingService";
+import { errorResponseHandler } from "@/services/errorHandle";
 import { findUniqueUserAbsoluteExist } from "@/services/prismaService";
 const logger = new CustomLogger();
 

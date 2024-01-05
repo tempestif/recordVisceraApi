@@ -20,7 +20,7 @@ import {
     maskConfInfoInReqBody,
 } from "@/services/LoggerService";
 import { PROCESS_FAILURE, PROCESS_SUCCESS } from "@/consts/logConsts";
-import { errorResponseHandler } from "@/services/errorHandlingService";
+import { errorResponseHandler } from "@/services/errorHandle";
 import { USER_LOGIN_STATUS } from "@/consts/db";
 import { Prisma } from "@prisma/client";
 import { transformNameTableToModel } from "@/services/prismaService/format";

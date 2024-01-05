@@ -1,4 +1,4 @@
-import { UNSPECIFIED_USER_ID_TYPE } from "@/consts/logConsts";
+import { PROCESS_FAILURE, UNSPECIFIED_USER_ID_TYPE } from "@/consts/logConsts";
 import { Request } from "express";
 import { createLogger, format, Logger, transports } from "winston";
 export type LoggingObjType = {
@@ -75,4 +75,32 @@ export const maskConfInfoInReqBody = (req: Request) => {
         }
     }
     return req;
+};
+
+/**
+ * エラーが発生した際のログを出力する
+ * @param responseMsg
+ * @param userId
+ * @param req
+ * @param HttpStatus
+ * @param funcName
+ */
+export const logError = (
+    responseMsg: string,
+    userId: number | UNSPECIFIED_USER_ID_TYPE,
+    req: Request,
+    HttpStatus: number,
+    funcName: string
+) => {
+    const logger = new CustomLogger();
+    const logBody: LoggingObjType = {
+        userId: userId,
+        ipAddress: req.ip,
+        method: req.method,
+        path: req.originalUrl,
+        body: req.body,
+        status: String(HttpStatus),
+        responseMsg,
+    };
+    logger.error(PROCESS_FAILURE.message(funcName), logBody);
 };

@@ -29,13 +29,32 @@ export class DbRecordNotFoundError extends Error {
     }
 
     // NOTE: 独自のunique関数をfindUniqueOrThrowに変更中のための一時的な処置
+    // instanceofで比較した際の挙動を変更する
     // findUniqueOrThrowで投げられるエラーでもinstanceofでtrueを返すようにしておく。
     static [Symbol.hasInstance](e: unknown) {
-        if (e instanceof PrismaClientKnownRequestError) {
-            return true;
-        } else {
+        if (!e || typeof e !== "object") {
             return false;
         }
+
+        // 該当のインスタンスかどうかを確認
+        // プロトタイプチェーンを手動でチェック
+        const isDbRecordNotFoundError = Object.prototype.isPrototypeOf.call(
+            DbRecordNotFoundError.prototype,
+            e
+        );
+        const isPrismaClientKnownRequestError =
+            PrismaClientKnownRequestError &&
+            Object.prototype.isPrototypeOf.call(
+                PrismaClientKnownRequestError.prototype,
+                e
+            );
+
+        // DbRecordNotFoundErrorかPrismaClientKnownRequestErrorをinstanceof演算子で比較したらtrueを返す
+        if (isDbRecordNotFoundError || isPrismaClientKnownRequestError) {
+            return true;
+        }
+
+        return false;
     }
 }
 

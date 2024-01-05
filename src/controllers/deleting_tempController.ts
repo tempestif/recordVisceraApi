@@ -17,9 +17,7 @@ import {
     createFilterForPrisma,
     createSortsForPrisma,
 } from "@/services/dataTransferService";
-import {
-    errorResponseHandler,
-} from "@/services/errorHandlingService";
+import { errorResponseHandler } from "@/services/errorHandle";
 import { customizedPrisma } from "@/services/prismaClients";
 import {
     findUniqueUserTempAbsoluteExist,
@@ -95,13 +93,7 @@ export const registTemp = async (
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        errorResponseHandler(
-            e,
-            userId,
-            req,
-            res,
-            currentFuncName
-        );
+        errorResponseHandler(e, userId, req, res, currentFuncName);
     }
 };
 
@@ -221,13 +213,7 @@ export const readTemps = async (
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        errorResponseHandler(
-            e,
-            userId.message,
-            req,
-            res,
-            currentFuncName
-        );
+        errorResponseHandler(e, userId.message, req, res, currentFuncName);
     }
 };
 
@@ -325,13 +311,7 @@ export const editTemp = async (
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        errorResponseHandler(
-            e,
-            userId.message,
-            req,
-            res,
-            currentFuncName
-        );
+        errorResponseHandler(e, userId.message, req, res, currentFuncName);
     }
 };
 
@@ -411,12 +391,6 @@ export const deleteTemp = async (
             newTemp
         );
     } catch (e) {
-        errorResponseHandler(
-            e,
-            userId,
-            req,
-            res,
-            currentFuncName
-        );
+        errorResponseHandler(e, userId, req, res, currentFuncName);
     }
 };

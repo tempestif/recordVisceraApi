@@ -9,7 +9,7 @@ import { basicHttpResponce } from "./utilResponseService";
 import { findUniqueUserAbsoluteExist } from "./prismaService";
 import { USER_LOGIN_STATUS } from "@/consts/db";
 import { customizedPrisma } from "./prismaClients";
-import { errorResponseHandler } from "./errorHandlingService";
+import { errorResponseHandler } from "@/services/errorHandle";
 import {
     UNSPECIFIED_USER_ID,
     UNSPECIFIED_USER_ID_TYPE,

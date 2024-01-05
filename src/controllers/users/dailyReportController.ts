@@ -17,7 +17,7 @@ import {
     createSortsForPrisma,
     FilterOptionsType,
 } from "@/services/dataTransferService";
-import { errorResponseHandler } from "@/services/errorHandlingService";
+import { errorResponseHandler } from "@/services/errorHandle";
 import { customizedPrisma } from "@/services/prismaClients";
 import {
     DAILY_REPORT_ALL_INCLUDE,

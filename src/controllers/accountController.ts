@@ -18,10 +18,7 @@ import {
     LoggingObjType,
     maskConfInfoInReqBody,
 } from "@/services/LoggerService";
-import {
-    internalServerErrorHandle,
-    errorResponseHandler,
-} from "@/services/errorHandlingService";
+import { errorResponseHandler } from "@/services/errorHandle";
 import { generateAuthToken } from "@/services/jwtService";
 import { sendMail } from "@/services/nodemailerService";
 import { customizedPrisma } from "@/services/prismaClients";
@@ -135,7 +132,7 @@ export const registUser = async (
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        internalServerErrorHandle(
+        errorResponseHandler(
             e,
             UNSPECIFIED_USER_ID.message,
             req,

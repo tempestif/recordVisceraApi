@@ -8,7 +8,7 @@ import {
     LoggingObjType,
     maskConfInfoInReqBody,
 } from "@/services/LoggerService";
-import { errorResponseHandler } from "@/services/errorHandlingService";
+import { errorResponseHandler } from "@/services/errorHandle";
 import { customizedPrisma } from "@/services/prismaClients";
 import { findUniqueProfileAbsoluteExist } from "@/services/prismaService";
 import { basicHttpResponceIncludeData } from "@/services/utilResponseService";
