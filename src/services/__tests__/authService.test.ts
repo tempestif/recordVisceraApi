@@ -113,22 +113,17 @@ describe("authの単体テスト", () => {
     test("PrivateKeyがない", async () => {
         // JWTPRIVATEKEYをmock化
         const originalEnvVar = process.env.JWTPRIVATEKEY;
-        process.env.JWTPRIVATEKEY = undefined;
+        process.env.JWTPRIVATEKEY = "";
 
-        // reject.throwだとうまく動かない
-        // https://zenn.dev/link/comments/bf4b7474f6d598
         try {
             // テスト実行
-            await auth(
-                mockRequest as Request,
-                mockResponse as Response,
-                nextFunction
-            );
-        } catch (e) {
-            expect(e).toBeInstanceOf(Error);
-            if (e instanceof Error) {
-                expect(e.message).toBe("auth: 環境変数が足りません");
-            }
+            await expect(
+                auth(
+                    mockRequest as Request,
+                    mockResponse as Response,
+                    nextFunction
+                )
+            ).rejects.toThrow("wrong message");
         } finally {
             // 環境変数を元に戻す
             process.env.JWTPRIVATEKEY = originalEnvVar;
