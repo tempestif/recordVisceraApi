@@ -12,20 +12,24 @@ export const sendMail = async (to: string, subject: string, text: string) => {
     // Gmailのアプリパスワード
     const pass = process.env.MAIL_PASSWORD;
 
+    if (!mail || !pass) {
+        throw new Error("sendMail: 環境変数が足りません");
+    }
+
     // Gmailにtransportする
     const transporter = createTransport({
         service: "Gmail",
         auth: {
             user: mail,
-            pass: pass,
-        }
+            pass,
+        },
     });
 
     // メール送信
     await transporter.sendMail({
         from: mail,
-        to: to,
-        subject: subject,
-        text: text,
+        to,
+        subject,
+        text,
     });
-}
+};
