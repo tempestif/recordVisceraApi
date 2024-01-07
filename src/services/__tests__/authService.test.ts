@@ -123,7 +123,7 @@ describe("authの単体テスト", () => {
                     mockResponse as Response,
                     nextFunction
                 )
-            ).rejects.toThrow("wrong message");
+            ).rejects.toThrow("auth: 環境変数が足りません");
         } finally {
             // 環境変数を元に戻す
             process.env.JWTPRIVATEKEY = originalEnvVar;

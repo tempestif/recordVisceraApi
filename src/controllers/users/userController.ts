@@ -18,7 +18,7 @@ import {
     CustomLogger,
     LoggingObjType,
     maskConfInfoInReqBody,
-} from "@/services/LoggerService";
+} from "@/services/logger/loggerService";
 import { PROCESS_FAILURE, PROCESS_SUCCESS } from "@/consts/logConsts";
 import { errorResponseHandler } from "@/services/errorHandle";
 import { USER_LOGIN_STATUS } from "@/consts/db";

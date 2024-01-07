@@ -17,7 +17,7 @@ import {
     CustomLogger,
     LoggingObjType,
     maskConfInfoInReqBody,
-} from "@/services/LoggerService";
+} from "@/services/logger/loggerService";
 import { errorResponseHandler } from "@/services/errorHandle";
 import { sendMail } from "@/services/nodemailerService";
 import { customizedPrisma } from "@/services/prismaClients";

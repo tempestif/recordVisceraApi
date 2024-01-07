@@ -1,6 +1,5 @@
-jest.mock("@/services/LoggerService");
 import type { Request, Response } from "express";
-import { logError } from "@/services/LoggerService";
+import { logError } from "@/services/logger/loggerService";
 import { UNEXPECTED_ERROR } from "@/consts/logConsts";
 import {
     dbRecordNotFoundErrorHandle,
@@ -23,8 +22,8 @@ jest.mock("@/services/utilResponseService", () => ({
     basicHttpResponce: jest.fn(),
     internalServerErr: jest.fn(),
 }));
-jest.mock("@/services/LoggerService", () => ({
-    ...jest.requireActual("@/services/LoggerService"),
+jest.mock("@/services/logger/loggerService", () => ({
+    ...jest.requireActual("@/services/logger/loggerService"),
     logError: jest.fn(),
 }));
 

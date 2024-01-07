@@ -7,7 +7,7 @@ import {
     CustomLogger,
     LoggingObjType,
     maskConfInfoInReqBody,
-} from "@/services/LoggerService";
+} from "@/services/logger/loggerService";
 import { errorResponseHandler } from "@/services/errorHandle";
 import { customizedPrisma } from "@/services/prismaClients";
 import { findUniqueProfileAbsoluteExist } from "@/services/prismaService";

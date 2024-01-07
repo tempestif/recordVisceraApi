@@ -10,7 +10,7 @@ import {
     CustomLogger,
     LoggingObjType,
     maskConfInfoInReqBody,
-} from "@/services/LoggerService";
+} from "@/services/logger/loggerService";
 import {
     createFilterForPrisma,
     createSelectForPrisma,

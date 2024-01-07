@@ -4,7 +4,7 @@ import {
 } from "@/consts/logConsts";
 import {
     logError,
-} from "@/services/LoggerService";
+} from "@/services/logger/loggerService";
 import {
     DbRecordNotFoundError,
     MultipleActiveUserError,
