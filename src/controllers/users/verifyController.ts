@@ -12,12 +12,12 @@ import {
     PROCESS_SUCCESS,
 } from "@/consts/logConsts";
 import {
-    CustomLogger,
     LoggingObjType,
     maskConfInfoInReqBody,
 } from "@/services/logger/loggerService";
 import { errorResponseHandler } from "@/services/errorHandle";
 import { findUniqueUserAbsoluteExist } from "@/services/prismaService";
+import { CustomLogger } from "@/services/logger/loggerClass";
 const logger = new CustomLogger();
 
 /**

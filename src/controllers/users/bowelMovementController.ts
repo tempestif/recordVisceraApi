@@ -9,7 +9,6 @@ import {
     RECORD_BOWEL_MOVEMENT,
 } from "@/consts/responseConsts/bowelMovement";
 import {
-    CustomLogger,
     LoggingObjType,
     maskConfInfoInReqBody,
 } from "@/services/logger/loggerService";
@@ -28,6 +27,7 @@ import {
     basicHttpResponceIncludeData,
 } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
+import { CustomLogger } from "@/services/logger/loggerClass";
 const logger = new CustomLogger();
 
 /**

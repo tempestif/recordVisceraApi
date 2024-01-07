@@ -7,7 +7,6 @@ import {
     RECORD_DAILY_REPORT,
 } from "@/consts/responseConsts";
 import {
-    CustomLogger,
     LoggingObjType,
     maskConfInfoInReqBody,
 } from "@/services/logger/loggerService";
@@ -31,6 +30,7 @@ import {
 } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
 import { DAILY_REPORT_DEFAULT_DATA_INFO } from "@/consts/db/dailyReport";
+import { CustomLogger } from "@/services/logger/loggerClass";
 const logger = new CustomLogger();
 
 /**

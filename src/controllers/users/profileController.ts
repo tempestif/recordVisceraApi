@@ -4,7 +4,6 @@ import {
     COMPLETE_UPDATE_PROFILE,
 } from "@/consts/responseConsts";
 import {
-    CustomLogger,
     LoggingObjType,
     maskConfInfoInReqBody,
 } from "@/services/logger/loggerService";
@@ -13,6 +12,7 @@ import { customizedPrisma } from "@/services/prismaClients";
 import { findUniqueProfileAbsoluteExist } from "@/services/prismaService";
 import { basicHttpResponceIncludeData } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
+import { CustomLogger } from "@/services/logger/loggerClass";
 const logger = new CustomLogger();
 
 /**

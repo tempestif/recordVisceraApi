@@ -14,7 +14,6 @@ import {
     MULTIPLE_ACTIVE_USERS,
 } from "@/consts/responseConsts";
 import {
-    CustomLogger,
     LoggingObjType,
     maskConfInfoInReqBody,
 } from "@/services/logger/loggerService";
@@ -30,6 +29,7 @@ import { basicHttpResponce } from "@/services/utilResponseService";
 import { compare } from "bcrypt";
 import { randomBytes } from "crypto";
 import { type Request, type Response, type NextFunction } from "express";
+import { CustomLogger } from "@/services/logger/loggerClass";
 const logger = new CustomLogger();
 /**
  * 認証前アカウントを作成し、認証メールを送信する

@@ -8,7 +8,6 @@ import {
     TEMP_ACCESS_FORBIDDEN,
 } from "@/consts/responseConsts";
 import {
-    CustomLogger,
     LoggingObjType,
     maskConfInfoInReqBody,
 } from "@/services/logger/loggerService";
@@ -28,6 +27,7 @@ import {
     basicHttpResponceIncludeData,
 } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
+import { CustomLogger } from "@/services/logger/loggerClass";
 const logger = new CustomLogger();
 
 // TODO: このコントローラ自体は廃止。dailyReportControllerに移行する。

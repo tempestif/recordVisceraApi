@@ -14,7 +14,6 @@ import {
     TOKEN_NOT_FOUND,
 } from "@/consts/responseConsts";
 import {
-    CustomLogger,
     LoggingObjType,
     maskConfInfoInReqBody,
 } from "@/services/logger/loggerService";
@@ -29,6 +28,7 @@ import {
 import { basicHttpResponce } from "@/services/utilResponseService";
 import { randomBytes } from "crypto";
 import type { Request, Response, NextFunction } from "express";
+import { CustomLogger } from "@/services/logger/loggerClass";
 const logger = new CustomLogger();
 
 /**
@@ -129,7 +129,10 @@ export const ExecuteResettingPassword = async (
     try {
         // idからユーザーを検索
         const whereByUserId = { id };
-        const user = await findUniqueUserAbsoluteExist(whereByUserId, customizedPrisma);
+        const user = await findUniqueUserAbsoluteExist(
+            whereByUserId,
+            customizedPrisma
+        );
 
         // tokenが見つからなかったら400エラー
         if (!user.passResetHash) {

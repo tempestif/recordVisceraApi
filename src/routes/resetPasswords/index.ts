@@ -1,4 +1,4 @@
-import { requestResettingPassword, ExecuteResettingPassword } from "@/controllers/resetPasswords/resetPassowordsController";
+import { requestResettingPassword, ExecuteResettingPassword } from "@/controllers/resetPasswords/resetPasswordsController";
 import express from "express";
 const router = express.Router();
 

@@ -15,7 +15,6 @@ import {
 } from "@/consts/responseConsts";
 import { findUniqueUserAbsoluteExist } from "@/services/prismaService";
 import {
-    CustomLogger,
     LoggingObjType,
     maskConfInfoInReqBody,
 } from "@/services/logger/loggerService";
@@ -24,6 +23,7 @@ import { errorResponseHandler } from "@/services/errorHandle";
 import { USER_LOGIN_STATUS } from "@/consts/db";
 import { Prisma } from "@prisma/client";
 import { transformNameTableToModel } from "@/services/prismaService/format";
+import { CustomLogger } from "@/services/logger/loggerClass";
 const logger = new CustomLogger();
 
 /**
