@@ -1,6 +1,4 @@
 import {
-    PROCESS_FAILURE,
-    PROCESS_SUCCESS,
     UNSPECIFIED_USER_ID,
 } from "@/consts/logConsts";
 import {
@@ -14,8 +12,8 @@ import {
     TOKEN_NOT_FOUND,
 } from "@/consts/responseConsts";
 import {
-    LoggingObjType,
-    maskConfInfoInReqBody,
+    logError,
+    logResponse,
 } from "@/services/logger/loggerService";
 import { errorResponseHandler } from "@/services/errorHandle";
 import { sendMail } from "@/services/nodemailerService";
@@ -28,8 +26,6 @@ import {
 import { basicHttpResponce } from "@/services/utilResponseService";
 import { randomBytes } from "crypto";
 import type { Request, Response, NextFunction } from "express";
-import { CustomLogger } from "@/services/logger/loggerClass";
-const logger = new CustomLogger();
 
 /**
  * パスワード再設定のリクエストを行う
@@ -73,7 +69,7 @@ export const requestResettingPassword = async (
         });
 
         // メール送信
-        // TODO: ここはフロント側のページのURLを送信するべき。フロントを実装したら修正する。
+        // TODO: メールにはフロント(クライアント)のURLを載せたい。これはAPIのURI。
         const verifyUrl = `${process.env.BASE_URL}/reset-password/${newUser.id}/execute/${newUser.passResetHash}`;
         await sendMailForResetPasswordVerify(email, verifyUrl);
 
@@ -84,16 +80,13 @@ export const requestResettingPassword = async (
         basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 
         // ログを出力
-        const logBody: LoggingObjType = {
-            userId: UNSPECIFIED_USER_ID.message,
-            ipAddress: req.ip,
-            method: req.method,
-            path: req.originalUrl,
-            body: maskConfInfoInReqBody(req).body,
-            status: String(HttpStatus),
+        logResponse(
+            UNSPECIFIED_USER_ID.message,
+            req,
+            HttpStatus,
             responseMsg,
-        };
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
+            currentFuncName
+        );
     } catch (e) {
         errorResponseHandler(
             e,
@@ -142,16 +135,13 @@ export const ExecuteResettingPassword = async (
             basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 
             // ログを出力
-            const logBody: LoggingObjType = {
-                userId: UNSPECIFIED_USER_ID.message,
-                ipAddress: req.ip,
-                method: req.method,
-                path: req.originalUrl,
-                body: maskConfInfoInReqBody(req).body,
-                status: String(HttpStatus),
+            logError(
+                UNSPECIFIED_USER_ID.message,
+                req,
+                HttpStatus,
                 responseMsg,
-            };
-            logger.error(PROCESS_FAILURE.message(currentFuncName), logBody);
+                currentFuncName
+            );
             return;
         }
 
@@ -173,16 +163,13 @@ export const ExecuteResettingPassword = async (
         basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 
         // ログを出力
-        const logBody: LoggingObjType = {
-            userId: UNSPECIFIED_USER_ID.message,
-            ipAddress: req.ip,
-            method: req.method,
-            path: req.originalUrl,
-            body: maskConfInfoInReqBody(req).body,
-            status: String(HttpStatus),
+        logResponse(
+            UNSPECIFIED_USER_ID.message,
+            req,
+            HttpStatus,
             responseMsg,
-        };
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
+            currentFuncName
+        );
     } catch (e) {
         // エラーの時のレスポンス
         errorResponseHandler(
@@ -200,7 +187,10 @@ export const ExecuteResettingPassword = async (
  * @param email 送信先メールアドレス
  * @param url 認証用URL
  */
-const sendMailForResetPasswordVerify = async (email: string, url: string) => {
+export const sendMailForResetPasswordVerify = async (
+    email: string,
+    url: string
+) => {
     // 件名
     const mailSubject = TITLE_VALID_RESET_PASS.message;
     // 本文
