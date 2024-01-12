@@ -97,3 +97,23 @@ export class TokenNotFoundError extends Error {
         }
     }
 }
+
+/**
+ * 不正なリクエストを受け取った
+ */
+export class BadRequestError extends Error {
+    constructor(...args: any[]) {
+        super(...args);
+
+        Object.defineProperty(this, "name", {
+            configurable: true,
+            enumerable: false,
+            value: this.constructor.name,
+            writable: true,
+        });
+
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, BadRequestError);
+        }
+    }
+}

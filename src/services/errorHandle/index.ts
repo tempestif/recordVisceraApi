@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { UNSPECIFIED_USER_ID_TYPE } from "@/consts/logConsts";
 import {
+    BadRequestError,
     DbRecordNotFoundError,
     MultipleActiveUserError,
     TokenNotFoundError,
@@ -10,6 +11,7 @@ import {
     multipleActiveUsersErrorHandle,
     tokenNotFoundErrorHandle,
     internalServerErrorHandle,
+    badRequestErrorHandle,
 } from "@/services/errorHandle/errorHandlingService";
 
 /**
@@ -34,6 +36,8 @@ export const errorResponseHandler = (
         multipleActiveUsersErrorHandle(e, userId, req, res, funcName);
     } else if (e instanceof TokenNotFoundError) {
         tokenNotFoundErrorHandle(e, userId, req, res, funcName);
+    } else if (e instanceof BadRequestError) {
+        badRequestErrorHandle(e, userId, req, res, funcName);
     } else {
         internalServerErrorHandle(e, userId, req, res, funcName);
     }

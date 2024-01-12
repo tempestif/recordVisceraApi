@@ -1,9 +1,8 @@
-import {
-    UNSPECIFIED_USER_ID,
-} from "@/consts/logConsts";
+import { UNSPECIFIED_USER_ID } from "@/consts/logConsts";
 import {
     TITLE_VALID_RESET_PASS,
     TEXT_VALID_RESET_PASS,
+    BAD_REQUEST,
 } from "@/consts/mailConsts";
 import {
     COMPLETE_VALID_RESET_PASS,
@@ -11,14 +10,12 @@ import {
     SEND_MAIL_FOR_RESET_PASS_VALID,
     TOKEN_NOT_FOUND,
 } from "@/consts/responseConsts";
-import {
-    logError,
-    logResponse,
-} from "@/services/logger/loggerService";
+import { logError, logResponse } from "@/services/logger/loggerService";
 import { errorResponseHandler } from "@/services/errorHandle";
 import { sendMail } from "@/services/nodemailerService";
 import { customizedPrisma } from "@/services/prismaClients";
 import {
+    BadRequestError,
     MultipleActiveUserError,
     findActivedUser,
     findUniqueUserAbsoluteExist,
@@ -26,6 +23,7 @@ import {
 import { basicHttpResponce } from "@/services/utilResponseService";
 import { randomBytes } from "crypto";
 import type { Request, Response, NextFunction } from "express";
+import fs from "fs";
 
 /**
  * パスワード再設定のリクエストを行う
@@ -43,13 +41,17 @@ export const requestResettingPassword = async (
 
     // logのために関数名を取得
     const currentFuncName = requestResettingPassword.name;
-    // TODO: バリデーション
 
     try {
+        if (!email) {
+            throw new BadRequestError(BAD_REQUEST.message);
+        }
+
         // emailからuserを取得
         const whereByEmail = { email };
         const users = await findActivedUser(whereByEmail, customizedPrisma);
-        if (users.length !== 0) {
+        fs.appendFileSync("src/test.txt", `users:\n${JSON.stringify(users)}\n`);
+        if (users.length !== 1) {
             throw new MultipleActiveUserError(MULTIPLE_ACTIVE_USERS.message);
         }
 
@@ -57,6 +59,10 @@ export const requestResettingPassword = async (
 
         // 認証トークン作成
         const passResetHash = randomBytes(32).toString("hex");
+        fs.appendFileSync(
+            "src/test.txt",
+            `randomBytes:\n${String(randomBytes)}\n`
+        );
 
         // DBに保存
         const newUser = await customizedPrisma.user.update({
@@ -67,17 +73,28 @@ export const requestResettingPassword = async (
                 passResetHash,
             },
         });
+        fs.appendFileSync(
+            "src/test.txt",
+            `newUser: ${JSON.stringify(newUser)}\n`
+        );
 
         // メール送信
         // TODO: メールにはフロント(クライアント)のURLを載せたい。これはAPIのURI。
+        fs.appendFileSync(
+            "src/test.txt",
+            `sendMailForResetPasswordVerify:\n${String(
+                sendMailForResetPasswordVerify
+            )}`
+        );
         const verifyUrl = `${process.env.BASE_URL}/reset-password/${newUser.id}/execute/${newUser.passResetHash}`;
         await sendMailForResetPasswordVerify(email, verifyUrl);
-
+        fs.appendFileSync("src/test.txt", "sendMailForResetPasswordVerify\n");
         // レスポンスを返却
         const HttpStatus = 201;
         const responseStatus = true;
         const responseMsg = SEND_MAIL_FOR_RESET_PASS_VALID.message;
         basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
+        fs.appendFileSync("src/test.txt", "basicHttpResponce\n");
 
         // ログを出力
         logResponse(
@@ -87,14 +104,18 @@ export const requestResettingPassword = async (
             responseMsg,
             currentFuncName
         );
+        fs.appendFileSync("src/test.txt", "logResponse\n");
     } catch (e) {
-        errorResponseHandler(
-            e,
-            UNSPECIFIED_USER_ID.message,
-            req,
-            res,
-            currentFuncName
-        );
+        fs.appendFileSync("src/test.txt", `e: ${e}\n`);
+
+        // errorResponseHandler(
+        //     e,
+        //     UNSPECIFIED_USER_ID.message,
+        //     req,
+        //     res,
+        //     currentFuncName
+        // );
+        throw e;
     }
 };
 
@@ -117,9 +138,10 @@ export const ExecuteResettingPassword = async (
     // logのために関数名を取得
     const currentFuncName = ExecuteResettingPassword.name;
 
-    // TODO: バリデーション
-
     try {
+        if (!id || !token || !newPassword) {
+            throw new BadRequestError(BAD_REQUEST.message);
+        }
         // idからユーザーを検索
         const whereByUserId = { id };
         const user = await findUniqueUserAbsoluteExist(

@@ -1,11 +1,13 @@
 import type { Request, Response } from "express";
 import {
+    BadRequestError,
     DbRecordNotFoundError,
     MultipleActiveUserError,
     TokenNotFoundError,
 } from "@/services/prismaService";
 import { errorResponseHandler } from "@/services/errorHandle/index";
 import {
+    badRequestErrorHandle,
     dbRecordNotFoundErrorHandle,
     internalServerErrorHandle,
     multipleActiveUsersErrorHandle,
@@ -18,6 +20,7 @@ jest.mock("@/services/errorHandle/errorHandlingService", () => ({
     dbRecordNotFoundErrorHandle: jest.fn(),
     multipleActiveUsersErrorHandle: jest.fn(),
     tokenNotFoundErrorHandle: jest.fn(),
+    badRequestErrorHandle: jest.fn(),
     internalServerErrorHandle: jest.fn(),
 }));
 
@@ -115,6 +118,26 @@ describe("errorResponseHandlerのテスト", () => {
         );
 
         expect(tokenNotFoundErrorHandle).toHaveBeenCalledWith(
+            error,
+            userId,
+            mockReq as Request,
+            mockRes as Response,
+            funcName
+        );
+    });
+    test("BadRequestErrorインスタンスの処理", () => {
+        const error = new BadRequestError();
+        const userId = 10;
+        const funcName = "errorResponseHandlerのテスト";
+        errorResponseHandler(
+            error,
+            userId,
+            mockReq as Request,
+            mockRes as Response,
+            funcName
+        );
+
+        expect(badRequestErrorHandle).toHaveBeenCalledWith(
             error,
             userId,
             mockReq as Request,

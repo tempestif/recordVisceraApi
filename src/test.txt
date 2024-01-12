@@ -1,0 +1,11 @@
+users:
+[{"name":"mock-name","email":"mock@email","password":"mock-password","verifyEmailHash":null,"passResetHash":null,"verified":1,"loginStatus":1,"id":1,"createdAt":"2024-01-09T06:25:21.987Z","updatedAt":"2024-01-09T06:25:21.987Z"}]
+randomBytes:
+function () {
+        return fn.apply(this, arguments);
+      }
+newUser: {"name":"mock-name","email":"mock@email","password":"mock-password","verifyEmailHash":null,"passResetHash":"mock-hash","verified":1,"loginStatus":1,"id":1,"createdAt":"2024-01-09T06:25:21.993Z","updatedAt":"2024-01-09T06:25:21.993Z"}
+sendMailForResetPasswordVerify:
+function () {
+        return fn.apply(this, arguments);
+      }e: TypeError: Cannot read properties of undefined (reading 'replace')

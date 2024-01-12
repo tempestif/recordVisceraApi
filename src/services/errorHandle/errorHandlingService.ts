@@ -1,11 +1,7 @@
+import { UNEXPECTED_ERROR, UNSPECIFIED_USER_ID_TYPE } from "@/consts/logConsts";
+import { logError } from "@/services/logger/loggerService";
 import {
-    UNEXPECTED_ERROR,
-    UNSPECIFIED_USER_ID_TYPE,
-} from "@/consts/logConsts";
-import {
-    logError,
-} from "@/services/logger/loggerService";
-import {
+    BadRequestError,
     DbRecordNotFoundError,
     MultipleActiveUserError,
     TokenNotFoundError,
@@ -36,7 +32,7 @@ export const internalServerErrorHandle = (
     const responseMsg =
         e instanceof Error ? e.message : UNEXPECTED_ERROR.message;
 
-    logError(responseMsg, userId, req, HttpStatus, funcName);
+    logError(userId, req, HttpStatus, funcName, responseMsg);
     internalServerErr(res, e);
 };
 
@@ -60,7 +56,7 @@ export const dbRecordNotFoundErrorHandle = (
     const responseStatus = false;
     const responseMsg = e.message;
 
-    logError(responseMsg, userId, req, HttpStatus, funcName);
+    logError(userId, req, HttpStatus, funcName, responseMsg);
     basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 };
 
@@ -85,7 +81,7 @@ export const multipleActiveUsersErrorHandle = (
     const responseStatus = false;
     const responseMsg = e.message;
 
-    logError(responseMsg, userId, req, HttpStatus, funcName);
+    logError(userId, req, HttpStatus, funcName, responseMsg);
     basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 };
 
@@ -108,6 +104,21 @@ export const tokenNotFoundErrorHandle = (
     const responseStatus = false;
     const responseMsg = e.message;
 
-    logError(responseMsg, userId, req, HttpStatus, funcName);
+    logError(userId, req, HttpStatus, funcName, responseMsg);
+    basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
+};
+
+export const badRequestErrorHandle = (
+    e: BadRequestError,
+    userId: number | UNSPECIFIED_USER_ID_TYPE,
+    req: Request,
+    res: Response,
+    funcName: string
+) => {
+    const HttpStatus = 400;
+    const responseStatus = false;
+    const responseMsg = e.message;
+
+    logError(userId, req, HttpStatus, funcName, responseMsg);
     basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 };
