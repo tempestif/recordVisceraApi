@@ -1,4 +1,4 @@
-import { requestResettingPassword, ExecuteResettingPassword } from "@/controllers/resetPasswords/resetPasswordsController";
+import { requestResettingPassword, executeResettingPassword } from "@/controllers/resetPasswords/resetPasswordsController";
 import express from "express";
 const router = express.Router();
 
@@ -6,5 +6,5 @@ const router = express.Router();
 router.post("/request", requestResettingPassword)
 
 /** パスワードリセットを実行 */
-router.post("/execute", ExecuteResettingPassword)
+router.post("/execute", executeResettingPassword)
 export { router };

@@ -1,4 +1,7 @@
-import { sendMail } from "@/services/nodemailerService";
+import {
+    sendMail,
+    sendMailForResetPasswordVerify,
+} from "@/services/nodemailerService";
 import { createTransport } from "nodemailer";
 
 jest.mock("nodemailer", () => ({
@@ -92,5 +95,30 @@ describe("sendMailのテスト", () => {
             process.env.MAIL_ACCOUNT = originalEnvAcc;
             process.env.MAIL_PASSWORD = originalEnvPass;
         }
+    });
+});
+
+describe("sendMailForResetPasswordVerifyのテスト", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
+    test("正常", async () => {
+        // mock化
+        const nodemailerService = require("@/services/nodemailerService");
+        const spySendMail = jest.spyOn(nodemailerService, "sendMail");
+
+        const email = "mock-email";
+        const url = "mock-url";
+        await sendMailForResetPasswordVerify(email, url);
+
+        expect(spySendMail).toHaveBeenCalledWith(
+            email,
+            "[recordViscera]メールアドレス認証",
+            "以下のURLをクリックしてください\n登録されたメールアドレスを確認します。\nmock-url"
+        );
     });
 });
