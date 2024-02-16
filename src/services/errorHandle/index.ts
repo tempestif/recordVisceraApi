@@ -17,6 +17,9 @@ import {
 /**
  * エラーハンドラー
  * 各エラーハンドルをここに集約
+ * TODO: これはいつか辞める
+ * try...catchを短くし、各catchに必要最低限ハンドルを置く
+ * https://zenn.dev/link/comments/bf900ad59f6547
  * @param e
  * @param userId
  * @param req

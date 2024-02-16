@@ -6,6 +6,7 @@ import { DbRecordNotFoundError } from ".";
 /**
  * DBより、プロフィールの存在確認、取得を行う。
  * プロフィールが存在しなかった場合はDbRecordNotFoundErrorを投げる
+ * TODO: findUniqueOrThrowに換装する
  * @param where 検索条件
  * @param res
  * @returns

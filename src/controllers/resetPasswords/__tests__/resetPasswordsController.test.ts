@@ -12,7 +12,7 @@ import {
 } from "@/services/prismaService";
 import { customizedPrisma } from "@/services/prismaClients";
 import { randomBytes } from "crypto";
-import { logError, logResponse } from "@/services/logger/loggerService";
+import { logResponse } from "@/services/logger/loggerService";
 import { basicHttpResponce } from "@/services/utilResponseService";
 import { UNSPECIFIED_USER_ID } from "@/consts/logConsts";
 import { sendMailForResetPasswordVerify } from "@/services/nodemailerService";

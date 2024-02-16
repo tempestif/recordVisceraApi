@@ -5,6 +5,7 @@ export * from "./temps";
 export * from "./profiles";
 export * from "./weights";
 export * from "./dailyReports";
+export * from "./bowelMovements"
 
 /**
  * DBから対象のレコードが見つからない

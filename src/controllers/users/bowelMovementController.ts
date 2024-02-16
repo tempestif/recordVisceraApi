@@ -1,5 +1,9 @@
 import { DEFAULT_DATA_INFO } from "@/consts/db";
-import { PROCESS_FAILURE, PROCESS_SUCCESS } from "@/consts/logConsts";
+import {
+    PROCESS_FAILURE,
+    PROCESS_SUCCESS,
+    UNSPECIFIED_USER_ID,
+} from "@/consts/logConsts";
 import {
     BOWEL_MOVEMENT_ACCESS_FORBIDDEN,
     COUNT_BOWEL_MOVEMENT_PER_DAY,
@@ -10,6 +14,7 @@ import {
 } from "@/consts/responseConsts/bowelMovement";
 import {
     LoggingObjType,
+    logResponse,
     maskConfInfoInReqBody,
 } from "@/services/logger/loggerService";
 import {
@@ -20,15 +25,19 @@ import {
 } from "@/services/dataTransferService";
 import { errorResponseHandler } from "@/services/errorHandle";
 import { customizedPrisma } from "@/services/prismaClients";
-import { findUniqueUserAbsoluteExist } from "@/services/prismaService";
-import { findUniqueBowelMovementAbsoluteExist } from "@/services/prismaService/bowelMovements";
+import {
+    BadRequestError,
+    findUniqueUserAbsoluteExist,
+    findUniqueBowelMovementAbsoluteExist,
+} from "@/services/prismaService";
 import {
     basicHttpResponce,
     basicHttpResponceIncludeData,
 } from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
 import { CustomLogger } from "@/services/logger/loggerClass";
-const logger = new CustomLogger();
+import { BAD_REQUEST } from "@/consts/mailConsts";
+// const logger = new CustomLogger();
 
 /**
  * 新たな排便記録を作成する
@@ -43,13 +52,21 @@ export const registBowelMovement = async (
     res: Response,
     next: NextFunction
 ) => {
-    const { userId, bristolStoolScale, blood, drainage, note, date } = req.body;
+    const userId = Number(req.body.userId);
+    const bristolStoolScale = Number(req.body.bristolStoolScale);
+    const blood = Number(req.body.blood);
+    const drainage = Number(req.body.drainage);
+    const { note, date } = req.body;
 
     // logのために関数名を取得
     const currentFuncName = registBowelMovement.name;
     // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
     try {
+        if (!userId || !bristolStoolScale || !blood || !drainage) {
+            throw new BadRequestError(BAD_REQUEST.message);
+        }
+
         // userIdからユーザーを取得
         const whereByUserId = { id: userId };
         await findUniqueUserAbsoluteExist(whereByUserId, customizedPrisma);
@@ -78,30 +95,27 @@ export const registBowelMovement = async (
         });
 
         // レスポンスを返却
-        const HttpStatus = 200;
+        const httpStatus = 200;
         const responseStatus = true;
         const responseMsg = RECORD_BOWEL_MOVEMENT.message;
         basicHttpResponceIncludeData(
             res,
-            HttpStatus,
+            httpStatus,
             responseStatus,
             responseMsg,
             bowelMovementData
         );
 
         // ログを出力
-        const logBody: LoggingObjType = {
-            userId,
-            ipAddress: req.ip,
-            method: req.method,
-            path: req.originalUrl,
-            body: maskConfInfoInReqBody(req).body,
-            status: String(HttpStatus),
-            responseMsg,
-        };
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
+        logResponse(userId, req, httpStatus, responseMsg, currentFuncName);
     } catch (e) {
-        errorResponseHandler(e, userId, req, res, currentFuncName);
+        errorResponseHandler(
+            e,
+            !userId ? UNSPECIFIED_USER_ID.message : userId,
+            req,
+            res,
+            currentFuncName
+        );
     }
 };
 
@@ -248,7 +262,7 @@ export const readBowelMovements = async (
             status: String(HttpStatus),
             responseMsg,
         };
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
+        // logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
         errorResponseHandler(e, userId, req, res, currentFuncName);
     }
@@ -304,10 +318,10 @@ export const editBowelMovement = async (
                 status: String(HttpStatus),
                 responseMsg,
             };
-            logger.error(
-                PROCESS_FAILURE.message(editBowelMovement.name),
-                logBody
-            );
+            // logger.error(
+            //     PROCESS_FAILURE.message(editBowelMovement.name),
+            //     logBody
+            // );
 
             return;
         }
@@ -366,7 +380,7 @@ export const editBowelMovement = async (
             status: String(HttpStatus),
             responseMsg,
         };
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
+        // logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
         errorResponseHandler(e, userId, req, res, currentFuncName);
     }
@@ -422,7 +436,7 @@ export const deleteBowelMovement = async (
                 status: String(HttpStatus),
                 responseMsg,
             };
-            logger.error(PROCESS_FAILURE.message(currentFuncName), logBody);
+            // logger.error(PROCESS_FAILURE.message(currentFuncName), logBody);
 
             return;
         }
@@ -454,7 +468,7 @@ export const deleteBowelMovement = async (
             status: String(HttpStatus),
             responseMsg,
         };
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
+        // logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
         errorResponseHandler(e, userId, req, res, currentFuncName);
     }
@@ -525,7 +539,7 @@ export const countBowelMovementsPerDay = async (
             status: String(HttpStatus),
             responseMsg,
         };
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
+        // logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
         errorResponseHandler(e, userId, req, res, currentFuncName);
     }
