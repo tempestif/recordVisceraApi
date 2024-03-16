@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { registBowelMovement } from "@/controllers/users/bowelMovementController";
 import {
     BadRequestError,
+    DbRecordNotFoundError,
     findUniqueUserAbsoluteExist,
 } from "@/services/prismaService";
 import { customizedPrisma } from "@/services/prismaClients";
@@ -168,8 +169,130 @@ describe("registBowelMovementのテスト", () => {
             "registBowelMovement"
         );
     });
-    // test("bristolStoolScaleがない");
-    // test("bloodがない");
-    // test("drainageがない");
-    // test("findUniqueUserAbsoluteExistがエラーを投げる");
+    test("bristolStoolScaleがない", async () => {
+        mockReq = {
+            ip: "mock-ip",
+            method: "mock-method",
+            path: "mock-path",
+            body: {
+                userId: "10",
+                blood: "1",
+                drainage: "1",
+                note: "mock-note",
+                date: "2023-10-13T17:40:33.000Z",
+            },
+        };
+
+        // テスト対象実行
+        await registBowelMovement(
+            mockReq as Request,
+            mockRes as Response,
+            next
+        );
+
+        // 確認
+        expect(errorResponseHandler).toHaveBeenCalledWith(
+            new BadRequestError("不正なリクエストです"),
+            10,
+            mockReq,
+            mockRes,
+            "registBowelMovement"
+        );
+    });
+    test("bloodがない", async () => {
+        mockReq = {
+            ip: "mock-ip",
+            method: "mock-method",
+            path: "mock-path",
+            body: {
+                userId: "10",
+                bristolStoolScale: "1",
+                drainage: "1",
+                note: "mock-note",
+                date: "2023-10-13T17:40:33.000Z",
+            },
+        };
+
+        // テスト対象実行
+        await registBowelMovement(
+            mockReq as Request,
+            mockRes as Response,
+            next
+        );
+
+        // 確認
+        expect(errorResponseHandler).toHaveBeenCalledWith(
+            new BadRequestError("不正なリクエストです"),
+            10,
+            mockReq,
+            mockRes,
+            "registBowelMovement"
+        );
+    });
+    test("drainageがない", async () => {
+        mockReq = {
+            ip: "mock-ip",
+            method: "mock-method",
+            path: "mock-path",
+            body: {
+                userId: "10",
+                bristolStoolScale: "1",
+                blood: "1",
+                note: "mock-note",
+                date: "2023-10-13T17:40:33.000Z",
+            },
+        };
+
+        // テスト対象実行
+        await registBowelMovement(
+            mockReq as Request,
+            mockRes as Response,
+            next
+        );
+
+        // 確認
+        expect(errorResponseHandler).toHaveBeenCalledWith(
+            new BadRequestError("不正なリクエストです"),
+            10,
+            mockReq,
+            mockRes,
+            "registBowelMovement"
+        );
+    });
+    test("findUniqueUserAbsoluteExistがエラーを投げる", async () => {
+        mockReq = {
+            ip: "mock-ip",
+            method: "mock-method",
+            path: "mock-path",
+            body: {
+                userId: "10",
+                bristolStoolScale: "1",
+                blood: "1",
+                drainage: "1",
+                note: "mock-note",
+                date: "2023-10-13T17:40:33.000Z",
+            },
+        };
+
+        // findUniqueUserAbsoluteExistがDbRecordNotFoundErrorを投げる
+        (findUniqueUserAbsoluteExist  as jest.Mock).mockImplementation(() => {
+            throw new DbRecordNotFoundError()
+        })
+
+        // テスト対象実行
+        await registBowelMovement(
+            mockReq as Request,
+            mockRes as Response,
+            next
+        );
+
+        // 確認
+        expect(errorResponseHandler).toHaveBeenCalledWith(
+            new DbRecordNotFoundError(),
+            10,
+            mockReq,
+            mockRes,
+            "registBowelMovement"
+        );
+    });
 });
