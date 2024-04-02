@@ -1,14 +1,39 @@
 import { PROCESS_FAILURE, PROCESS_SUCCESS } from "@/consts/logConsts";
-import { DAILY_REPORT_ACCESS_FORBIDDEN, DELETE_DAILY_REPORT, EDIT_DAILY_REPORT, READ_DAILY_REPORT, RECORD_DAILY_REPORT } from "@/consts/responseConsts";
-import { CustomLogger, LoggingObjType, maskConfInfoInReqBody } from "@/services/LoggerService";
-import { createFilterForPrisma, createSortsForPrisma, filteringFields, FilterOptionsType } from "@/services/dataTransferService";
-import { ErrorHandleIncludeDbRecordNotFound } from "@/services/errorHandlingService";
+import {
+    DAILY_REPORT_ACCESS_FORBIDDEN,
+    DELETE_DAILY_REPORT,
+    EDIT_DAILY_REPORT,
+    READ_DAILY_REPORT,
+    RECORD_DAILY_REPORT,
+} from "@/consts/responseConsts";
+import {
+    LoggingObjType,
+    logResponse,
+    maskConfInfoInReqBody,
+} from "@/services/logger/loggerService";
+import {
+    createFilterForPrisma,
+    createSelectForPrisma,
+    createSortsForPrisma,
+    FilterOptionsType,
+} from "@/services/dataTransferService";
+import { errorResponseHandler } from "@/services/errorHandle";
 import { customizedPrisma } from "@/services/prismaClients";
-import { DAILY_REPORT_ALL_INCLUDE, createDailyReport, findUniqueUserAbsoluteExist, updateDailyReport } from "@/services/prismaService";
-import { basicHttpResponce, basicHttpResponceIncludeData } from "@/services/utilResponseService";
+import {
+    DAILY_REPORT_ALL_INCLUDE,
+    createDailyReport,
+    findUniqueUserAbsoluteExist,
+    updateDailyReport,
+} from "@/services/prismaService";
+import {
+    basicHttpResponce,
+    basicHttpResponceIncludeData,
+} from "@/services/utilResponseService";
 import type { Request, Response, NextFunction } from "express";
 import { DAILY_REPORT_DEFAULT_DATA_INFO } from "@/consts/db/dailyReport";
-const logger = new CustomLogger()
+import { CustomLogger } from "@/services/logger/loggerClass";
+import { BasedQuery, QueryType } from "@/services/utilRequestService";
+const logger = new CustomLogger();
 
 /**
  * 今日の体調を作成
@@ -27,14 +52,19 @@ const logger = new CustomLogger()
  * @param res
  * @param next
  */
-export const registDailyReport = async (req: Request, res: Response, next: NextFunction) => {
+export const registDailyReport = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
     // logのために関数名を取得
-    const currentFuncName = registDailyReport.name
+    const currentFuncName = registDailyReport.name;
     // TODO: バリデーション
 
     // bodyから情報を取得
+    // これ、うまくできないかねぇ。
+    const userId = Number(req.body.userId);
     const {
-        userId,
         date,
         // 体温
         temp,
@@ -55,22 +85,22 @@ export const registDailyReport = async (req: Request, res: Response, next: NextF
         // その他の肛門病変の有無
         anirectalOtherLesitions,
         // 腹部腫瘤の有無
-        abdominal
-    } = req.body
+        abdominal,
+    } = req.body;
 
     try {
         // idからユーザーの存在確認
-        const whereByUserId = { id: userId }
-        await findUniqueUserAbsoluteExist(whereByUserId, res)
+        const whereByUserId = { id: userId };
+        await findUniqueUserAbsoluteExist(whereByUserId, customizedPrisma);
 
         // dateをDate型に変換
-        let dateForDb
+        let dateForDb;
         if (!date) {
             // dateが指定なしの場合、現在日時を入力
-            dateForDb = new Date()
+            dateForDb = new Date();
         } else {
             // dateが指定されていた場合、指定のdate
-            dateForDb = new Date(date)
+            dateForDb = new Date(date);
         }
 
         // dailyReport追加
@@ -84,32 +114,27 @@ export const registDailyReport = async (req: Request, res: Response, next: NextF
             ocularLesitions,
             anirectalLesitions,
             anirectalOtherLesitions,
-            abdominal
-        })
+            abdominal,
+        });
 
         // レスポンスを返却
-        const HttpStatus = 200
-        const responseStatus = true
-        const responseMsg = RECORD_DAILY_REPORT.message
-        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, dailyReport)
+        const httpStatus = 200;
+        const responseStatus = true;
+        const responseMsg = RECORD_DAILY_REPORT.message;
+        basicHttpResponceIncludeData(
+            res,
+            httpStatus,
+            responseStatus,
+            responseMsg,
+            dailyReport
+        );
 
         // ログを出力
-        const logBody: LoggingObjType = {
-            userId: userId,
-            ipAddress: req.ip,
-            method: req.method,
-            path: req.originalUrl,
-            body: maskConfInfoInReqBody(req).body,
-            status: String(HttpStatus),
-            responseMsg
-        }
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
-
+        logResponse(userId, req, httpStatus, responseMsg, currentFuncName);
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
+        errorResponseHandler(e, userId, req, res, currentFuncName);
     }
-
-}
+};
 
 /**
  * 今日の体調を取得
@@ -117,34 +142,37 @@ export const registDailyReport = async (req: Request, res: Response, next: NextF
  * @param res
  * @param next
  */
-export const readDailyReport = async (req: Request, res: Response, next: NextFunction) => {
+export const readDailyReport = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
     // logのために関数名を取得
-    const currentFuncName = readDailyReport.name
+    const currentFuncName = readDailyReport.name;
     // TODO: バリデーション
     // クエリのデータを扱いやすくするための型を定義
-    type Query = {
-        sort: string | undefined
-        fields: string | undefined
-        limit: string | undefined
-        offset: string | undefined
-        id: string | undefined
-        temp: string | undefined
-        weight: string | undefined
-        stomachach: string | undefined
-        condition: string | undefined
-        arthritis: string | undefined
-        skinLesitions: string | undefined
-        ocularLesitions: string | undefined
-        anirectalLesitions: string | undefined
-        anirectalOtherLesitions: string | undefined
-        abdominal: string | undefined
-        createdAt: string | undefined
-        updatedAt: string | undefined
-    }
+    type DailyReportQuery = {
+        id: QueryType;
+        temp: QueryType;
+        weight: QueryType;
+        stomachach: QueryType;
+        condition: QueryType;
+        arthritis: QueryType;
+        skinLesitions: QueryType;
+        ocularLesitions: QueryType;
+        anirectalLesitions: QueryType;
+        anirectalOtherLesitions: QueryType;
+        abdominal: QueryType;
+        createdAt: QueryType;
+        updatedAt: QueryType;
+    };
+    type Query = BasedQuery & DailyReportQuery;
     // フィルター以外の条件を取得
-    const { sort, fields, limit, offset } = req.query as Query
+    const { sort, fields, limit, offset } = req.query as Query;
     // 指定されたソートの内容をprismaに渡せるように成型
-    const sorts = createSortsForPrisma(sort)
+    const sorts = createSortsForPrisma(sort);
+    // 指定されたフィールドのみ取得するように設定
+    const select = createSelectForPrisma(fields);
 
     // クエリで指定されたフィルターの内容を連想配列にまとめる
     const {
@@ -160,78 +188,97 @@ export const readDailyReport = async (req: Request, res: Response, next: NextFun
         anirectalOtherLesitions,
         abdominal,
         createdAt,
+        updatedAt,
+    } = req.query as Query;
+    const filterOptions = createDailyReportFilterOptions(
+        id,
+        temp,
+        weight,
+        stomachach,
+        condition,
+        arthritis,
+        skinLesitions,
+        ocularLesitions,
+        anirectalLesitions,
+        anirectalOtherLesitions,
+        abdominal,
+        createdAt,
         updatedAt
-    } = req.query as Query
-    const filterOptions = createDailyReportFilterOptions(id, temp, weight, stomachach, condition, arthritis, skinLesitions, ocularLesitions, anirectalLesitions, anirectalOtherLesitions, abdominal, createdAt, updatedAt)
+    );
     // 指定されたフィールドのみのオブジェクトを作成
-    const filter = createFilterForPrisma(filterOptions)
+    const filter = createFilterForPrisma(filterOptions);
 
     // bodyからuserIdを取得
-    const userId = req.body.userId
+    const userId = req.body.userId;
     // paramから年月日を取得
-    const { year, month, day } = req.query
+    const { year, month, day } = req.query;
 
     try {
         // bodyの年月日をDate型に変換
-        let dateForDb
+        let dateForDb;
         if (year && month && day) {
-            dateForDb = new Date(`${year}-${month}-${day}`)
+            dateForDb = new Date(`${year}-${month}-${day}`);
         }
         // 今日の体調を取得
-        const includeFields = DAILY_REPORT_ALL_INCLUDE
-        delete includeFields.User
+        const includeFields = DAILY_REPORT_ALL_INCLUDE;
+        delete includeFields.User;
         const dailyReports = await customizedPrisma.daily_Report.findMany({
             where: {
                 userId,
                 day: dateForDb,
-                ...filter
+                ...filter,
             },
             orderBy: sorts,
-            skip: offset ? Number(offset) : DAILY_REPORT_DEFAULT_DATA_INFO.offset,
+            skip: offset
+                ? Number(offset)
+                : DAILY_REPORT_DEFAULT_DATA_INFO.offset,
             take: limit ? Number(limit) : DAILY_REPORT_DEFAULT_DATA_INFO.limit,
-            include: includeFields
-        })
+            include: includeFields,
+            select,
+        });
 
         // NOTE: ひとまずもう一度全検索でallCountを取る。もっといい方法を考える。
         const allCount = await customizedPrisma.daily_Report.count({
             where: {
-                userId
-            }
-        })
-
-        // 指定されたフィールドのみ抜き出す
-        const fileteredDailyReports = filteringFields(fields, dailyReports)
+                userId,
+            },
+        });
 
         // レスポンス返却
-        const HttpStatus = 200
-        const responseStatus = true
-        const responseMsg = READ_DAILY_REPORT.message
-        res.status(HttpStatus).json({
-            "status": responseStatus,
-            "message": responseMsg,
-            "allCount": allCount,
-            "count": fileteredDailyReports.length,
-            "sort": sort ?? '',
-            "fields": fields ?? '',
-            "limit": limit ?? '',
-            "offset": offset ?? '',
-            "filter": {
-                "id": id ?? '',
-                "temp": temp ?? '',
-                "weight": weight ?? '',
-                "stomachach": stomachach ?? '',
-                "condition": condition ?? '',
-                "arthritis": arthritis ?? '',
-                "skinLesitions": skinLesitions ?? '',
-                "ocularLesitions": ocularLesitions ?? '',
-                "anirectalLesitions": anirectalLesitions ?? '',
-                "anirectalOtherLesitions": anirectalOtherLesitions ?? '',
-                "abdominal": abdominal ?? '',
-                "createdAt": createdAt ?? '',
-                "updatedAt": updatedAt ?? ''
+        const httpStatus = 200;
+        const responseStatus = true;
+        const responseMsg = READ_DAILY_REPORT.message;
+        const resData = {
+            allCount: allCount,
+            count: dailyReports.length,
+            sort: sort ?? "",
+            fields: fields ?? "",
+            limit: limit ?? "",
+            offset: offset ?? "",
+            filter: {
+                id: id ?? "",
+                temp: temp ?? "",
+                weight: weight ?? "",
+                stomachach: stomachach ?? "",
+                condition: condition ?? "",
+                arthritis: arthritis ?? "",
+                skinLesitions: skinLesitions ?? "",
+                ocularLesitions: ocularLesitions ?? "",
+                anirectalLesitions: anirectalLesitions ?? "",
+                anirectalOtherLesitions: anirectalOtherLesitions ?? "",
+                abdominal: abdominal ?? "",
+                createdAt: createdAt ?? "",
+                updatedAt: updatedAt ?? "",
             },
-            "dailyReports": fileteredDailyReports
-        });
+            dailyReports,
+        };
+        basicHttpResponceIncludeData(
+            res,
+            httpStatus,
+            responseStatus,
+            responseMsg,
+            resData
+        );
 
         // ログを出力
         const logBody: LoggingObjType = {
@@ -240,15 +287,14 @@ export const readDailyReport = async (req: Request, res: Response, next: NextFun
             method: req.method,
             path: req.originalUrl,
             body: maskConfInfoInReqBody(req).body,
-            status: String(HttpStatus),
-            responseMsg
-        }
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
-
+            status: String(httpStatus),
+            responseMsg,
+        };
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
+        errorResponseHandler(e, userId, req, res, currentFuncName);
     }
-}
+};
 
 /**
  * 今日の体調のフィルターオプションを作成
@@ -269,77 +315,77 @@ export const readDailyReport = async (req: Request, res: Response, next: NextFun
  * @returns
  */
 const createDailyReportFilterOptions = (
-    id: string | undefined,
-    temp: string | undefined,
-    weight: string | undefined,
-    stomachach: string | undefined,
-    condition: string | undefined,
-    arthritis: string | undefined,
-    skinLesitions: string | undefined,
-    ocularLesitions: string | undefined,
-    anirectalLesitions: string | undefined,
-    anirectalOtherLesitions: string | undefined,
-    abdominal: string | undefined,
-    createdAt: string | undefined,
-    updatedAt: string | undefined
+    id: QueryType,
+    temp: QueryType,
+    weight: QueryType,
+    stomachach: QueryType,
+    condition: QueryType,
+    arthritis: QueryType,
+    skinLesitions: QueryType,
+    ocularLesitions: QueryType,
+    anirectalLesitions: QueryType,
+    anirectalOtherLesitions: QueryType,
+    abdominal: QueryType,
+    createdAt: QueryType,
+    updatedAt: QueryType
 ): FilterOptionsType => {
     const filterOptions: FilterOptionsType = {
         id: {
             data: id,
-            constructor: (i) => Number(i)
+            constructor: (i) => Number(i),
         },
         temp: {
             data: temp,
-            constructor: (i) => Number(i)
+            constructor: (i) => Number(i),
         },
         weight: {
             data: weight,
-            constructor: (i) => Number(i)
+            constructor: (i) => Number(i),
         },
         stomachach: {
             data: stomachach,
-            constructor: (i) => Number(i)
+            constructor: (i) => Number(i),
         },
         condition: {
             data: condition,
-            constructor: (i) => Number(i)
+            constructor: (i) => Number(i),
         },
         arthritis: {
             data: arthritis,
-            constructor: (i) => Number(i)
+            constructor: (i) => Number(i),
         },
         skinLesitions: {
             data: skinLesitions,
-            constructor: (i) => Number(i)
+            constructor: (i) => Number(i),
         },
         ocularLesitions: {
             data: ocularLesitions,
-            constructor: (i) => Number(i)
+            constructor: (i) => Number(i),
         },
         anirectalLesitions: {
             data: anirectalLesitions,
-            constructor: (i) => Number(i)
+            constructor: (i) => Number(i),
         },
         anirectalOtherLesitions: {
             data: anirectalOtherLesitions,
-            constructor: (i) => Number(i)
+            constructor: (i) => Number(i),
         },
         abdominal: {
             data: abdominal,
-            constructor: (i) => Number(i)
+            constructor: (i) => Number(i),
         },
         createdAt: {
             data: createdAt,
-            constructor: (i) => new Date(i)
+            constructor: (i) => new Date(i),
         },
         updatedAt: {
             data: updatedAt,
-            constructor: (i) => new Date(i)
+            constructor: (i) => new Date(i),
         },
-    }
+    };
 
-    return filterOptions
-}
+    return filterOptions;
+};
 
 /**
  * 今日の体調を編集
@@ -349,9 +395,13 @@ const createDailyReportFilterOptions = (
  * @param next
  * @returns
  */
-export const editDailyReport = async (req: Request, res: Response, next: NextFunction) => {
-    const id = Number(req.params.id)
-    const userId = Number(req.body.userId)
+export const editDailyReport = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    const id = Number(req.params.id);
+    const userId = Number(req.body.userId);
     const {
         date,
         temp,
@@ -363,26 +413,29 @@ export const editDailyReport = async (req: Request, res: Response, next: NextFun
         ocularLesitions,
         anirectalLesitions,
         anirectalOtherLesitions,
-        abdominal
-    } = req.body
+        abdominal,
+    } = req.body;
 
     // logのために関数名を取得
-    const currentFuncName = editDailyReport.name
+    const currentFuncName = editDailyReport.name;
 
     // TODO: バリデーション
     try {
         // idから今日の体調を取得
-        const whereByDailyReportId = { id }
-        console.log(whereByDailyReportId)
-        const dailyReport = await customizedPrisma.daily_Report.findUniqueOrThrow({ where: whereByDailyReportId })
+        const whereByDailyReportId = { id };
+        console.log(whereByDailyReportId);
+        const dailyReport =
+            await customizedPrisma.daily_Report.findUniqueOrThrow({
+                where: whereByDailyReportId,
+            });
         // 指定した今日の体調がユーザー本人のものか確認
-        const isSelfUser = (dailyReport.userId === userId)
+        const isSelfUser = dailyReport.userId === userId;
         // ユーザー本人のものではない場合、403を返す
         if (!isSelfUser) {
-            const HttpStatus = 403
-            const responseStatus = false
-            const responseMsg = DAILY_REPORT_ACCESS_FORBIDDEN.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+            const httpStatus = 403;
+            const responseStatus = false;
+            const responseMsg = DAILY_REPORT_ACCESS_FORBIDDEN.message;
+            basicHttpResponce(res, httpStatus, responseStatus, responseMsg);
 
             // ログを出力
             const logBody: LoggingObjType = {
@@ -391,24 +444,42 @@ export const editDailyReport = async (req: Request, res: Response, next: NextFun
                 method: req.method,
                 path: req.originalUrl,
                 body: maskConfInfoInReqBody(req).body,
-                status: String(HttpStatus),
-                responseMsg
-            }
-            logger.error(PROCESS_FAILURE.message(currentFuncName), logBody)
+                status: String(httpStatus),
+                responseMsg,
+            };
+            logger.error(PROCESS_FAILURE.message(currentFuncName), logBody);
 
-            return
+            return;
         }
 
         // 編集するdataを成型
-        const recordData = { date, temp, weight, stomachach, condition, arthritis, skinLesitions, ocularLesitions, anirectalLesitions, anirectalOtherLesitions, abdominal }
+        const recordData = {
+            date,
+            temp,
+            weight,
+            stomachach,
+            condition,
+            arthritis,
+            skinLesitions,
+            ocularLesitions,
+            anirectalLesitions,
+            anirectalOtherLesitions,
+            abdominal,
+        };
         // 編集
-        const newDailyReport = await updateDailyReport(id, date, recordData)
+        const newDailyReport = await updateDailyReport(id, date, recordData);
 
         // レスポンスを返却
-        const HttpStatus = 200
-        const responseStatus = true
-        const responseMsg = EDIT_DAILY_REPORT.message
-        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, newDailyReport)
+        const httpStatus = 200;
+        const responseStatus = true;
+        const responseMsg = EDIT_DAILY_REPORT.message;
+        basicHttpResponceIncludeData(
+            res,
+            httpStatus,
+            responseStatus,
+            responseMsg,
+            newDailyReport
+        );
 
         // ログを出力
         const logBody: LoggingObjType = {
@@ -417,15 +488,14 @@ export const editDailyReport = async (req: Request, res: Response, next: NextFun
             method: req.method,
             path: req.originalUrl,
             body: maskConfInfoInReqBody(req).body,
-            status: String(HttpStatus),
-            responseMsg
-        }
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
-
+            status: String(httpStatus),
+            responseMsg,
+        };
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
+        errorResponseHandler(e, userId, req, res, currentFuncName);
     }
-}
+};
 
 /**
  * 今日の体調を削除
@@ -435,31 +505,36 @@ export const editDailyReport = async (req: Request, res: Response, next: NextFun
  * @param res
  * @param next
  */
-export const deleteDailyReport = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteDailyReport = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
     // daily_reportのid
-    const id = Number(req.params.id)
-    const { userId } = req.body
+    const id = Number(req.params.id);
+    const { userId } = req.body;
 
     // logのために関数名を取得
-    const currentFuncName = deleteDailyReport.name
+    const currentFuncName = deleteDailyReport.name;
 
     // TODO: バリデーション
 
     try {
         // idから今日の体調を削除
-        const whereByDailyReportId = { id }
-        const dailyReport = await customizedPrisma.daily_Report.findUniqueOrThrow({
-            where: whereByDailyReportId
-        })
+        const whereByDailyReportId = { id };
+        const dailyReport =
+            await customizedPrisma.daily_Report.findUniqueOrThrow({
+                where: whereByDailyReportId,
+            });
 
         // 指定した今日の体調が本人のものか確認
-        const isSelfUser = (dailyReport.userId === userId)
+        const isSelfUser = dailyReport.userId === userId;
         // ユーザー本人のものではない場合、403を返す
         if (!isSelfUser) {
-            const HttpStatus = 403
-            const responseStatus = false
-            const responseMsg = DAILY_REPORT_ACCESS_FORBIDDEN.message
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg)
+            const httpStatus = 403;
+            const responseStatus = false;
+            const responseMsg = DAILY_REPORT_ACCESS_FORBIDDEN.message;
+            basicHttpResponce(res, httpStatus, responseStatus, responseMsg);
 
             // ログを出力
             const logBody: LoggingObjType = {
@@ -468,12 +543,12 @@ export const deleteDailyReport = async (req: Request, res: Response, next: NextF
                 method: req.method,
                 path: req.originalUrl,
                 body: maskConfInfoInReqBody(req).body,
-                status: String(HttpStatus),
-                responseMsg
-            }
-            logger.error(PROCESS_FAILURE.message(currentFuncName), logBody)
+                status: String(httpStatus),
+                responseMsg,
+            };
+            logger.error(PROCESS_FAILURE.message(currentFuncName), logBody);
 
-            return
+            return;
         }
 
         // 今日の体調を削除
@@ -488,15 +563,21 @@ export const deleteDailyReport = async (req: Request, res: Response, next: NextF
                 Daily_report_Skin_Lesions: true,
                 Daily_report_Ocular_Lesitions: true,
                 Daily_report_Anorectal_Lesitions: true,
-                Daily_report_Abdominal: true
-            }
-        })
+                Daily_report_Abdominal: true,
+            },
+        });
 
         // レスポンスを返却
-        const HttpStatus = 200
-        const responseStatus = true
-        const responseMsg = DELETE_DAILY_REPORT.message
-        basicHttpResponceIncludeData(res, HttpStatus, responseStatus, responseMsg, newDailyReport)
+        const httpStatus = 200;
+        const responseStatus = true;
+        const responseMsg = DELETE_DAILY_REPORT.message;
+        basicHttpResponceIncludeData(
+            res,
+            httpStatus,
+            responseStatus,
+            responseMsg,
+            newDailyReport
+        );
 
         // ログを出力
         const logBody: LoggingObjType = {
@@ -505,11 +586,11 @@ export const deleteDailyReport = async (req: Request, res: Response, next: NextF
             method: req.method,
             path: req.originalUrl,
             body: maskConfInfoInReqBody(req).body,
-            status: String(HttpStatus),
-            responseMsg
-        }
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody)
+            status: String(httpStatus),
+            responseMsg,
+        };
+        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e) {
-        ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName)
+        errorResponseHandler(e, userId, req, res, currentFuncName);
     }
-}
+};
