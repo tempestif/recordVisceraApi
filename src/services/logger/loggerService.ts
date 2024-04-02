@@ -76,7 +76,7 @@ export const logResponse = (
     req: Request,
     httpStatus: number,
     responseMsg: string,
-    funcName: string
+    funcName: string,
 ) => {
     const logger = new CustomLogger();
     const logBody: LoggingObjType = {

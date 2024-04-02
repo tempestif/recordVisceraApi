@@ -4,7 +4,6 @@ import {
     PROCESS_FAILURE,
     PROCESS_SUCCESS,
 } from "@/consts/logConsts";
-import { TITLE_VALID_MAIL, TEXT_VALID_MAIL } from "@/consts/mailConsts";
 import {
     ALREADY_USED_MAILADDLESS,
     SEND_MAIL_FOR_USER_VALID,
@@ -15,11 +14,11 @@ import {
 } from "@/consts/responseConsts";
 import {
     LoggingObjType,
+    logResponse,
     maskConfInfoInReqBody,
 } from "@/services/logger/loggerService";
 import { errorResponseHandler } from "@/services/errorHandle";
 import { generateAuthToken } from "@/services/jwtService";
-import { sendMail } from "@/services/nodemailerService";
 import { customizedPrisma } from "@/services/prismaClients";
 import {
     MultipleActiveUserError,
@@ -30,6 +29,7 @@ import { compare } from "bcrypt";
 import { randomBytes } from "crypto";
 import { type Request, type Response, type NextFunction } from "express";
 import { CustomLogger } from "@/services/logger/loggerClass";
+import { sendMailForEmailVerify } from "@/services/prismaService/account";
 const logger = new CustomLogger();
 /**
  * 認証前アカウントを作成し、認証メールを送信する
@@ -58,15 +58,15 @@ export const registUser = async (
             },
         });
         // ユーザーが存在 && 全てのユーザーが退会済じゃない場合400エラー
-        if (users) {
+        if (users.length) {
             for (const user of users) {
                 if (user.loginStatus !== USER_LOGIN_STATUS.deactived) {
-                    const HttpStatus = 400;
+                    const httpStatus = 400;
                     const responseStatus = false;
                     const responseMsg = ALREADY_USED_MAILADDLESS.message;
                     basicHttpResponce(
                         res,
-                        HttpStatus,
+                        httpStatus,
                         responseStatus,
                         responseMsg
                     );
@@ -78,7 +78,7 @@ export const registUser = async (
                         method: req.method,
                         path: req.originalUrl,
                         body: maskConfInfoInReqBody(req).body,
-                        status: String(HttpStatus),
+                        status: String(httpStatus),
                         responseMsg,
                     };
                     logger.error(
@@ -91,6 +91,7 @@ export const registUser = async (
         }
 
         // 認証トークン作成
+        // TODO: serviceに関数作る
         const verifyEmailHash = randomBytes(32).toString("hex");
 
         // ユーザー作成
@@ -115,22 +116,19 @@ export const registUser = async (
         await sendMailForEmailVerify(email, verifyUrl);
 
         // レスポンスを返却
-        const HttpStatus = 201;
+        const httpStatus = 201;
         const responseStatus = true;
         const responseMsg = SEND_MAIL_FOR_USER_VALID.message;
-        basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
+        basicHttpResponce(res, httpStatus, responseStatus, responseMsg);
 
         // ログを出力
-        const logBody: LoggingObjType = {
-            userId: UNSPECIFIED_USER_ID.message,
-            ipAddress: req.ip,
-            method: req.method,
-            path: req.originalUrl,
-            body: maskConfInfoInReqBody(req).body,
-            status: String(HttpStatus),
+        logResponse(
+            UNSPECIFIED_USER_ID.message,
+            req,
+            httpStatus,
             responseMsg,
-        };
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
+            currentFuncName
+        );
     } catch (e) {
         errorResponseHandler(
             e,
@@ -178,10 +176,10 @@ export const login = async (
         if (!isValidPassword) {
             // TODO: これもエラークラスにして、throwだけにしたい。
             // レスポンスを返却
-            const HttpStatus = 401;
+            const httpStatus = 401;
             const responseStatus = false;
             const responseMsg = WRONG_LOGIN_INFO.message;
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
+            basicHttpResponce(res, httpStatus, responseStatus, responseMsg);
 
             // TODO: email, passwordをマスクする
             // ログを出力
@@ -191,7 +189,7 @@ export const login = async (
                 method: req.method,
                 path: req.originalUrl,
                 body: maskConfInfoInReqBody(req).body,
-                status: String(HttpStatus),
+                status: String(httpStatus),
                 responseMsg,
             };
             logger.error(PROCESS_FAILURE.message(currentFuncName), logBody);
@@ -229,10 +227,10 @@ export const login = async (
             await sendMailForEmailVerify(email, verifyUrl);
 
             // レスポンスを返却
-            const HttpStatus = 201;
+            const httpStatus = 201;
             const responseStatus = true;
             const responseMsg = SEND_MAIL_FOR_USER_VALID.message;
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
+            basicHttpResponce(res, httpStatus, responseStatus, responseMsg);
 
             // ログを出力
             const logBody: LoggingObjType = {
@@ -241,7 +239,7 @@ export const login = async (
                 method: req.method,
                 path: req.originalUrl,
                 body: maskConfInfoInReqBody(req).body,
-                status: String(HttpStatus),
+                status: String(httpStatus),
                 responseMsg,
             };
             logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
@@ -263,10 +261,10 @@ export const login = async (
         });
 
         // レスポンスを返却
-        const HttpStatus = 200;
+        const httpStatus = 200;
         const responseStatus = true;
         const responseMsg = COMPLETE_LOGIN.message;
-        res.status(HttpStatus).json({
+        res.status(httpStatus).json({
             status: responseStatus,
             token: jwt,
             message: responseMsg,
@@ -279,7 +277,7 @@ export const login = async (
             method: req.method,
             path: req.originalUrl,
             body: maskConfInfoInReqBody(req).body,
-            status: String(HttpStatus),
+            status: String(httpStatus),
             responseMsg,
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
@@ -313,10 +311,10 @@ export const logout = async (
             },
         });
         // レスポンスを返却
-        const HttpStatus = 200;
+        const httpStatus = 200;
         const responseStatus = true;
         const responseMsg = COMPLETE_LOOUT.message;
-        basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
+        basicHttpResponce(res, httpStatus, responseStatus, responseMsg);
 
         // ログを出力
         const logBody: LoggingObjType = {
@@ -325,30 +323,11 @@ export const logout = async (
             method: req.method,
             path: req.originalUrl,
             body: maskConfInfoInReqBody(req).body,
-            status: String(HttpStatus),
+            status: String(httpStatus),
             responseMsg,
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
     } catch (e: unknown) {
-        errorResponseHandler(
-            e,
-            userId,
-            req,
-            res,
-            currentFuncName
-        );
+        errorResponseHandler(e, userId, req, res, currentFuncName);
     }
-};
-
-/**
- * email認証確認用のメールを送信する。
- * @param email 送信先メールアドレス
- * @param url 認証用URL
- */
-const sendMailForEmailVerify = async (email: string, url: string) => {
-    // 件名
-    const mailSubject = TITLE_VALID_MAIL.message;
-    // 本文
-    const text = TEXT_VALID_MAIL.message(url);
-    await sendMail(email, mailSubject, text);
 };

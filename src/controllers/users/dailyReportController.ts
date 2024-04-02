@@ -8,6 +8,7 @@ import {
 } from "@/consts/responseConsts";
 import {
     LoggingObjType,
+    logResponse,
     maskConfInfoInReqBody,
 } from "@/services/logger/loggerService";
 import {
@@ -31,6 +32,7 @@ import {
 import type { Request, Response, NextFunction } from "express";
 import { DAILY_REPORT_DEFAULT_DATA_INFO } from "@/consts/db/dailyReport";
 import { CustomLogger } from "@/services/logger/loggerClass";
+import { BasedQuery, QueryType } from "@/services/utilRequestService";
 const logger = new CustomLogger();
 
 /**
@@ -60,8 +62,9 @@ export const registDailyReport = async (
     // TODO: バリデーション
 
     // bodyから情報を取得
+    // これ、うまくできないかねぇ。
+    const userId = Number(req.body.userId);
     const {
-        userId,
         date,
         // 体温
         temp,
@@ -115,28 +118,19 @@ export const registDailyReport = async (
         });
 
         // レスポンスを返却
-        const HttpStatus = 200;
+        const httpStatus = 200;
         const responseStatus = true;
         const responseMsg = RECORD_DAILY_REPORT.message;
         basicHttpResponceIncludeData(
             res,
-            HttpStatus,
+            httpStatus,
             responseStatus,
             responseMsg,
             dailyReport
         );
 
         // ログを出力
-        const logBody: LoggingObjType = {
-            userId: userId,
-            ipAddress: req.ip,
-            method: req.method,
-            path: req.originalUrl,
-            body: maskConfInfoInReqBody(req).body,
-            status: String(HttpStatus),
-            responseMsg,
-        };
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
+        logResponse(userId, req, httpStatus, responseMsg, currentFuncName);
     } catch (e) {
         errorResponseHandler(e, userId, req, res, currentFuncName);
     }
@@ -157,25 +151,22 @@ export const readDailyReport = async (
     const currentFuncName = readDailyReport.name;
     // TODO: バリデーション
     // クエリのデータを扱いやすくするための型を定義
-    type Query = {
-        sort: string | undefined;
-        fields: string | undefined;
-        limit: string | undefined;
-        offset: string | undefined;
-        id: string | undefined;
-        temp: string | undefined;
-        weight: string | undefined;
-        stomachach: string | undefined;
-        condition: string | undefined;
-        arthritis: string | undefined;
-        skinLesitions: string | undefined;
-        ocularLesitions: string | undefined;
-        anirectalLesitions: string | undefined;
-        anirectalOtherLesitions: string | undefined;
-        abdominal: string | undefined;
-        createdAt: string | undefined;
-        updatedAt: string | undefined;
+    type DailyReportQuery = {
+        id: QueryType;
+        temp: QueryType;
+        weight: QueryType;
+        stomachach: QueryType;
+        condition: QueryType;
+        arthritis: QueryType;
+        skinLesitions: QueryType;
+        ocularLesitions: QueryType;
+        anirectalLesitions: QueryType;
+        anirectalOtherLesitions: QueryType;
+        abdominal: QueryType;
+        createdAt: QueryType;
+        updatedAt: QueryType;
     };
+    type Query = BasedQuery & DailyReportQuery;
     // フィルター以外の条件を取得
     const { sort, fields, limit, offset } = req.query as Query;
     // 指定されたソートの内容をprismaに渡せるように成型
@@ -254,12 +245,10 @@ export const readDailyReport = async (
         });
 
         // レスポンス返却
-        const HttpStatus = 200;
+        const httpStatus = 200;
         const responseStatus = true;
         const responseMsg = READ_DAILY_REPORT.message;
-        res.status(HttpStatus).json({
-            status: responseStatus,
-            message: responseMsg,
+        const resData = {
             allCount: allCount,
             count: dailyReports.length,
             sort: sort ?? "",
@@ -282,7 +271,14 @@ export const readDailyReport = async (
                 updatedAt: updatedAt ?? "",
             },
             dailyReports,
-        });
+        };
+        basicHttpResponceIncludeData(
+            res,
+            httpStatus,
+            responseStatus,
+            responseMsg,
+            resData
+        );
 
         // ログを出力
         const logBody: LoggingObjType = {
@@ -291,7 +287,7 @@ export const readDailyReport = async (
             method: req.method,
             path: req.originalUrl,
             body: maskConfInfoInReqBody(req).body,
-            status: String(HttpStatus),
+            status: String(httpStatus),
             responseMsg,
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
@@ -319,19 +315,19 @@ export const readDailyReport = async (
  * @returns
  */
 const createDailyReportFilterOptions = (
-    id: string | undefined,
-    temp: string | undefined,
-    weight: string | undefined,
-    stomachach: string | undefined,
-    condition: string | undefined,
-    arthritis: string | undefined,
-    skinLesitions: string | undefined,
-    ocularLesitions: string | undefined,
-    anirectalLesitions: string | undefined,
-    anirectalOtherLesitions: string | undefined,
-    abdominal: string | undefined,
-    createdAt: string | undefined,
-    updatedAt: string | undefined
+    id: QueryType,
+    temp: QueryType,
+    weight: QueryType,
+    stomachach: QueryType,
+    condition: QueryType,
+    arthritis: QueryType,
+    skinLesitions: QueryType,
+    ocularLesitions: QueryType,
+    anirectalLesitions: QueryType,
+    anirectalOtherLesitions: QueryType,
+    abdominal: QueryType,
+    createdAt: QueryType,
+    updatedAt: QueryType
 ): FilterOptionsType => {
     const filterOptions: FilterOptionsType = {
         id: {
@@ -436,10 +432,10 @@ export const editDailyReport = async (
         const isSelfUser = dailyReport.userId === userId;
         // ユーザー本人のものではない場合、403を返す
         if (!isSelfUser) {
-            const HttpStatus = 403;
+            const httpStatus = 403;
             const responseStatus = false;
             const responseMsg = DAILY_REPORT_ACCESS_FORBIDDEN.message;
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
+            basicHttpResponce(res, httpStatus, responseStatus, responseMsg);
 
             // ログを出力
             const logBody: LoggingObjType = {
@@ -448,7 +444,7 @@ export const editDailyReport = async (
                 method: req.method,
                 path: req.originalUrl,
                 body: maskConfInfoInReqBody(req).body,
-                status: String(HttpStatus),
+                status: String(httpStatus),
                 responseMsg,
             };
             logger.error(PROCESS_FAILURE.message(currentFuncName), logBody);
@@ -474,12 +470,12 @@ export const editDailyReport = async (
         const newDailyReport = await updateDailyReport(id, date, recordData);
 
         // レスポンスを返却
-        const HttpStatus = 200;
+        const httpStatus = 200;
         const responseStatus = true;
         const responseMsg = EDIT_DAILY_REPORT.message;
         basicHttpResponceIncludeData(
             res,
-            HttpStatus,
+            httpStatus,
             responseStatus,
             responseMsg,
             newDailyReport
@@ -492,7 +488,7 @@ export const editDailyReport = async (
             method: req.method,
             path: req.originalUrl,
             body: maskConfInfoInReqBody(req).body,
-            status: String(HttpStatus),
+            status: String(httpStatus),
             responseMsg,
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
@@ -535,10 +531,10 @@ export const deleteDailyReport = async (
         const isSelfUser = dailyReport.userId === userId;
         // ユーザー本人のものではない場合、403を返す
         if (!isSelfUser) {
-            const HttpStatus = 403;
+            const httpStatus = 403;
             const responseStatus = false;
             const responseMsg = DAILY_REPORT_ACCESS_FORBIDDEN.message;
-            basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
+            basicHttpResponce(res, httpStatus, responseStatus, responseMsg);
 
             // ログを出力
             const logBody: LoggingObjType = {
@@ -547,7 +543,7 @@ export const deleteDailyReport = async (
                 method: req.method,
                 path: req.originalUrl,
                 body: maskConfInfoInReqBody(req).body,
-                status: String(HttpStatus),
+                status: String(httpStatus),
                 responseMsg,
             };
             logger.error(PROCESS_FAILURE.message(currentFuncName), logBody);
@@ -572,12 +568,12 @@ export const deleteDailyReport = async (
         });
 
         // レスポンスを返却
-        const HttpStatus = 200;
+        const httpStatus = 200;
         const responseStatus = true;
         const responseMsg = DELETE_DAILY_REPORT.message;
         basicHttpResponceIncludeData(
             res,
-            HttpStatus,
+            httpStatus,
             responseStatus,
             responseMsg,
             newDailyReport
@@ -590,7 +586,7 @@ export const deleteDailyReport = async (
             method: req.method,
             path: req.originalUrl,
             body: maskConfInfoInReqBody(req).body,
-            status: String(HttpStatus),
+            status: String(httpStatus),
             responseMsg,
         };
         logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
