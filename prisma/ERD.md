@@ -217,7 +217,7 @@ erDiagram
   
 
   "checkup_mri" {
-    String result 
+    String result "❓"
     Int id "🗝️"
     Int checkupId 
     DateTime createdAt 
@@ -226,7 +226,7 @@ erDiagram
   
 
   "checkup_ct" {
-    String result 
+    String result "❓"
     Int id "🗝️"
     Int checkupId 
     DateTime createdAt 
@@ -245,7 +245,7 @@ erDiagram
   
 
   "clinic_note" {
-    String note 
+    String note "❓"
     Int id "🗝️"
     Int clinicReportId 
     DateTime createdAt 
