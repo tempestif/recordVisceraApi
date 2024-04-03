@@ -1,11 +1,11 @@
 import { PROCESS_SUCCESS } from "@/consts/logConsts";
 import {
-    COMPLETE_GET_PROFILE,
-    COMPLETE_UPDATE_PROFILE,
+  COMPLETE_GET_PROFILE,
+  COMPLETE_UPDATE_PROFILE,
 } from "@/consts/responseConsts";
 import {
-    LoggingObjType,
-    maskConfInfoInReqBody,
+  LoggingObjType,
+  maskConfInfoInReqBody,
 } from "@/services/logger/loggerService";
 import { errorResponseHandler } from "@/services/errorHandle";
 import { customizedPrisma } from "@/services/prismaClients";
@@ -24,48 +24,48 @@ const logger = new CustomLogger();
  * @returns
  */
 export const readProfile = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
+  req: Request,
+  res: Response,
+  next: NextFunction,
 ) => {
-    const { userId } = req.body;
+  const { userId } = req.body;
 
-    // logのために関数名を取得
-    const currentFuncName = readProfile.name;
-    try {
-        // userIdでプロフィールを取得
-        const whereByUserId = { userId: userId };
-        const profile = await findUniqueProfileAbsoluteExist(
-            whereByUserId,
-            customizedPrisma
-        );
+  // logのために関数名を取得
+  const currentFuncName = readProfile.name;
+  try {
+    // userIdでプロフィールを取得
+    const whereByUserId = { userId: userId };
+    const profile = await findUniqueProfileAbsoluteExist(
+      whereByUserId,
+      customizedPrisma,
+    );
 
-        // レスポンスを返却
-        const HttpStatus = 200;
-        const responseStatus = true;
-        const responseMsg = COMPLETE_GET_PROFILE.message;
-        basicHttpResponceIncludeData(
-            res,
-            HttpStatus,
-            responseStatus,
-            responseMsg,
-            profile
-        );
+    // レスポンスを返却
+    const HttpStatus = 200;
+    const responseStatus = true;
+    const responseMsg = COMPLETE_GET_PROFILE.message;
+    basicHttpResponceIncludeData(
+      res,
+      HttpStatus,
+      responseStatus,
+      responseMsg,
+      profile,
+    );
 
-        // ログを出力
-        const logBody: LoggingObjType = {
-            userId,
-            ipAddress: req.ip,
-            method: req.method,
-            path: req.originalUrl,
-            body: maskConfInfoInReqBody(req).body,
-            status: String(HttpStatus),
-            responseMsg,
-        };
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
-    } catch (e) {
-        errorResponseHandler(e, userId.message, req, res, currentFuncName);
-    }
+    // ログを出力
+    const logBody: LoggingObjType = {
+      userId,
+      ipAddress: req.ip,
+      method: req.method,
+      path: req.originalUrl,
+      body: maskConfInfoInReqBody(req).body,
+      status: String(HttpStatus),
+      responseMsg,
+    };
+    logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
+  } catch (e) {
+    errorResponseHandler(e, userId.message, req, res, currentFuncName);
+  }
 };
 
 /**
@@ -76,55 +76,55 @@ export const readProfile = async (
  * @param next
  */
 export const editProfile = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
+  req: Request,
+  res: Response,
+  next: NextFunction,
 ) => {
-    const { userId, sex, height, birthday } = req.body;
+  const { userId, sex, height, birthday } = req.body;
 
-    // logのために関数名を取得
-    const currentFuncName = editProfile.name;
-    // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
+  // logのために関数名を取得
+  const currentFuncName = editProfile.name;
+  // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
 
-    try {
-        // userIdでプロフィールを検索
-        const whereByUserId = { userId };
-        await findUniqueProfileAbsoluteExist(whereByUserId, customizedPrisma);
+  try {
+    // userIdでプロフィールを検索
+    const whereByUserId = { userId };
+    await findUniqueProfileAbsoluteExist(whereByUserId, customizedPrisma);
 
-        // プロフィールを更新
-        const updatedProfile = await customizedPrisma.profile.update({
-            where: whereByUserId,
-            data: {
-                sex,
-                height,
-                birthday,
-            },
-        });
+    // プロフィールを更新
+    const updatedProfile = await customizedPrisma.profile.update({
+      where: whereByUserId,
+      data: {
+        sex,
+        height,
+        birthday,
+      },
+    });
 
-        // レスポンスを返却
-        const HttpStatus = 200;
-        const responseStatus = true;
-        const responseMsg = COMPLETE_UPDATE_PROFILE.message;
-        basicHttpResponceIncludeData(
-            res,
-            HttpStatus,
-            responseStatus,
-            responseMsg,
-            updatedProfile
-        );
+    // レスポンスを返却
+    const HttpStatus = 200;
+    const responseStatus = true;
+    const responseMsg = COMPLETE_UPDATE_PROFILE.message;
+    basicHttpResponceIncludeData(
+      res,
+      HttpStatus,
+      responseStatus,
+      responseMsg,
+      updatedProfile,
+    );
 
-        // ログを出力
-        const logBody: LoggingObjType = {
-            userId,
-            ipAddress: req.ip,
-            method: req.method,
-            path: req.originalUrl,
-            body: maskConfInfoInReqBody(req).body,
-            status: String(HttpStatus),
-            responseMsg,
-        };
-        logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
-    } catch (e) {
-        errorResponseHandler(e, userId.message, req, res, currentFuncName);
-    }
+    // ログを出力
+    const logBody: LoggingObjType = {
+      userId,
+      ipAddress: req.ip,
+      method: req.method,
+      path: req.originalUrl,
+      body: maskConfInfoInReqBody(req).body,
+      status: String(HttpStatus),
+      responseMsg,
+    };
+    logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
+  } catch (e) {
+    errorResponseHandler(e, userId.message, req, res, currentFuncName);
+  }
 };

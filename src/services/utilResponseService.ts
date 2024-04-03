@@ -3,11 +3,11 @@ import type { Response } from "express";
  * 500エラー
  */
 export const internalServerErr = (res: Response, e: any) => {
-    // エラーの時のレスポンス
-    return res.status(500).json({
-        status: false,
-        message: e, // TODO: 本番環境では固定文言に変更
-    });
+  // エラーの時のレスポンス
+  return res.status(500).json({
+    status: false,
+    message: e, // TODO: 本番環境では固定文言に変更
+  });
 };
 
 /**
@@ -19,15 +19,15 @@ export const internalServerErr = (res: Response, e: any) => {
  * @returns
  */
 export const basicHttpResponce = (
-    res: Response,
-    HttpStatus: number,
-    status: boolean,
-    message: string
+  res: Response,
+  HttpStatus: number,
+  status: boolean,
+  message: string,
 ) => {
-    return res.status(HttpStatus).json({
-        status,
-        message,
-    });
+  return res.status(HttpStatus).json({
+    status,
+    message,
+  });
 };
 
 /**
@@ -40,15 +40,15 @@ export const basicHttpResponce = (
  * @returns
  */
 export const basicHttpResponceIncludeData = (
-    res: Response,
-    HttpStatus: number,
-    status: boolean,
-    message: string,
-    data: object
+  res: Response,
+  HttpStatus: number,
+  status: boolean,
+  message: string,
+  data: object,
 ) => {
-    return res.status(HttpStatus).json({
-        status,
-        message,
-        data,
-    });
+  return res.status(HttpStatus).json({
+    status,
+    message,
+    data,
+  });
 };

@@ -12,18 +12,18 @@ import { DbRecordNotFoundError } from ".";
  * @returns
  */
 export const findUniqueUserTempAbsoluteExist = async (
-    where: Prisma.Daily_report_TempWhereUniqueInput,
-    prismaClient: typeof customizedPrisma
+  where: Prisma.Daily_report_TempWhereUniqueInput,
+  prismaClient: typeof customizedPrisma,
 ) => {
-    // idから体温記録を取得
-    const tempData = await prismaClient.daily_report_Temp.findUnique({
-        where,
-    });
-    // 体温記録が無かったらDbRecordNotFoundErrorを投げる
-    if (!tempData) {
-        const responseMsg = TEMP_NOT_FOUND.message;
-        throw new DbRecordNotFoundError(responseMsg);
-    }
+  // idから体温記録を取得
+  const tempData = await prismaClient.daily_report_Temp.findUnique({
+    where,
+  });
+  // 体温記録が無かったらDbRecordNotFoundErrorを投げる
+  if (!tempData) {
+    const responseMsg = TEMP_NOT_FOUND.message;
+    throw new DbRecordNotFoundError(responseMsg);
+  }
 
-    return tempData;
+  return tempData;
 };

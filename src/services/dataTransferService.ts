@@ -1,8 +1,8 @@
 export type FilterOptionsType = {
-    [key: string]: {
-        data: any;
-        constructor: (i: string) => any;
-    };
+  [key: string]: {
+    data: any;
+    constructor: (i: string) => any;
+  };
 };
 
 /**
@@ -12,22 +12,22 @@ export type FilterOptionsType = {
  * @returns
  */
 export const createFilterForPrisma = (filterOptions: FilterOptionsType) => {
-    // フィルターとして指定されたフィールドだけ、適するオブジェクトに変換してfilterに追加
-    const filter: { [key: string]: any } = {};
-    Object.keys(filterOptions).forEach((key) => {
-        // クエリから受け取った値
-        const data = filterOptions[key].data;
+  // フィルターとして指定されたフィールドだけ、適するオブジェクトに変換してfilterに追加
+  const filter: { [key: string]: any } = {};
+  Object.keys(filterOptions).forEach((key) => {
+    // クエリから受け取った値
+    const data = filterOptions[key].data;
 
-        // paramsにデータが存在することを確認
-        if (typeof data === "string") {
-            // 指定した型にキャスト
-            const objForFilter = filterOptions[key].constructor(
-                filterOptions[key].data
-            );
-            filter[key] = objForFilter;
-        }
-    });
-    return filter;
+    // paramsにデータが存在することを確認
+    if (typeof data === "string") {
+      // 指定した型にキャスト
+      const objForFilter = filterOptions[key].constructor(
+        filterOptions[key].data,
+      );
+      filter[key] = objForFilter;
+    }
+  });
+  return filter;
 };
 
 /**
@@ -37,22 +37,22 @@ export const createFilterForPrisma = (filterOptions: FilterOptionsType) => {
  * @returns
  */
 export const createSortsForPrisma = (sort: string | undefined) => {
-    // NOTE: 引数の文字列のチェックはどうする？
-    // 指定されたソートの内容をprismaに渡せるように成型
-    const sorts: { [key: string]: string }[] = [];
-    sort?.split(",").forEach((s) => {
-        if (s[0] === "-") {
-            const property = s.slice(1);
-            sorts.push({
-                [property]: "desc",
-            });
-        } else if (s) {
-            sorts.push({
-                [s]: "asc",
-            });
-        }
-    });
-    return sorts;
+  // NOTE: 引数の文字列のチェックはどうする？
+  // 指定されたソートの内容をprismaに渡せるように成型
+  const sorts: { [key: string]: string }[] = [];
+  sort?.split(",").forEach((s) => {
+    if (s[0] === "-") {
+      const property = s.slice(1);
+      sorts.push({
+        [property]: "desc",
+      });
+    } else if (s) {
+      sorts.push({
+        [s]: "asc",
+      });
+    }
+  });
+  return sorts;
 };
 
 /**
@@ -62,15 +62,15 @@ export const createSortsForPrisma = (sort: string | undefined) => {
  * @returns
  */
 export const createSelectForPrisma = (fields: string | undefined) => {
-    // 指定されたフィールドを抽出
+  // 指定されたフィールドを抽出
 
-    const select: { [key: string]: true } = {};
+  const select: { [key: string]: true } = {};
 
-    fields?.split(",").forEach((field) => {
-        if (field) {
-            select[field] = true;
-        }
-    });
+  fields?.split(",").forEach((field) => {
+    if (field) {
+      select[field] = true;
+    }
+  });
 
-    return select;
+  return select;
 };

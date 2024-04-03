@@ -12,18 +12,18 @@ import { DbRecordNotFoundError } from ".";
  * @returns
  */
 export const findUniqueUserWeightAbsoluteExist = async (
-    where: Prisma.Daily_report_WeightWhereUniqueInput,
-    prismaClient: typeof customizedPrisma
+  where: Prisma.Daily_report_WeightWhereUniqueInput,
+  prismaClient: typeof customizedPrisma,
 ) => {
-    // idから体重記録を取得
-    const weightData = await prismaClient.daily_report_Weight.findUnique({
-        where,
-    });
-    // 体重記録が無かったらDbRecordNotFoundErrorを投げる
-    if (!weightData) {
-        const responseMsg = WEIGHT_NOT_FOUND.message;
-        throw new DbRecordNotFoundError(responseMsg);
-    }
+  // idから体重記録を取得
+  const weightData = await prismaClient.daily_report_Weight.findUnique({
+    where,
+  });
+  // 体重記録が無かったらDbRecordNotFoundErrorを投げる
+  if (!weightData) {
+    const responseMsg = WEIGHT_NOT_FOUND.message;
+    throw new DbRecordNotFoundError(responseMsg);
+  }
 
-    return weightData;
+  return weightData;
 };
