@@ -10,29 +10,29 @@ import {
   LoggingObjType,
   logResponse,
   maskConfInfoInReqBody,
-} from "@/services/logger/loggerService";
+} from "@/utils/logger/utilLogger";
 import {
   createFilterForPrisma,
   createSelectForPrisma,
   createSortsForPrisma,
   FilterOptionsType,
-} from "@/services/dataTransferService";
-import { errorResponseHandler } from "@/services/errorHandle";
-import { customizedPrisma } from "@/services/prismaClients";
+} from "@/utils/dataTransfer";
+import { errorResponseHandler } from "@/utils/errorHandle";
+import { customizedPrisma } from "@/utils/prismaClients";
+import { findUniqueUserAbsoluteExist } from "@/services/users/usersService";
 import {
   DAILY_REPORT_ALL_INCLUDE,
   createDailyReport,
-  findUniqueUserAbsoluteExist,
   updateDailyReport,
-} from "@/services/prismaService";
+} from "@/services/users/dailyReportsService";
 import {
   basicHttpResponce,
   basicHttpResponceIncludeData,
-} from "@/services/utilResponseService";
+} from "@/utils/utilResponse";
 import type { Request, Response, NextFunction } from "express";
 import { DAILY_REPORT_DEFAULT_DATA_INFO } from "@/consts/db/dailyReport";
-import { CustomLogger } from "@/services/logger/loggerClass";
-import { BasedQuery, QueryType } from "@/services/utilRequestService";
+import { CustomLogger } from "@/utils/logger/loggerClass";
+import { BasedQuery, QueryType } from "@/utils/utilRequest";
 const logger = new CustomLogger();
 
 /**
@@ -55,7 +55,7 @@ const logger = new CustomLogger();
 export const registDailyReport = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   // logのために関数名を取得
   const currentFuncName = registDailyReport.name;
@@ -126,7 +126,7 @@ export const registDailyReport = async (
       httpStatus,
       responseStatus,
       responseMsg,
-      dailyReport,
+      dailyReport
     );
 
     // ログを出力
@@ -145,7 +145,7 @@ export const registDailyReport = async (
 export const readDailyReport = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   // logのために関数名を取得
   const currentFuncName = readDailyReport.name;
@@ -203,7 +203,7 @@ export const readDailyReport = async (
     anirectalOtherLesitions,
     abdominal,
     createdAt,
-    updatedAt,
+    updatedAt
   );
   // 指定されたフィールドのみのオブジェクトを作成
   const filter = createFilterForPrisma(filterOptions);
@@ -275,7 +275,7 @@ export const readDailyReport = async (
       httpStatus,
       responseStatus,
       responseMsg,
-      resData,
+      resData
     );
 
     // ログを出力
@@ -325,7 +325,7 @@ const createDailyReportFilterOptions = (
   anirectalOtherLesitions: QueryType,
   abdominal: QueryType,
   createdAt: QueryType,
-  updatedAt: QueryType,
+  updatedAt: QueryType
 ): FilterOptionsType => {
   const filterOptions: FilterOptionsType = {
     id: {
@@ -396,7 +396,7 @@ const createDailyReportFilterOptions = (
 export const editDailyReport = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const id = Number(req.params.id);
   const userId = Number(req.body.userId);
@@ -475,7 +475,7 @@ export const editDailyReport = async (
       httpStatus,
       responseStatus,
       responseMsg,
-      newDailyReport,
+      newDailyReport
     );
 
     // ログを出力
@@ -505,7 +505,7 @@ export const editDailyReport = async (
 export const deleteDailyReport = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   // daily_reportのid
   const id = Number(req.params.id);
@@ -572,7 +572,7 @@ export const deleteDailyReport = async (
       httpStatus,
       responseStatus,
       responseMsg,
-      newDailyReport,
+      newDailyReport
     );
 
     // ログを出力

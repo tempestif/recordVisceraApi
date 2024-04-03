@@ -5,7 +5,7 @@ import {
   readBowelMovements,
   registBowelMovement,
 } from "@/controllers/users/bowelMovementController";
-import { auth } from "@/services/authService";
+import { auth } from "@/utils/auth";
 import express from "express";
 const router = express.Router();
 

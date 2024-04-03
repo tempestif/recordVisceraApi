@@ -16,26 +16,23 @@ import {
   LoggingObjType,
   logResponse,
   maskConfInfoInReqBody,
-} from "@/services/logger/loggerService";
+} from "@/utils/logger/utilLogger";
 import {
   FilterOptionsType,
   createFilterForPrisma,
   createSelectForPrisma,
   createSortsForPrisma,
-} from "@/services/dataTransferService";
-import { errorResponseHandler } from "@/services/errorHandle";
-import { customizedPrisma } from "@/services/prismaClients";
-import {
-  BadRequestError,
-  findUniqueUserAbsoluteExist,
-  findUniqueBowelMovementAbsoluteExist,
-} from "@/services/prismaService";
+} from "@/utils/dataTransfer";
+import { errorResponseHandler } from "@/utils/errorHandle";
+import { customizedPrisma } from "@/utils/prismaClients";
+import { BadRequestError } from "@/utils/errorHandle/errors";
+import { findUniqueUserAbsoluteExist } from "@/services/users/usersService";
+import { findUniqueBowelMovementAbsoluteExist } from "@/services/users/bowelMovementsService";
 import {
   basicHttpResponce,
   basicHttpResponceIncludeData,
-} from "@/services/utilResponseService";
+} from "@/utils/utilResponse";
 import type { Request, Response, NextFunction } from "express";
-import { CustomLogger } from "@/services/logger/loggerClass";
 import { BAD_REQUEST } from "@/consts/mailConsts";
 // const logger = new CustomLogger();
 
@@ -50,7 +47,7 @@ import { BAD_REQUEST } from "@/consts/mailConsts";
 export const registBowelMovement = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const userId = Number(req.body.userId);
   const bristolStoolScale = Number(req.body.bristolStoolScale);
@@ -103,7 +100,7 @@ export const registBowelMovement = async (
       httpStatus,
       responseStatus,
       responseMsg,
-      bowelMovementData,
+      bowelMovementData
     );
 
     // ログを出力
@@ -114,7 +111,7 @@ export const registBowelMovement = async (
       !userId ? UNSPECIFIED_USER_ID.message : userId,
       req,
       res,
-      currentFuncName,
+      currentFuncName
     );
   }
 };
@@ -134,7 +131,7 @@ export const registBowelMovement = async (
 export const readBowelMovements = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   // logのために関数名を取得
   const currentFuncName = readBowelMovements.name;
@@ -149,7 +146,7 @@ export const readBowelMovements = async (
   const { sort, fields, limit, offset } = req.query as Query;
 
   // bodyからuserIdを取得
-  const userId = req.body.userId;
+  const userId = Number(req.body.userId);
 
   // 指定されたソートの内容をprismaに渡せるように成型
   const sorts = createSortsForPrisma(sort);
@@ -209,6 +206,10 @@ export const readBowelMovements = async (
   const filter = createFilterForPrisma(filterOptions);
 
   try {
+    // userの有無を確認
+    const where = { id: userId };
+    findUniqueUserAbsoluteExist(where, customizedPrisma);
+
     // 排便記録を取得
     const bowelMovents = await customizedPrisma.bowel_Movement.findMany({
       orderBy: sorts,
@@ -281,7 +282,7 @@ export const readBowelMovements = async (
 export const editBowelMovement = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const id = Number(req.params.id);
   const { userId, date, blood, drainage, note, bristolStoolScale } = req.body;
@@ -296,7 +297,7 @@ export const editBowelMovement = async (
     const whereByBowelMovementId = { id };
     const bowelMoventData = await findUniqueBowelMovementAbsoluteExist(
       whereByBowelMovementId,
-      customizedPrisma,
+      customizedPrisma
     );
 
     // 指定した体温記録がユーザー本人のものか確認
@@ -367,7 +368,7 @@ export const editBowelMovement = async (
       HttpStatus,
       responseStatus,
       responseMsg,
-      newBowelMovement,
+      newBowelMovement
     );
 
     // ログを出力
@@ -399,7 +400,7 @@ export const editBowelMovement = async (
 export const deleteBowelMovement = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const id = Number(req.params.id);
   const { userId } = req.body;
@@ -414,7 +415,7 @@ export const deleteBowelMovement = async (
     const whereByBowelMoventId = { id };
     const bowelMoventData = await findUniqueBowelMovementAbsoluteExist(
       whereByBowelMoventId,
-      customizedPrisma,
+      customizedPrisma
     );
 
     // 指定した排便記録がユーザー本人のものか確認
@@ -455,7 +456,7 @@ export const deleteBowelMovement = async (
       HttpStatus,
       responseStatus,
       responseMsg,
-      newBowelMovement,
+      newBowelMovement
     );
 
     // ログを出力
@@ -477,7 +478,7 @@ export const deleteBowelMovement = async (
 export const countBowelMovementsPerDay = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const { userId } = req.body;
 

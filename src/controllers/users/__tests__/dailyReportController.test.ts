@@ -1,26 +1,24 @@
-import {
-  createDailyReport,
-  findUniqueUserAbsoluteExist,
-} from "@/services/prismaService";
+import { createDailyReport } from "@/services/users/dailyReportsService";
+import { findUniqueUserAbsoluteExist } from "@/services/users/usersService";
 import type { Request, Response } from "express";
-import { customizedPrisma } from "@/services/prismaClients";
-import { logResponse } from "@/services/logger/loggerService";
-import { basicHttpResponceIncludeData } from "@/services/utilResponseService";
-import { registDailyReport } from "../dailyReportController";
-jest.mock("@/services/prismaService", () => ({
-  ...jest.requireActual("@/services/prismaService"),
+import { customizedPrisma } from "@/utils/prismaClients";
+import { logResponse } from "@/utils/logger/utilLogger";
+import { basicHttpResponceIncludeData } from "@/utils/utilResponse";
+import { registDailyReport } from "@/controllers/users/dailyReportController";
+jest.mock("@/services/users/usersService", () => ({
+  ...jest.requireActual("@/services/users/usersService"),
   findUniqueUserAbsoluteExist: jest.fn(),
 }));
-jest.mock("@/services/utilResponseService", () => ({
-  ...jest.requireActual("@/services/utilResponseService"),
+jest.mock("@/utils/utilResponse", () => ({
+  ...jest.requireActual("@/utils/utilResponse"),
   basicHttpResponceIncludeData: jest.fn(),
 }));
-jest.mock("@/services/logger/loggerService", () => ({
-  ...jest.requireActual("@/services/logger/loggerService"),
-  logError: jest.fn(),
+jest.mock("@/utils/logger/utilLogger", () => ({
+  ...jest.requireActual("@/utils/logger/utilLogger"),
   logResponse: jest.fn(),
 }));
-jest.mock("@/services/prismaService/dailyReports.ts", () => ({
+jest.mock("@/services/users/dailyReportsService", () => ({
+  ...jest.requireActual("@/services/users/dailyReportsService"),
   createDailyReport: jest.fn().mockImplementation(() => ({
     id: 1,
     note: "mock-note",
@@ -40,10 +38,6 @@ jest.mock("@/services/prismaService/dailyReports.ts", () => ({
     createdAt: new Date("2023-11-01T07:01:13.000Z"),
     updatedAt: new Date("2023-11-11T07:01:13.000Z"),
   })),
-}));
-jest.mock("@/services/errorHandle", () => ({
-  ...jest.requireActual("@/services/errorHandle"),
-  errorResponseHandler: jest.fn(),
 }));
 
 describe("registDailyReportのテスト", () => {
@@ -92,7 +86,7 @@ describe("registDailyReportのテスト", () => {
     // 確認
     expect(findUniqueUserAbsoluteExist).toHaveBeenCalledWith(
       { id: 10 },
-      customizedPrisma,
+      customizedPrisma
     );
 
     expect(createDailyReport).toHaveBeenCalledWith(
@@ -109,7 +103,7 @@ describe("registDailyReportのテスト", () => {
         anirectalLesitions: "1",
         anirectalOtherLesitions: "1",
         abdominal: "1",
-      },
+      }
     );
 
     const httpStatus = 200;
@@ -138,7 +132,7 @@ describe("registDailyReportのテスト", () => {
         userId: 10,
         createdAt: new Date("2023-11-01T07:01:13.000Z"),
         updatedAt: new Date("2023-11-11T07:01:13.000Z"),
-      },
+      }
     );
 
     expect(logResponse).toHaveBeenCalledWith(
@@ -146,7 +140,7 @@ describe("registDailyReportのテスト", () => {
       mockReq,
       httpStatus,
       responseMsg,
-      "registDailyReport",
+      "registDailyReport"
     );
   });
 });

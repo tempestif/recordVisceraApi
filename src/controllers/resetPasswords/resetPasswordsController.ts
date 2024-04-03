@@ -6,18 +6,20 @@ import {
   SEND_MAIL_FOR_RESET_PASS_VALID,
   TOKEN_NOT_FOUND,
 } from "@/consts/responseConsts";
-import { logResponse } from "@/services/logger/loggerService";
-import { errorResponseHandler } from "@/services/errorHandle";
-import { sendMailForResetPasswordVerify } from "@/services/nodemailerService";
-import { customizedPrisma } from "@/services/prismaClients";
+import { logResponse } from "@/utils/logger/utilLogger";
+import { errorResponseHandler } from "@/utils/errorHandle";
+import { sendMailForResetPasswordVerify } from "@/services/resetPasswords/resetPasswordsService";
+import { customizedPrisma } from "@/utils/prismaClients";
 import {
   BadRequestError,
   MultipleActiveUserError,
   TokenNotFoundError,
+} from "@/utils/errorHandle/errors";
+import {
   findActivedUser,
   findUniqueUserAbsoluteExist,
-} from "@/services/prismaService";
-import { basicHttpResponce } from "@/services/utilResponseService";
+} from "@/services/users/usersService";
+import { basicHttpResponce } from "@/utils/utilResponse";
 import { randomBytes } from "crypto";
 import type { Request, Response, NextFunction } from "express";
 
@@ -31,7 +33,7 @@ import type { Request, Response, NextFunction } from "express";
 export const requestResettingPassword = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const { email } = req.body;
 
@@ -82,7 +84,7 @@ export const requestResettingPassword = async (
       req,
       HttpStatus,
       responseMsg,
-      currentFuncName,
+      currentFuncName
     );
   } catch (e) {
     errorResponseHandler(
@@ -90,7 +92,7 @@ export const requestResettingPassword = async (
       UNSPECIFIED_USER_ID.message,
       req,
       res,
-      currentFuncName,
+      currentFuncName
     );
   }
 };
@@ -106,7 +108,7 @@ export const requestResettingPassword = async (
 export const executeResettingPassword = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const id = Number(req.body.id);
   const { token, newPassword } = req.body;
@@ -122,7 +124,7 @@ export const executeResettingPassword = async (
     const whereByUserId = { id };
     const user = await findUniqueUserAbsoluteExist(
       whereByUserId,
-      customizedPrisma,
+      customizedPrisma
     );
 
     // tokenが見つからない、または一致しない場合は400エラー
@@ -150,7 +152,7 @@ export const executeResettingPassword = async (
       req,
       HttpStatus,
       responseMsg,
-      currentFuncName,
+      currentFuncName
     );
   } catch (e) {
     // エラーの時のレスポンス
@@ -159,7 +161,7 @@ export const executeResettingPassword = async (
       UNSPECIFIED_USER_ID.message,
       req,
       res,
-      currentFuncName,
+      currentFuncName
     );
   }
 };

@@ -1,34 +1,34 @@
 {
-    "env": {
-        "es2021": true,
-        "node": true
-        // "browser": true
-    },
-    "extends": [
-        "eslint:recommended",
-        "plugin:@typescript-eslint/recommended",
-        "prettier"
-    ],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-        "sourceType": "module",
-        "project": "./tsconfig.json"
-    },
-    "plugins": ["@typescript-eslint"],
-    "rules": {
-        // お好みで設定ください
-        "@typescript-eslint/no-explicit-any": 1,
-        "@typescript-eslint/no-non-null-assertion": 1,
-        "@typescript-eslint/no-unused-vars": "off",
-        "@typescript-eslint/explicit-module-boundary-types": "off",
-        "@typescript-eslint/ban-ts-comment": "off",
-        "no-console": "warn",
-        "indent": ["error", 2],
-        "quotes": ["error", "dosuble"],
-        "semi": ["error", "always"],
-        "eqeqeq": "error",
-        "no-eval": "error",
-        "no-redeclare": "error"
-    },
-    "root": true
+  "env": {
+    "es2021": true,
+    "node": true
+    // "browser": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "plugins": ["@typescript-eslint"],
+  "rules": {
+    // お好みで設定ください
+    "@typescript-eslint/no-explicit-any": 1,
+    "@typescript-eslint/no-non-null-assertion": 1,
+    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
+    "no-console": "warn",
+    "indent": ["error", 2],
+    "quotes": ["error", "double"],
+    "semi": ["error", "always"],
+    "eqeqeq": "error",
+    "no-eval": "error",
+    "no-redeclare": "error"
+  },
+  "root": true
 }

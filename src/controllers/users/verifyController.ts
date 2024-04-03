@@ -1,5 +1,5 @@
-import { basicHttpResponce } from "@/services/utilResponseService";
-import { customizedPrisma } from "@/services/prismaClients";
+import { basicHttpResponce } from "@/utils/utilResponse";
+import { customizedPrisma } from "@/utils/prismaClients";
 import type { Request, Response, NextFunction } from "express";
 import {
   COMPLETE_VALID_MAILADDRESS,
@@ -14,10 +14,10 @@ import {
 import {
   LoggingObjType,
   maskConfInfoInReqBody,
-} from "@/services/logger/loggerService";
-import { errorResponseHandler } from "@/services/errorHandle";
-import { findUniqueUserAbsoluteExist } from "@/services/prismaService";
-import { CustomLogger } from "@/services/logger/loggerClass";
+} from "@/utils/logger/utilLogger";
+import { errorResponseHandler } from "@/utils/errorHandle";
+import { findUniqueUserAbsoluteExist } from "@/services/users/usersService";
+import { CustomLogger } from "@/utils/logger/loggerClass";
 const logger = new CustomLogger();
 
 /**
@@ -32,7 +32,7 @@ const logger = new CustomLogger();
 export const verifyMailadress = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const id = Number(req.body.id);
   const token = req.body.token;
@@ -45,7 +45,7 @@ export const verifyMailadress = async (
     const whereByUserId = { id };
     const user = await findUniqueUserAbsoluteExist(
       whereByUserId,
-      customizedPrisma,
+      customizedPrisma
     );
 
     // tokenが見つからなかったら400エラー
@@ -104,7 +104,7 @@ export const verifyMailadress = async (
       UNSPECIFIED_USER_ID.message,
       req,
       res,
-      currentFuncName,
+      currentFuncName
     );
   }
 };

@@ -1,3 +1,3 @@
-import { customizedPrisma } from "@/services/prismaClients";
+import { customizedPrisma } from "@/utils/prismaClients";
 
 jestPrisma.initializeClient(customizedPrisma);

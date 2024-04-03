@@ -6,13 +6,13 @@ import {
 import {
   LoggingObjType,
   maskConfInfoInReqBody,
-} from "@/services/logger/loggerService";
-import { errorResponseHandler } from "@/services/errorHandle";
-import { customizedPrisma } from "@/services/prismaClients";
-import { findUniqueProfileAbsoluteExist } from "@/services/prismaService";
-import { basicHttpResponceIncludeData } from "@/services/utilResponseService";
+} from "@/utils/logger/utilLogger";
+import { errorResponseHandler } from "@/utils/errorHandle";
+import { customizedPrisma } from "@/utils/prismaClients";
+import { findUniqueProfileAbsoluteExist } from "@/services/users/profilesService";
+import { basicHttpResponceIncludeData } from "@/utils/utilResponse";
 import type { Request, Response, NextFunction } from "express";
-import { CustomLogger } from "@/services/logger/loggerClass";
+import { CustomLogger } from "@/utils/logger/loggerClass";
 const logger = new CustomLogger();
 
 /**
@@ -26,7 +26,7 @@ const logger = new CustomLogger();
 export const readProfile = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const { userId } = req.body;
 
@@ -37,7 +37,7 @@ export const readProfile = async (
     const whereByUserId = { userId: userId };
     const profile = await findUniqueProfileAbsoluteExist(
       whereByUserId,
-      customizedPrisma,
+      customizedPrisma
     );
 
     // レスポンスを返却
@@ -49,7 +49,7 @@ export const readProfile = async (
       HttpStatus,
       responseStatus,
       responseMsg,
-      profile,
+      profile
     );
 
     // ログを出力
@@ -78,7 +78,7 @@ export const readProfile = async (
 export const editProfile = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const { userId, sex, height, birthday } = req.body;
 
@@ -110,7 +110,7 @@ export const editProfile = async (
       HttpStatus,
       responseStatus,
       responseMsg,
-      updatedProfile,
+      updatedProfile
     );
 
     // ログを出力

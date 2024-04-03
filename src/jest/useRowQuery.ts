@@ -2,7 +2,7 @@
 // 生のSQLをJestPrismaで実行するためのクラス。
 // 実行時にエラーになってしまって動かない
 
-import { customizedPrisma } from "@/services/prismaClients";
+import { customizedPrisma } from "@/utils/prismaClients";
 
 /**
  * customizedPrismaとは独立したDB操作を行う

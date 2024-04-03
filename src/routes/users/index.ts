@@ -5,7 +5,7 @@ import {
   deleteUser,
 } from "@/controllers/users/userController";
 import express from "express";
-import { auth } from "@/services/authService";
+import { auth } from "@/utils/auth";
 import type { Request, Response, NextFunction } from "express";
 
 const router = express.Router();
@@ -40,7 +40,7 @@ router.get(
         message: e,
       });
     }
-  },
+  }
 );
 
 export { router };

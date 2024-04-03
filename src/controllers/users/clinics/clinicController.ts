@@ -1,27 +1,26 @@
 import { CLINIC_DEFAULT_DATA_INFO } from "@/consts/db/clinic";
 import { PROCESS_SUCCESS } from "@/consts/logConsts";
 import { READ_CLINIC, RECORD_CLINIC } from "@/consts/responseConsts/clinic";
+import { CustomLogger } from "@/utils/logger/loggerClass";
 import {
-  CustomLogger,
   LoggingObjType,
   maskConfInfoInReqBody,
-} from "@/services/LoggerService";
+} from "@/utils/logger/utilLogger";
 import {
   createFilterForPrisma,
   createSortsForPrisma,
-  filteringFields,
-} from "@/services/dataTransferService";
-import { ErrorHandleIncludeDbRecordNotFound } from "@/services/errorHandlingService";
-import { customizedPrisma } from "@/services/prismaClients";
-import { createClinicReport } from "@/services/prismaService/clinic";
-import { basicHttpResponceIncludeData } from "@/services/utilResponseService";
+} from "@/utils/dataTransfer";
+import { errorResponseHandler } from "@/utils/errorHandle/index";
+import { customizedPrisma } from "@/utils/prismaClients";
+import { createClinicReport } from "@/services/users/clinics/clinicService";
+import { basicHttpResponceIncludeData } from "@/utils/utilResponse";
 import type { Request, Response, NextFunction } from "express";
 const logger = new CustomLogger();
 
 export const registClinicReport = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   // logのために関数名を取得
   const currentFuncName = registClinicReport.name;
@@ -76,7 +75,7 @@ export const registClinicReport = async (
       HttpStatus,
       responseStatus,
       responseMsg,
-      clinicReport,
+      clinicReport
     );
 
     // ログを出力
@@ -91,7 +90,7 @@ export const registClinicReport = async (
     };
     logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
   } catch (e) {
-    ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName);
+    errorResponseHandler(e, userId, req, res, currentFuncName);
   }
 };
 
@@ -104,7 +103,7 @@ export const registClinicReport = async (
 export const readClinicReport = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   // logのために関数名を取得
   const currentFuncName = readClinicReport.name;
@@ -184,9 +183,6 @@ export const readClinicReport = async (
       },
     });
 
-    // 指定されたフィールドのみ抜き出す
-    const fileteredClinic = filteringFields(fields, clinicReports);
-
     // レスポンス返却
     const HttpStatus = 200;
     const responseStatus = true;
@@ -195,7 +191,7 @@ export const readClinicReport = async (
       status: responseStatus,
       message: responseMsg,
       allCount: allCount,
-      count: fileteredClinic.length,
+      count: clinicReports.length,
       sort: sort ?? "",
       fields: fields ?? "",
       limit: limit ?? "",
@@ -205,9 +201,9 @@ export const readClinicReport = async (
         createdAt: createdAt ?? "",
         updatedAt: updatedAt ?? "",
       },
-      dailyReports: fileteredClinic,
+      dailyReports: clinicReports,
     });
   } catch (e) {
-    ErrorHandleIncludeDbRecordNotFound(e, userId, req, res, currentFuncName);
+    errorResponseHandler(e, userId, req, res, currentFuncName);
   }
 };

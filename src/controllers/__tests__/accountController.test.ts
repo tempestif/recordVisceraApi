@@ -1,37 +1,20 @@
 import type { Request, Response } from "express";
-import { customizedPrisma } from "@/services/prismaClients";
-import { logResponse } from "@/services/logger/loggerService";
-import { basicHttpResponce } from "@/services/utilResponseService";
-import { registUser } from "../accountController";
+import { customizedPrisma } from "@/utils/prismaClients";
+import { logResponse } from "@/utils/logger/utilLogger";
+import { basicHttpResponce } from "@/utils/utilResponse";
+import { registUser } from "@/controllers/accountController";
 import { randomBytes } from "crypto";
-import { sendMailForEmailVerify } from "@/services/prismaService/account";
-import { errorResponseHandler } from "@/services/errorHandle";
-jest.mock("@/services/prismaService", () => ({
-  ...jest.requireActual("@/services/prismaService"),
-  findUniqueUserAbsoluteExist: jest.fn(),
-}));
-jest.mock("@/services/utilResponseService", () => ({
-  ...jest.requireActual("@/services/utilResponseService"),
+import { sendMailForEmailVerify } from "@/services/accountService";
+
+jest.mock("@/utils/utilResponse", () => ({
+  ...jest.requireActual("@/utils/utilResponse"),
   basicHttpResponce: jest.fn(),
 }));
-jest.mock("@/services/logger/loggerService", () => ({
-  ...jest.requireActual("@/services/logger/loggerService"),
-  logError: jest.fn(),
+jest.mock("@/utils/logger/utilLogger", () => ({
+  ...jest.requireActual("@/utils/logger/utilLogger"),
   logResponse: jest.fn(),
-  maskConfInfoInReqBody: jest.fn().mockImplementation(() => ({
-    ip: "mock-ip",
-    method: "mock-method",
-    path: "mock-path",
-    body: {
-      userId: "10",
-      date: "2023-10-13T17:40:33.000Z",
-      email: "testmail@test",
-      password: "masked-password",
-      name: "hoge",
-    },
-  })),
 }));
-jest.mock("@/services/prismaClients", () => ({
+jest.mock("@/utils/prismaClients", () => ({
   customizedPrisma: {
     user: {
       findMany: jest.fn().mockImplementation(() => []),
@@ -55,16 +38,12 @@ jest.mock("@/services/prismaClients", () => ({
     },
   },
 }));
-jest.mock("@/services/errorHandle", () => ({
-  ...jest.requireActual("@/services/errorHandle"),
-  errorResponseHandler: jest.fn(),
-}));
 jest.mock("crypto", () => ({
   randomBytes: jest.fn().mockImplementation(() => ({
     toString: jest.fn().mockImplementation(() => "mock-hash"),
   })),
 }));
-jest.mock("@/services/prismaService/account", () => ({
+jest.mock("@/services/accountService", () => ({
   sendMailForEmailVerify: jest.fn(),
 }));
 
@@ -130,7 +109,7 @@ describe("registUserのテスト", () => {
 
     expect(sendMailForEmailVerify).toHaveBeenCalledWith(
       "testmail@test",
-      `${process.env.BASE_URL}/users/10/verify/mock-hash`,
+      `${process.env.BASE_URL}/users/10/verify/mock-hash`
     );
 
     const httpStatus = 201;
@@ -140,7 +119,7 @@ describe("registUserのテスト", () => {
       mockRes,
       httpStatus,
       responseStatus,
-      responseMsg,
+      responseMsg
     );
 
     expect(logResponse).toHaveBeenCalledWith(
@@ -148,7 +127,7 @@ describe("registUserのテスト", () => {
       mockReq,
       httpStatus,
       responseMsg,
-      "registUser",
+      "registUser"
     );
   });
 });

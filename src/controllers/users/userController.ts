@@ -1,29 +1,29 @@
 import { type Request, type Response, type NextFunction } from "express";
-import { customizedPrisma } from "@/services/prismaClients";
-import { sendMail } from "@/services/nodemailerService";
+import { customizedPrisma } from "@/utils/prismaClients";
+import { sendMail } from "@/utils/nodemailer";
 import { compare } from "bcrypt";
 import {
   basicHttpResponce,
   basicHttpResponceIncludeData,
   internalServerErr,
-} from "@/services/utilResponseService";
+} from "@/utils/utilResponse";
 import {
   COMPLETE_GET_PROFILE,
   COMPLETE_UPDATE_PASSWORD,
   DELETE_USER,
   WRONG_LOGIN_INFO,
 } from "@/consts/responseConsts";
-import { findUniqueUserAbsoluteExist } from "@/services/prismaService";
+import { findUniqueUserAbsoluteExist } from "@/services/users/usersService";
 import {
   LoggingObjType,
   maskConfInfoInReqBody,
-} from "@/services/logger/loggerService";
+} from "@/utils/logger/utilLogger";
 import { PROCESS_FAILURE, PROCESS_SUCCESS } from "@/consts/logConsts";
-import { errorResponseHandler } from "@/services/errorHandle";
+import { errorResponseHandler } from "@/utils/errorHandle";
 import { USER_LOGIN_STATUS } from "@/consts/db";
 import { Prisma } from "@prisma/client";
-import { transformNameTableToModel } from "@/services/prismaService/format";
-import { CustomLogger } from "@/services/logger/loggerClass";
+import { transformNameTableToModel } from "@/utils/format";
+import { CustomLogger } from "@/utils/logger/loggerClass";
 const logger = new CustomLogger();
 
 /**
@@ -33,7 +33,7 @@ const logger = new CustomLogger();
 export const sendMailTest = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   try {
     // メールを送信
@@ -61,7 +61,7 @@ export const sendMailTest = async (
 export const readUser = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   // TODO: バリデーション
   const { userId } = req.body;
@@ -73,7 +73,7 @@ export const readUser = async (
     const whereByUserId = { id: userId };
     const user = await findUniqueUserAbsoluteExist(
       whereByUserId,
-      customizedPrisma,
+      customizedPrisma
     );
 
     // レスポンスを返却
@@ -94,7 +94,7 @@ export const readUser = async (
       HttpStatus,
       responseStatus,
       responseMsg,
-      respondUser,
+      respondUser
     );
 
     // ログを出力
@@ -135,7 +135,7 @@ const userInclude: Prisma.UserInclude = {
 export const deleteUser = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const { userId } = req.body;
   const currentFuncName = deleteUser.name;
@@ -214,7 +214,7 @@ export const deleteUser = async (
 export const changePassowrd = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const { userId, oldPassword, newPassword } = req.body;
 
@@ -226,7 +226,7 @@ export const changePassowrd = async (
     const whereByUserId = { id: userId };
     const user = await findUniqueUserAbsoluteExist(
       whereByUserId,
-      customizedPrisma,
+      customizedPrisma
     );
 
     // 旧パスワードの一致を確認
@@ -278,7 +278,7 @@ export const changePassowrd = async (
       HttpStatus,
       responseStatus,
       responseMsg,
-      respondUser,
+      respondUser
     );
 
     // ログを出力

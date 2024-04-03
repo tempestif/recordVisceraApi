@@ -1,6 +1,6 @@
 import { registUser, login, logout } from "@/controllers/accountController";
 import { verifyMailadress } from "@/controllers/users/verifyController";
-import { auth } from "@/services/authService";
+import { auth } from "@/utils/auth";
 import express from "express";
 const router = express.Router();
 

@@ -4,7 +4,7 @@ import {
   editDailyReport,
   deleteDailyReport,
 } from "@/controllers/users/dailyReportController";
-import { auth } from "@/services/authService";
+import { auth } from "@/utils/auth";
 import express from "express";
 const router = express.Router();
 

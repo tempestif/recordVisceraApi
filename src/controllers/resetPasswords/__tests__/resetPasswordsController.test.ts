@@ -7,19 +7,21 @@ import {
   BadRequestError,
   MultipleActiveUserError,
   TokenNotFoundError,
+} from "@/utils/errorHandle/errors";
+import {
   findActivedUser,
   findUniqueUserAbsoluteExist,
-} from "@/services/prismaService";
-import { customizedPrisma } from "@/services/prismaClients";
+} from "@/services/users/usersService";
+import { customizedPrisma } from "@/utils/prismaClients";
 import { randomBytes } from "crypto";
-import { logResponse } from "@/services/logger/loggerService";
-import { basicHttpResponce } from "@/services/utilResponseService";
+import { logResponse } from "@/utils/logger/utilLogger";
+import { basicHttpResponce } from "@/utils/utilResponse";
 import { UNSPECIFIED_USER_ID } from "@/consts/logConsts";
-import { sendMailForResetPasswordVerify } from "@/services/nodemailerService";
-import { errorResponseHandler } from "@/services/errorHandle";
+import { sendMailForResetPasswordVerify } from "@/services/resetPasswords/resetPasswordsService";
+import { errorResponseHandler } from "@/utils/errorHandle";
 
-jest.mock("@/services/prismaService", () => ({
-  ...jest.requireActual("@/services/prismaService"),
+jest.mock("@/services/users/usersService", () => ({
+  ...jest.requireActual("@/services/users/usersService"),
   findActivedUser: jest.fn().mockImplementation(() => undefined),
   findUniqueUserAbsoluteExist: jest.fn().mockImplementation(() => undefined),
 }));
@@ -28,7 +30,7 @@ jest.mock("crypto", () => ({
     toString: jest.fn().mockImplementation(() => "mock-hash"),
   })),
 }));
-jest.mock("@/services/prismaClients", () => ({
+jest.mock("@/utils/prismaClients", () => ({
   customizedPrisma: {
     user: {
       update: jest.fn().mockImplementation(() => ({
@@ -46,21 +48,20 @@ jest.mock("@/services/prismaClients", () => ({
     },
   },
 }));
-jest.mock("@/services/utilResponseService", () => ({
-  ...jest.requireActual("@/services/utilResponseService"),
+jest.mock("@/utils/utilResponse", () => ({
+  ...jest.requireActual("@/utils/utilResponse"),
   basicHttpResponce: jest.fn(),
 }));
-jest.mock("@/services/logger/loggerService", () => ({
-  ...jest.requireActual("@/services/logger/loggerService"),
-  logError: jest.fn(),
+jest.mock("@/utils/logger/utilLogger", () => ({
+  ...jest.requireActual("@/utils/logger/utilLogger"),
   logResponse: jest.fn(),
 }));
-jest.mock("@/services/nodemailerService", () => ({
-  ...jest.requireActual("@/services/nodemailerService"),
+jest.mock("@/services/resetPasswords/resetPasswordsService", () => ({
+  ...jest.requireActual("@/services/resetPasswords/resetPasswordsService"),
   sendMailForResetPasswordVerify: jest.fn(),
 }));
-jest.mock("@/services/errorHandle", () => ({
-  ...jest.requireActual("@/services/nodemailerService"),
+jest.mock("@/utils/errorHandle", () => ({
+  ...jest.requireActual("@/utils/errorHandle"),
   errorResponseHandler: jest.fn(),
 }));
 
@@ -113,7 +114,7 @@ describe("requestResettingPasswordのテスト", () => {
     await requestResettingPassword(
       mockReq as Request,
       mockRes as Response,
-      next,
+      next
     );
 
     // 確認
@@ -138,7 +139,7 @@ describe("requestResettingPasswordのテスト", () => {
 
     expect(sendMailForResetPasswordVerify).toHaveBeenCalledWith(
       email,
-      `${process.env.BASE_URL}/reset-password/1/execute/mock-hash`,
+      `${process.env.BASE_URL}/reset-password/1/execute/mock-hash`
     );
 
     const HttpStatus = 201;
@@ -149,7 +150,7 @@ describe("requestResettingPasswordのテスト", () => {
       mockRes,
       HttpStatus,
       responseStatus,
-      responseMsg,
+      responseMsg
     );
 
     expect(logResponse).toHaveBeenCalledWith(
@@ -157,7 +158,7 @@ describe("requestResettingPasswordのテスト", () => {
       mockReq,
       HttpStatus,
       responseMsg,
-      funcName,
+      funcName
     );
   });
   test("emailがない", async () => {
@@ -172,7 +173,7 @@ describe("requestResettingPasswordのテスト", () => {
     await requestResettingPassword(
       mockReq as Request,
       mockRes as Response,
-      next,
+      next
     );
 
     // 確認
@@ -181,7 +182,7 @@ describe("requestResettingPasswordのテスト", () => {
       "unspecified",
       mockReq,
       mockRes,
-      "requestResettingPassword",
+      "requestResettingPassword"
     );
   });
   test("userが取得できない", async () => {
@@ -201,7 +202,7 @@ describe("requestResettingPasswordのテスト", () => {
     await requestResettingPassword(
       mockReq as Request,
       mockRes as Response,
-      next,
+      next
     );
 
     // 確認
@@ -210,7 +211,7 @@ describe("requestResettingPasswordのテスト", () => {
       "unspecified",
       mockReq,
       mockRes,
-      "requestResettingPassword",
+      "requestResettingPassword"
     );
   });
 });
@@ -265,13 +266,13 @@ describe("executeResettingPasswordのテスト", () => {
     await executeResettingPassword(
       mockReq as Request,
       mockRes as Response,
-      next,
+      next
     );
 
     // 確認
     expect(findUniqueUserAbsoluteExist).toHaveBeenCalledWith(
       { id: 1 },
-      customizedPrisma,
+      customizedPrisma
     );
 
     const customizedPrismaUserUpdateInstance = customizedPrisma.user
@@ -294,7 +295,7 @@ describe("executeResettingPasswordのテスト", () => {
       mockRes,
       HttpStatus,
       responseStatus,
-      responseMsg,
+      responseMsg
     );
 
     expect(logResponse).toHaveBeenCalledWith(
@@ -302,7 +303,7 @@ describe("executeResettingPasswordのテスト", () => {
       mockReq,
       HttpStatus,
       responseMsg,
-      funcName,
+      funcName
     );
   });
   test("idがない", async () => {
@@ -335,7 +336,7 @@ describe("executeResettingPasswordのテスト", () => {
     await executeResettingPassword(
       mockReq as Request,
       mockRes as Response,
-      next,
+      next
     );
 
     // 確認
@@ -344,7 +345,7 @@ describe("executeResettingPasswordのテスト", () => {
       "unspecified",
       mockReq,
       mockRes,
-      "executeResettingPassword",
+      "executeResettingPassword"
     );
   });
   test("tokenがない", async () => {
@@ -377,7 +378,7 @@ describe("executeResettingPasswordのテスト", () => {
     await executeResettingPassword(
       mockReq as Request,
       mockRes as Response,
-      next,
+      next
     );
 
     // 確認
@@ -386,7 +387,7 @@ describe("executeResettingPasswordのテスト", () => {
       "unspecified",
       mockReq,
       mockRes,
-      "executeResettingPassword",
+      "executeResettingPassword"
     );
   });
   test("newPasswordがない", async () => {
@@ -419,7 +420,7 @@ describe("executeResettingPasswordのテスト", () => {
     await executeResettingPassword(
       mockReq as Request,
       mockRes as Response,
-      next,
+      next
     );
 
     // 確認
@@ -428,7 +429,7 @@ describe("executeResettingPasswordのテスト", () => {
       "unspecified",
       mockReq,
       mockRes,
-      "executeResettingPassword",
+      "executeResettingPassword"
     );
   });
   test("userがない", async () => {
@@ -436,7 +437,7 @@ describe("executeResettingPasswordのテスト", () => {
     const token = "mock-token";
     const newPassword = "mock-newPassword";
     (findUniqueUserAbsoluteExist as jest.Mock).mockImplementation(
-      () => undefined,
+      () => undefined
     );
     mockReq = {
       ip: "mock-ip",
@@ -453,7 +454,7 @@ describe("executeResettingPasswordのテスト", () => {
     await executeResettingPassword(
       mockReq as Request,
       mockRes as Response,
-      next,
+      next
     );
 
     // 確認
@@ -462,7 +463,7 @@ describe("executeResettingPasswordのテスト", () => {
       "unspecified",
       mockReq,
       mockRes,
-      "executeResettingPassword",
+      "executeResettingPassword"
     );
   });
   test("userのpassResetHashがない", async () => {
@@ -496,7 +497,7 @@ describe("executeResettingPasswordのテスト", () => {
     await executeResettingPassword(
       mockReq as Request,
       mockRes as Response,
-      next,
+      next
     );
 
     // 確認
@@ -505,7 +506,7 @@ describe("executeResettingPasswordのテスト", () => {
       "unspecified",
       mockReq,
       mockRes,
-      "executeResettingPassword",
+      "executeResettingPassword"
     );
   });
   test("passResetHashとtokenが一致しない", async () => {
@@ -539,7 +540,7 @@ describe("executeResettingPasswordのテスト", () => {
     await executeResettingPassword(
       mockReq as Request,
       mockRes as Response,
-      next,
+      next
     );
 
     // 確認
@@ -548,7 +549,7 @@ describe("executeResettingPasswordのテスト", () => {
       "unspecified",
       mockReq,
       mockRes,
-      "executeResettingPassword",
+      "executeResettingPassword"
     );
   });
 });
