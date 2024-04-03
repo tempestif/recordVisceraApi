@@ -7,9 +7,9 @@ import { sendMail } from "../nodemailerService";
  * @param url 認証用URL
  */
 export const sendMailForEmailVerify = async (email: string, url: string) => {
-    // 件名
-    const mailSubject = TITLE_VALID_MAIL.message;
-    // 本文
-    const text = TEXT_VALID_MAIL.message(url);
-    await sendMail(email, mailSubject, text);
+  // 件名
+  const mailSubject = TITLE_VALID_MAIL.message;
+  // 本文
+  const text = TEXT_VALID_MAIL.message(url);
+  await sendMail(email, mailSubject, text);
 };

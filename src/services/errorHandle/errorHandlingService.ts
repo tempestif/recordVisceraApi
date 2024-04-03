@@ -1,14 +1,14 @@
 import { UNEXPECTED_ERROR, UNSPECIFIED_USER_ID_TYPE } from "@/consts/logConsts";
 import { logError } from "@/services/logger/loggerService";
 import {
-    BadRequestError,
-    DbRecordNotFoundError,
-    MultipleActiveUserError,
-    TokenNotFoundError,
+  BadRequestError,
+  DbRecordNotFoundError,
+  MultipleActiveUserError,
+  TokenNotFoundError,
 } from "@/services/prismaService";
 import {
-    basicHttpResponce,
-    internalServerErr,
+  basicHttpResponce,
+  internalServerErr,
 } from "@/services/utilResponseService";
 import type { Request, Response } from "express";
 
@@ -22,18 +22,17 @@ import type { Request, Response } from "express";
  * @param funcName
  */
 export const internalServerErrorHandle = (
-    e: unknown,
-    userId: number | UNSPECIFIED_USER_ID_TYPE,
-    req: Request,
-    res: Response,
-    funcName: string
+  e: unknown,
+  userId: number | UNSPECIFIED_USER_ID_TYPE,
+  req: Request,
+  res: Response,
+  funcName: string,
 ) => {
-    const HttpStatus = 500;
-    const responseMsg =
-        e instanceof Error ? e.message : UNEXPECTED_ERROR.message;
+  const HttpStatus = 500;
+  const responseMsg = e instanceof Error ? e.message : UNEXPECTED_ERROR.message;
 
-    logError(userId, req, HttpStatus, funcName, responseMsg);
-    internalServerErr(res, e);
+  logError(userId, req, HttpStatus, funcName, responseMsg);
+  internalServerErr(res, e);
 };
 
 /**
@@ -45,19 +44,19 @@ export const internalServerErrorHandle = (
  * @param funcName
  */
 export const dbRecordNotFoundErrorHandle = (
-    e: DbRecordNotFoundError,
-    userId: number | UNSPECIFIED_USER_ID_TYPE,
-    req: Request,
-    res: Response,
-    funcName: string
+  e: DbRecordNotFoundError,
+  userId: number | UNSPECIFIED_USER_ID_TYPE,
+  req: Request,
+  res: Response,
+  funcName: string,
 ) => {
-    // レコードが見つからなかったら401エラー
-    const HttpStatus = 401;
-    const responseStatus = false;
-    const responseMsg = e.message;
+  // レコードが見つからなかったら401エラー
+  const HttpStatus = 401;
+  const responseStatus = false;
+  const responseMsg = e.message;
 
-    logError(userId, req, HttpStatus, funcName, responseMsg);
-    basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
+  logError(userId, req, HttpStatus, funcName, responseMsg);
+  basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 };
 
 /**
@@ -69,20 +68,20 @@ export const dbRecordNotFoundErrorHandle = (
  * @param funcName
  */
 export const multipleActiveUsersErrorHandle = (
-    e: MultipleActiveUserError,
-    userId: number | UNSPECIFIED_USER_ID_TYPE,
-    req: Request,
-    res: Response,
-    funcName: string
+  e: MultipleActiveUserError,
+  userId: number | UNSPECIFIED_USER_ID_TYPE,
+  req: Request,
+  res: Response,
+  funcName: string,
 ) => {
-    // ユニークな条件でユーザーが複数取れたら500エラー
-    // ((サーバー内部の問題は500で返すから
-    const HttpStatus = 500;
-    const responseStatus = false;
-    const responseMsg = e.message;
+  // ユニークな条件でユーザーが複数取れたら500エラー
+  // ((サーバー内部の問題は500で返すから
+  const HttpStatus = 500;
+  const responseStatus = false;
+  const responseMsg = e.message;
 
-    logError(userId, req, HttpStatus, funcName, responseMsg);
-    basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
+  logError(userId, req, HttpStatus, funcName, responseMsg);
+  basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 };
 
 /**
@@ -94,31 +93,31 @@ export const multipleActiveUsersErrorHandle = (
  * @param funcName
  */
 export const tokenNotFoundErrorHandle = (
-    e: TokenNotFoundError,
-    userId: number | UNSPECIFIED_USER_ID_TYPE,
-    req: Request,
-    res: Response,
-    funcName: string
+  e: TokenNotFoundError,
+  userId: number | UNSPECIFIED_USER_ID_TYPE,
+  req: Request,
+  res: Response,
+  funcName: string,
 ) => {
-    const HttpStatus = 400;
-    const responseStatus = false;
-    const responseMsg = e.message;
+  const HttpStatus = 400;
+  const responseStatus = false;
+  const responseMsg = e.message;
 
-    logError(userId, req, HttpStatus, funcName, responseMsg);
-    basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
+  logError(userId, req, HttpStatus, funcName, responseMsg);
+  basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 };
 
 export const badRequestErrorHandle = (
-    e: BadRequestError,
-    userId: number | UNSPECIFIED_USER_ID_TYPE,
-    req: Request,
-    res: Response,
-    funcName: string
+  e: BadRequestError,
+  userId: number | UNSPECIFIED_USER_ID_TYPE,
+  req: Request,
+  res: Response,
+  funcName: string,
 ) => {
-    const HttpStatus = 400;
-    const responseStatus = false;
-    const responseMsg = e.message;
+  const HttpStatus = 400;
+  const responseStatus = false;
+  const responseMsg = e.message;
 
-    logError(userId, req, HttpStatus, funcName, responseMsg);
-    basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
+  logError(userId, req, HttpStatus, funcName, responseMsg);
+  basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 };

@@ -13,18 +13,18 @@ import { USER_LOGIN_STATUS } from "@/consts/db";
  * @returns
  */
 export const findUniqueUserAbsoluteExist = async (
-    where: Prisma.UserWhereUniqueInput,
-    prismaClient: typeof customizedPrisma
+  where: Prisma.UserWhereUniqueInput,
+  prismaClient: typeof customizedPrisma,
 ) => {
-    // userIdからユーザーを取得
-    const user = await prismaClient.user.findUnique({ where });
-    // ユーザーが見つからなかったらDbRecordNotFoundErrorを投げる
-    if (!user) {
-        const responseMsg = USER_NOT_FOUND.message;
-        throw new DbRecordNotFoundError(responseMsg);
-    }
+  // userIdからユーザーを取得
+  const user = await prismaClient.user.findUnique({ where });
+  // ユーザーが見つからなかったらDbRecordNotFoundErrorを投げる
+  if (!user) {
+    const responseMsg = USER_NOT_FOUND.message;
+    throw new DbRecordNotFoundError(responseMsg);
+  }
 
-    return user;
+  return user;
 };
 
 /**
@@ -34,22 +34,22 @@ export const findUniqueUserAbsoluteExist = async (
  * @returns
  */
 export const findActivedUser = async (
-    where: Prisma.UserWhereInput,
-    prismaClient: typeof customizedPrisma
+  where: Prisma.UserWhereInput,
+  prismaClient: typeof customizedPrisma,
 ) => {
-    const users = await prismaClient.user.findMany({
-        where: {
-            ...where,
-            NOT: {
-                loginStatus: USER_LOGIN_STATUS.deactived,
-            },
-        },
-    });
+  const users = await prismaClient.user.findMany({
+    where: {
+      ...where,
+      NOT: {
+        loginStatus: USER_LOGIN_STATUS.deactived,
+      },
+    },
+  });
 
-    if (users.length === 0) {
-        const responseMsg = USER_NOT_FOUND.message;
-        throw new DbRecordNotFoundError(responseMsg);
-    }
+  if (users.length === 0) {
+    const responseMsg = USER_NOT_FOUND.message;
+    throw new DbRecordNotFoundError(responseMsg);
+  }
 
-    return users;
+  return users;
 };

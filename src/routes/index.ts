@@ -10,15 +10,15 @@ router.get("/", function (req, res, next) {
 });
 
 /** 認証前アカウントを作成 */
-router.post("/register", registUser)
+router.post("/register", registUser);
 
 /** ログイン */
-router.post("/login", login)
+router.post("/login", login);
 
 /** ログアウト */
-router.post("/logout", auth, logout)
+router.post("/logout", auth, logout);
 
 /** メールアドレスを認証 */
-router.post("/email-verify", verifyMailadress)
+router.post("/email-verify", verifyMailadress);
 
 export { router };

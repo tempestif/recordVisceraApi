@@ -11,4 +11,4 @@ const router = express.Router();
 // /** 通院記録を削除 */
 // router.post("/delete/:id", auth, deleteClinicReport)
 
-export { router }
+export { router };

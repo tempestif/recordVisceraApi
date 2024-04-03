@@ -22,21 +22,24 @@ import { router as clinicsNotesRouter } from "@/routes/users/clinics/notes";
 const app = express();
 
 // CORS設定
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", process.env.CLIENT_URL); // クライアントのオリジンを指定
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-auth-token");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, x-auth-token",
+  );
   next();
 });
 
 // view engine setup
-app.set("views", path.join("views"));//__dirNameと書いてある箇所を除く！
+app.set("views", path.join("views")); //__dirNameと書いてある箇所を除く！
 app.set("view engine", "ejs");
 
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join("public")));//__dirNameと書いてある箇所を除く！
+app.use(express.static(path.join("public"))); //__dirNameと書いてある箇所を除く！
 app.use(express.static("public"));
 
 app.use("/", indexRouter);
@@ -72,7 +75,7 @@ app.use(function (
   err: ErrorWithStatus,
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   // set locals, only providing error in development
   res.locals.message = err.message;
