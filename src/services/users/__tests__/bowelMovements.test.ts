@@ -7,7 +7,7 @@ import {
   afterEach,
 } from "@jest/globals";
 import { Bowel_Movement, User } from "@prisma/client";
-import { findUniqueBowelMovementAbsoluteExist } from "@/services/users/bowelMovementsService";
+import { findUniqueBowelMovementAbsoluteExist } from "@/services/users/bowelMovements";
 import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
 
 // テスト用PrismaClient作成

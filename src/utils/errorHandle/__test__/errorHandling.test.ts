@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { logError } from "@/utils/logger/utilLogger";
-import { UNEXPECTED_ERROR } from "@/consts/logConsts";
+import { UNEXPECTED_ERROR } from "@/consts/logMessages";
 import {
   badRequestErrorHandle,
   dbRecordNotFoundErrorHandle,

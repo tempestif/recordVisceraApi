@@ -1,4 +1,7 @@
-import { UNEXPECTED_ERROR, UNSPECIFIED_USER_ID_TYPE } from "@/consts/logConsts";
+import {
+  UNEXPECTED_ERROR,
+  UNSPECIFIED_USER_ID_TYPE,
+} from "@/consts/logMessages";
 import { logError } from "@/utils/logger/utilLogger";
 import {
   BadRequestError,

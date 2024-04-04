@@ -2,7 +2,7 @@ import {
   PROCESS_FAILURE,
   PROCESS_SUCCESS,
   UNSPECIFIED_USER_ID_TYPE,
-} from "@/consts/logConsts";
+} from "@/consts/logMessages";
 import { Request } from "express";
 import { CustomLogger } from "@/utils/logger/loggerClass";
 

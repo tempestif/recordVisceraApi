@@ -1,4 +1,4 @@
-import { PROFILE_NOT_FOUND } from "@/consts/responseConsts";
+import { PROFILE_NOT_FOUND } from "@/consts/responseMessages";
 import { Prisma } from "@prisma/client";
 import { customizedPrisma } from "@/utils/prismaClients";
 import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";

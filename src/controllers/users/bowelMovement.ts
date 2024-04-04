@@ -1,9 +1,9 @@
-import { DEFAULT_DATA_INFO } from "@/consts/db";
+import { DEFAULT_DATA_INFO } from "@/consts/dbMappings";
 import {
   PROCESS_FAILURE,
   PROCESS_SUCCESS,
   UNSPECIFIED_USER_ID,
-} from "@/consts/logConsts";
+} from "@/consts/logMessages";
 import {
   BOWEL_MOVEMENT_ACCESS_FORBIDDEN,
   COUNT_BOWEL_MOVEMENT_PER_DAY,
@@ -11,7 +11,7 @@ import {
   EDIT_BOWEL_MOVEMENT,
   READ_BOWEL_MOVEMENT,
   RECORD_BOWEL_MOVEMENT,
-} from "@/consts/responseConsts/bowelMovement";
+} from "@/consts/responseMessages/bowelMovement";
 import {
   LoggingObjType,
   logResponse,
@@ -26,14 +26,14 @@ import {
 import { errorResponseHandler } from "@/utils/errorHandle";
 import { customizedPrisma } from "@/utils/prismaClients";
 import { BadRequestError } from "@/utils/errorHandle/errors";
-import { findUniqueUserAbsoluteExist } from "@/services/users/usersService";
-import { findUniqueBowelMovementAbsoluteExist } from "@/services/users/bowelMovementsService";
+import { findUniqueUserAbsoluteExist } from "@/services/users/users";
+import { findUniqueBowelMovementAbsoluteExist } from "@/services/users/bowelMovements";
 import {
   basicHttpResponce,
   basicHttpResponceIncludeData,
 } from "@/utils/utilResponse";
 import type { Request, Response, NextFunction } from "express";
-import { BAD_REQUEST } from "@/consts/mailConsts";
+import { BAD_REQUEST } from "@/consts/mail";
 // const logger = new CustomLogger();
 
 /**

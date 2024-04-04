@@ -1,11 +1,11 @@
-import { PROCESS_FAILURE, PROCESS_SUCCESS } from "@/consts/logConsts";
+import { PROCESS_FAILURE, PROCESS_SUCCESS } from "@/consts/logMessages";
 import {
   DAILY_REPORT_ACCESS_FORBIDDEN,
   DELETE_DAILY_REPORT,
   EDIT_DAILY_REPORT,
   READ_DAILY_REPORT,
   RECORD_DAILY_REPORT,
-} from "@/consts/responseConsts";
+} from "@/consts/responseMessages";
 import {
   LoggingObjType,
   logResponse,
@@ -19,18 +19,18 @@ import {
 } from "@/utils/dataTransfer";
 import { errorResponseHandler } from "@/utils/errorHandle";
 import { customizedPrisma } from "@/utils/prismaClients";
-import { findUniqueUserAbsoluteExist } from "@/services/users/usersService";
+import { findUniqueUserAbsoluteExist } from "@/services/users/users";
 import {
   DAILY_REPORT_ALL_INCLUDE,
   createDailyReport,
   updateDailyReport,
-} from "@/services/users/dailyReportsService";
+} from "@/services/users/dailyReports";
 import {
   basicHttpResponce,
   basicHttpResponceIncludeData,
 } from "@/utils/utilResponse";
 import type { Request, Response, NextFunction } from "express";
-import { DAILY_REPORT_DEFAULT_DATA_INFO } from "@/consts/db/dailyReport";
+import { DAILY_REPORT_DEFAULT_DATA_INFO } from "@/consts/dbMappings/dailyReport";
 import { CustomLogger } from "@/utils/logger/loggerClass";
 import { BasedQuery, QueryType } from "@/utils/utilRequest";
 const logger = new CustomLogger();

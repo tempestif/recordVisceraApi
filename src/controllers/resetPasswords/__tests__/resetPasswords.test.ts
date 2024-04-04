@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import {
   executeResettingPassword,
   requestResettingPassword,
-} from "@/controllers/resetPasswords/resetPasswordsController";
+} from "@/controllers/resetPasswords/resetPasswords";
 import {
   BadRequestError,
   MultipleActiveUserError,
@@ -11,17 +11,17 @@ import {
 import {
   findActivedUser,
   findUniqueUserAbsoluteExist,
-} from "@/services/users/usersService";
+} from "@/services/users/users";
 import { customizedPrisma } from "@/utils/prismaClients";
 import { randomBytes } from "crypto";
 import { logResponse } from "@/utils/logger/utilLogger";
 import { basicHttpResponce } from "@/utils/utilResponse";
-import { UNSPECIFIED_USER_ID } from "@/consts/logConsts";
-import { sendMailForResetPasswordVerify } from "@/services/resetPasswords/resetPasswordsService";
+import { UNSPECIFIED_USER_ID } from "@/consts/logMessages";
+import { sendMailForResetPasswordVerify } from "@/services/resetPasswords/resetPasswords";
 import { errorResponseHandler } from "@/utils/errorHandle";
 
-jest.mock("@/services/users/usersService", () => ({
-  ...jest.requireActual("@/services/users/usersService"),
+jest.mock("@/services/users/users", () => ({
+  ...jest.requireActual("@/services/users/users"),
   findActivedUser: jest.fn().mockImplementation(() => undefined),
   findUniqueUserAbsoluteExist: jest.fn().mockImplementation(() => undefined),
 }));
@@ -56,8 +56,8 @@ jest.mock("@/utils/logger/utilLogger", () => ({
   ...jest.requireActual("@/utils/logger/utilLogger"),
   logResponse: jest.fn(),
 }));
-jest.mock("@/services/resetPasswords/resetPasswordsService", () => ({
-  ...jest.requireActual("@/services/resetPasswords/resetPasswordsService"),
+jest.mock("@/services/resetPasswords/resetPasswords", () => ({
+  ...jest.requireActual("@/services/resetPasswords/resetPasswords"),
   sendMailForResetPasswordVerify: jest.fn(),
 }));
 jest.mock("@/utils/errorHandle", () => ({

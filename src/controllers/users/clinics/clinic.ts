@@ -1,6 +1,6 @@
-import { CLINIC_DEFAULT_DATA_INFO } from "@/consts/db/clinic";
-import { PROCESS_SUCCESS } from "@/consts/logConsts";
-import { READ_CLINIC, RECORD_CLINIC } from "@/consts/responseConsts/clinic";
+import { CLINIC_DEFAULT_DATA_INFO } from "@/consts/dbMappings/clinic";
+import { PROCESS_SUCCESS } from "@/consts/logMessages";
+import { READ_CLINIC, RECORD_CLINIC } from "@/consts/responseMessages/clinic";
 import { CustomLogger } from "@/utils/logger/loggerClass";
 import {
   LoggingObjType,
@@ -12,7 +12,7 @@ import {
 } from "@/utils/dataTransfer";
 import { errorResponseHandler } from "@/utils/errorHandle/index";
 import { customizedPrisma } from "@/utils/prismaClients";
-import { createClinicReport } from "@/services/users/clinics/clinicService";
+import { createClinicReport } from "@/services/users/clinics/clinic";
 import { basicHttpResponceIncludeData } from "@/utils/utilResponse";
 import type { Request, Response, NextFunction } from "express";
 const logger = new CustomLogger();

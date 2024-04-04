@@ -1,17 +1,17 @@
 import { Request, Response } from "express";
-import { registBowelMovement } from "@/controllers/users/bowelMovementController";
+import { registBowelMovement } from "@/controllers/users/bowelMovement";
 import {
   BadRequestError,
   DbRecordNotFoundError,
 } from "@/utils/errorHandle/errors";
-import { findUniqueUserAbsoluteExist } from "@/services/users/usersService";
+import { findUniqueUserAbsoluteExist } from "@/services/users/users";
 import { customizedPrisma } from "@/utils/prismaClients";
 import { basicHttpResponceIncludeData } from "@/utils/utilResponse";
 import { logResponse } from "@/utils/logger/utilLogger";
 import { errorResponseHandler } from "@/utils/errorHandle";
 
-jest.mock("@/services/users/usersService", () => ({
-  ...jest.requireActual("@/services/users/usersService"),
+jest.mock("@/services/users/users", () => ({
+  ...jest.requireActual("@/services/users/users"),
   findUniqueUserAbsoluteExist: jest.fn(),
 }));
 jest.mock("@/utils/utilResponse", () => ({

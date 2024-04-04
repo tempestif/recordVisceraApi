@@ -11,8 +11,8 @@ import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
 import {
   findActivedUser,
   findUniqueUserAbsoluteExist,
-} from "@/services/users/usersService";
-import { USER_LOGIN_STATUS } from "@/consts/db";
+} from "@/services/users/users";
+import { USER_LOGIN_STATUS } from "@/consts/dbMappings";
 import * as bcryptService from "@/utils/bcrypt";
 
 // テスト用PrismaClient作成

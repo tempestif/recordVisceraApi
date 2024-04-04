@@ -1,7 +1,7 @@
 import {
   requestResettingPassword,
   executeResettingPassword,
-} from "@/controllers/resetPasswords/resetPasswordsController";
+} from "@/controllers/resetPasswords/resetPasswords";
 import express from "express";
 const router = express.Router();
 

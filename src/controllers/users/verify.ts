@@ -4,19 +4,19 @@ import type { Request, Response, NextFunction } from "express";
 import {
   COMPLETE_VALID_MAILADDRESS,
   TOKEN_NOT_FOUND,
-} from "@/consts/responseConsts";
-import { USER_VARIFIED } from "@/consts/db";
+} from "@/consts/responseMessages";
+import { USER_VARIFIED } from "@/consts/dbMappings";
 import {
   UNSPECIFIED_USER_ID,
   PROCESS_FAILURE,
   PROCESS_SUCCESS,
-} from "@/consts/logConsts";
+} from "@/consts/logMessages";
 import {
   LoggingObjType,
   maskConfInfoInReqBody,
 } from "@/utils/logger/utilLogger";
 import { errorResponseHandler } from "@/utils/errorHandle";
-import { findUniqueUserAbsoluteExist } from "@/services/users/usersService";
+import { findUniqueUserAbsoluteExist } from "@/services/users/users";
 import { CustomLogger } from "@/utils/logger/loggerClass";
 const logger = new CustomLogger();
 

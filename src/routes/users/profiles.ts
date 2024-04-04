@@ -1,7 +1,4 @@
-import {
-  readProfile,
-  editProfile,
-} from "@/controllers/users/profileController";
+import { readProfile, editProfile } from "@/controllers/users/profile";
 import { auth } from "@/utils/auth";
 import express from "express";
 const router = express.Router();

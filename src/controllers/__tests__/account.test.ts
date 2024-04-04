@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { customizedPrisma } from "@/utils/prismaClients";
 import { logResponse } from "@/utils/logger/utilLogger";
 import { basicHttpResponce } from "@/utils/utilResponse";
-import { registUser } from "@/controllers/accountController";
+import { registUser } from "@/controllers/account";
 import { randomBytes } from "crypto";
 import { sendMailForEmailVerify } from "@/services/accountService";
 

@@ -1,5 +1,5 @@
-import { registUser, login, logout } from "@/controllers/accountController";
-import { verifyMailadress } from "@/controllers/users/verifyController";
+import { registUser, login, logout } from "@/controllers/account";
+import { verifyMailadress } from "@/controllers/users/verify";
 import { auth } from "@/utils/auth";
 import express from "express";
 const router = express.Router();

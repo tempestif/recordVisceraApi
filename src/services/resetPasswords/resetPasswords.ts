@@ -1,7 +1,4 @@
-import {
-  TITLE_VALID_RESET_PASS,
-  TEXT_VALID_RESET_PASS,
-} from "@/consts/mailConsts";
+import { TITLE_VALID_RESET_PASS, TEXT_VALID_RESET_PASS } from "@/consts/mail";
 import { sendMail } from "@/utils/nodemailer";
 
 /**

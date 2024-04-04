@@ -12,15 +12,15 @@ import {
   COMPLETE_UPDATE_PASSWORD,
   DELETE_USER,
   WRONG_LOGIN_INFO,
-} from "@/consts/responseConsts";
-import { findUniqueUserAbsoluteExist } from "@/services/users/usersService";
+} from "@/consts/responseMessages";
+import { findUniqueUserAbsoluteExist } from "@/services/users/users";
 import {
   LoggingObjType,
   maskConfInfoInReqBody,
 } from "@/utils/logger/utilLogger";
-import { PROCESS_FAILURE, PROCESS_SUCCESS } from "@/consts/logConsts";
+import { PROCESS_FAILURE, PROCESS_SUCCESS } from "@/consts/logMessages";
 import { errorResponseHandler } from "@/utils/errorHandle";
-import { USER_LOGIN_STATUS } from "@/consts/db";
+import { USER_LOGIN_STATUS } from "@/consts/dbMappings";
 import { Prisma } from "@prisma/client";
 import { transformNameTableToModel } from "@/utils/format";
 import { CustomLogger } from "@/utils/logger/loggerClass";

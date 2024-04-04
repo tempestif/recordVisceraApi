@@ -1,4 +1,4 @@
-import { TITLE_VALID_MAIL, TEXT_VALID_MAIL } from "@/consts/mailConsts";
+import { TITLE_VALID_MAIL, TEXT_VALID_MAIL } from "@/consts/mail";
 import { sendMail } from "@/utils/nodemailer";
 
 /**

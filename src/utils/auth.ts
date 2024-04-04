@@ -1,19 +1,19 @@
 import {
   TOKEN_NOT_DISCREPANCY,
   TOKEN_NOT_FOUND,
-} from "@/consts/responseConsts";
+} from "@/consts/responseMessages";
 import type { Request, Response, NextFunction } from "express";
 import { verify } from "jsonwebtoken";
 import type { JwtPayload } from "jsonwebtoken";
 import { basicHttpResponce } from "./utilResponse";
-import { findUniqueUserAbsoluteExist } from "@/services/users/usersService";
-import { USER_LOGIN_STATUS } from "@/consts/db";
+import { findUniqueUserAbsoluteExist } from "@/services/users/users";
+import { USER_LOGIN_STATUS } from "@/consts/dbMappings";
 import { customizedPrisma } from "@/utils/prismaClients";
 import { errorResponseHandler } from "@/utils/errorHandle";
 import {
   UNSPECIFIED_USER_ID,
   UNSPECIFIED_USER_ID_TYPE,
-} from "@/consts/logConsts";
+} from "@/consts/logMessages";
 
 /**
  * トークン認証

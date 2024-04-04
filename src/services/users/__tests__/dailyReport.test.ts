@@ -7,7 +7,7 @@ import {
   afterEach,
 } from "@jest/globals";
 import { Daily_Report, User } from "@prisma/client";
-import { findUniqueDailyReportAbsoluteExist } from "@/services/users/dailyReportsService";
+import { findUniqueDailyReportAbsoluteExist } from "@/services/users/dailyReports";
 import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
 
 // テスト用PrismaClient作成

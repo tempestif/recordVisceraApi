@@ -1,5 +1,5 @@
 import { sendMail } from "@/utils/nodemailer";
-import { sendMailForResetPasswordVerify } from "@/services/resetPasswords/resetPasswordsService";
+import { sendMailForResetPasswordVerify } from "@/services/resetPasswords/resetPasswords";
 
 jest.mock("@/utils/nodemailer", () => ({
   ...jest.requireActual("@/utils/nodemailer"),

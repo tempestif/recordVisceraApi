@@ -3,7 +3,7 @@ import {
   sendMailTest,
   changePassowrd,
   deleteUser,
-} from "@/controllers/users/userController";
+} from "@/controllers/users/user";
 import express from "express";
 import { auth } from "@/utils/auth";
 import type { Request, Response, NextFunction } from "express";

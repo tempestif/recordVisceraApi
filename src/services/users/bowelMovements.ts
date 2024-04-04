@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { customizedPrisma } from "@/utils/prismaClients";
-import { BOWEL_MOVEMENT_NOT_FOUND } from "@/consts/responseConsts/bowelMovement";
+import { BOWEL_MOVEMENT_NOT_FOUND } from "@/consts/responseMessages/bowelMovement";
 import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
 
 /**

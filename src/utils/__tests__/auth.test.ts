@@ -1,8 +1,8 @@
 import type { Request, Response, NextFunction } from "express";
 import { auth } from "@/utils/auth";
 import { verify } from "jsonwebtoken";
-import { findUniqueUserAbsoluteExist } from "@/services/users/usersService";
-import { USER_LOGIN_STATUS } from "@/consts/db";
+import { findUniqueUserAbsoluteExist } from "@/services/users/users";
+import { USER_LOGIN_STATUS } from "@/consts/dbMappings";
 import { basicHttpResponce } from "@/utils/utilResponse";
 
 // auth内で使う関数, 変数をモック化
@@ -10,8 +10,8 @@ jest.mock("jsonwebtoken", () => ({
   ...jest.requireActual("jsonwebtoken"),
   verify: jest.fn(),
 }));
-jest.mock("@/services/users/usersService", () => ({
-  ...jest.requireActual("@/services/users/usersService"),
+jest.mock("@/services/users/users", () => ({
+  ...jest.requireActual("@/services/users/users"),
   findUniqueUserAbsoluteExist: jest.fn(),
 }));
 jest.mock("@/utils/utilResponse", () => ({

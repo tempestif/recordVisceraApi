@@ -1,8 +1,8 @@
-import { USER_NOT_FOUND } from "@/consts/responseConsts";
+import { USER_NOT_FOUND } from "@/consts/responseMessages";
 import { customizedPrisma } from "@/utils/prismaClients";
 import { Prisma } from "@prisma/client";
 import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
-import { USER_LOGIN_STATUS } from "@/consts/db";
+import { USER_LOGIN_STATUS } from "@/consts/dbMappings";
 
 /**
  * DBより、ユーザーの存在確認、取得を行う。

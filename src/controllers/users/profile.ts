@@ -1,15 +1,15 @@
-import { PROCESS_SUCCESS } from "@/consts/logConsts";
+import { PROCESS_SUCCESS } from "@/consts/logMessages";
 import {
   COMPLETE_GET_PROFILE,
   COMPLETE_UPDATE_PROFILE,
-} from "@/consts/responseConsts";
+} from "@/consts/responseMessages";
 import {
   LoggingObjType,
   maskConfInfoInReqBody,
 } from "@/utils/logger/utilLogger";
 import { errorResponseHandler } from "@/utils/errorHandle";
 import { customizedPrisma } from "@/utils/prismaClients";
-import { findUniqueProfileAbsoluteExist } from "@/services/users/profilesService";
+import { findUniqueProfileAbsoluteExist } from "@/services/users/profiles";
 import { basicHttpResponceIncludeData } from "@/utils/utilResponse";
 import type { Request, Response, NextFunction } from "express";
 import { CustomLogger } from "@/utils/logger/loggerClass";

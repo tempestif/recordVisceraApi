@@ -1,12 +1,12 @@
-import { createDailyReport } from "@/services/users/dailyReportsService";
-import { findUniqueUserAbsoluteExist } from "@/services/users/usersService";
+import { createDailyReport } from "@/services/users/dailyReports";
+import { findUniqueUserAbsoluteExist } from "@/services/users/users";
 import type { Request, Response } from "express";
 import { customizedPrisma } from "@/utils/prismaClients";
 import { logResponse } from "@/utils/logger/utilLogger";
 import { basicHttpResponceIncludeData } from "@/utils/utilResponse";
-import { registDailyReport } from "@/controllers/users/dailyReportController";
-jest.mock("@/services/users/usersService", () => ({
-  ...jest.requireActual("@/services/users/usersService"),
+import { registDailyReport } from "@/controllers/users/dailyReport";
+jest.mock("@/services/users/users", () => ({
+  ...jest.requireActual("@/services/users/users"),
   findUniqueUserAbsoluteExist: jest.fn(),
 }));
 jest.mock("@/utils/utilResponse", () => ({
@@ -17,8 +17,8 @@ jest.mock("@/utils/logger/utilLogger", () => ({
   ...jest.requireActual("@/utils/logger/utilLogger"),
   logResponse: jest.fn(),
 }));
-jest.mock("@/services/users/dailyReportsService", () => ({
-  ...jest.requireActual("@/services/users/dailyReportsService"),
+jest.mock("@/services/users/dailyReports", () => ({
+  ...jest.requireActual("@/services/users/dailyReports"),
   createDailyReport: jest.fn().mockImplementation(() => ({
     id: 1,
     note: "mock-note",

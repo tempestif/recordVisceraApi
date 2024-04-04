@@ -1,14 +1,14 @@
-import { UNSPECIFIED_USER_ID } from "@/consts/logConsts";
-import { BAD_REQUEST } from "@/consts/mailConsts";
+import { UNSPECIFIED_USER_ID } from "@/consts/logMessages";
+import { BAD_REQUEST } from "@/consts/mail";
 import {
   COMPLETE_VALID_RESET_PASS,
   MULTIPLE_ACTIVE_USERS,
   SEND_MAIL_FOR_RESET_PASS_VALID,
   TOKEN_NOT_FOUND,
-} from "@/consts/responseConsts";
+} from "@/consts/responseMessages";
 import { logResponse } from "@/utils/logger/utilLogger";
 import { errorResponseHandler } from "@/utils/errorHandle";
-import { sendMailForResetPasswordVerify } from "@/services/resetPasswords/resetPasswordsService";
+import { sendMailForResetPasswordVerify } from "@/services/resetPasswords/resetPasswords";
 import { customizedPrisma } from "@/utils/prismaClients";
 import {
   BadRequestError,
@@ -18,7 +18,7 @@ import {
 import {
   findActivedUser,
   findUniqueUserAbsoluteExist,
-} from "@/services/users/usersService";
+} from "@/services/users/users";
 import { basicHttpResponce } from "@/utils/utilResponse";
 import { randomBytes } from "crypto";
 import type { Request, Response, NextFunction } from "express";

@@ -3,7 +3,7 @@ import {
   readDailyReport,
   editDailyReport,
   deleteDailyReport,
-} from "@/controllers/users/dailyReportController";
+} from "@/controllers/users/dailyReport";
 import { auth } from "@/utils/auth";
 import express from "express";
 const router = express.Router();

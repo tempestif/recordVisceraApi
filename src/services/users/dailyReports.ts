@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { customizedPrisma } from "@/utils/prismaClients";
-import { DAILY_REPORT_NOT_FOUND } from "@/consts/responseConsts";
+import { DAILY_REPORT_NOT_FOUND } from "@/consts/responseMessages";
 import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
 import {
   DynamicModelExtensionThis,

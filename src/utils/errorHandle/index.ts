@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { UNSPECIFIED_USER_ID_TYPE } from "@/consts/logConsts";
+import { UNSPECIFIED_USER_ID_TYPE } from "@/consts/logMessages";
 import {
   BadRequestError,
   DbRecordNotFoundError,

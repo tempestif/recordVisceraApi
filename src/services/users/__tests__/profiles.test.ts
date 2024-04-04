@@ -8,7 +8,7 @@ import {
 } from "@jest/globals";
 import { Profile, User } from "@prisma/client";
 import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
-import { findUniqueProfileAbsoluteExist } from "@/services/users/profilesService";
+import { findUniqueProfileAbsoluteExist } from "@/services/users/profiles";
 
 // テスト用PrismaClient作成
 const jestPrismaClient = jestPrisma.client;

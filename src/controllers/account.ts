@@ -1,9 +1,9 @@
-import { USER_LOGIN_STATUS } from "@/consts/db";
+import { USER_LOGIN_STATUS } from "@/consts/dbMappings";
 import {
   UNSPECIFIED_USER_ID,
   PROCESS_FAILURE,
   PROCESS_SUCCESS,
-} from "@/consts/logConsts";
+} from "@/consts/logMessages";
 import {
   ALREADY_USED_MAILADDLESS,
   SEND_MAIL_FOR_USER_VALID,
@@ -11,7 +11,7 @@ import {
   COMPLETE_LOGIN,
   COMPLETE_LOOUT,
   MULTIPLE_ACTIVE_USERS,
-} from "@/consts/responseConsts";
+} from "@/consts/responseMessages";
 import {
   LoggingObjType,
   logResponse,
@@ -21,7 +21,7 @@ import { errorResponseHandler } from "@/utils/errorHandle";
 import { generateAuthToken } from "@/utils/jwt";
 import { customizedPrisma } from "@/utils/prismaClients";
 import { MultipleActiveUserError } from "@/utils/errorHandle/errors";
-import { findActivedUser } from "@/services/users/usersService";
+import { findActivedUser } from "@/services/users/users";
 import { basicHttpResponce } from "@/utils/utilResponse";
 import { compare } from "bcrypt";
 import { randomBytes } from "crypto";
