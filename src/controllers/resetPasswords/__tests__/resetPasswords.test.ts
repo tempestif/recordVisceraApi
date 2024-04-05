@@ -17,7 +17,7 @@ import { randomBytes } from "crypto";
 import { logResponse } from "@/utils/logger/utilLogger";
 import { basicHttpResponce } from "@/utils/utilResponse";
 import { UNSPECIFIED_USER_ID } from "@/consts/logMessages";
-import { sendMailForResetPasswordVerify } from "@/services/resetPasswords/resetPasswords";
+import { sendMailForResetPasswordVerify } from "@/services/resetPasswords/resetPasswordsServices/resetPasswords";
 import { errorResponseHandler } from "@/utils/errorHandle";
 
 jest.mock("@/services/users/users", () => ({

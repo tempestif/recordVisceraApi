@@ -1,6 +1,9 @@
 import { CLINIC_DEFAULT_DATA_INFO } from "@/consts/dbMappings/clinic";
 import { PROCESS_SUCCESS } from "@/consts/logMessages";
-import { READ_CLINIC, RECORD_CLINIC } from "@/consts/responseMessages/clinic";
+import {
+  READ_CLINIC,
+  RECORD_CLINIC,
+} from "@/consts/responseMessages/messages/clinic";
 import { CustomLogger } from "@/utils/logger/loggerClass";
 import {
   LoggingObjType,

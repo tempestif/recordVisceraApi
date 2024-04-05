@@ -11,7 +11,7 @@ import {
   EDIT_BOWEL_MOVEMENT,
   READ_BOWEL_MOVEMENT,
   RECORD_BOWEL_MOVEMENT,
-} from "@/consts/responseMessages/bowelMovement";
+} from "@/consts/responseMessages/messages/bowelMovement";
 import {
   LoggingObjType,
   logResponse,
@@ -33,7 +33,7 @@ import {
   basicHttpResponceIncludeData,
 } from "@/utils/utilResponse";
 import type { Request, Response, NextFunction } from "express";
-import { ERROR_BAD_REQUEST } from "@/consts/responseMessages/utils";
+import { ERROR_BAD_REQUEST } from "@/consts/responseMessages/messages/utils";
 // const logger = new CustomLogger();
 
 /**
