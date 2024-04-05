@@ -1,4 +1,4 @@
-import { USER_NOT_FOUND } from "@/consts/responseMessages";
+import { ERROR_USER_NOT_FOUND } from "@/consts/responseMessages";
 import { customizedPrisma } from "@/utils/prismaClients";
 import { Prisma } from "@prisma/client";
 import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
@@ -20,7 +20,7 @@ export const findUniqueUserAbsoluteExist = async (
   const user = await prismaClient.user.findUnique({ where });
   // ユーザーが見つからなかったらDbRecordNotFoundErrorを投げる
   if (!user) {
-    const responseMsg = USER_NOT_FOUND.message;
+    const responseMsg = ERROR_USER_NOT_FOUND.message;
     throw new DbRecordNotFoundError(responseMsg);
   }
 
@@ -47,7 +47,7 @@ export const findActivedUser = async (
   });
 
   if (users.length === 0) {
-    const responseMsg = USER_NOT_FOUND.message;
+    const responseMsg = ERROR_USER_NOT_FOUND.message;
     throw new DbRecordNotFoundError(responseMsg);
   }
 

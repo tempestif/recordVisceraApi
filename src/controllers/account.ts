@@ -5,12 +5,12 @@ import {
   PROCESS_SUCCESS,
 } from "@/consts/logMessages";
 import {
-  ALREADY_USED_MAILADDLESS,
+  ERROR_ALREADY_USED_MAILADDLESS,
   SEND_MAIL_FOR_USER_VALID,
   WRONG_LOGIN_INFO,
   COMPLETE_LOGIN,
-  COMPLETE_LOOUT,
-  MULTIPLE_ACTIVE_USERS,
+  COMPLETE_LOGOUT,
+  ERROR_MULTIPLE_ACTIVE_USERS,
 } from "@/consts/responseMessages";
 import {
   LoggingObjType,
@@ -61,7 +61,7 @@ export const registUser = async (
         if (user.loginStatus !== USER_LOGIN_STATUS.deactived) {
           const httpStatus = 400;
           const responseStatus = false;
-          const responseMsg = ALREADY_USED_MAILADDLESS.message;
+          const responseMsg = ERROR_ALREADY_USED_MAILADDLESS.message;
           basicHttpResponce(res, httpStatus, responseStatus, responseMsg);
 
           // ログを出力
@@ -155,7 +155,7 @@ export const login = async (
     // 同じemailのユーザーが複数取れたら500エラー
     // サーバー内部の問題は500で返すらしい
     if (users.length !== 1) {
-      throw new MultipleActiveUserError(MULTIPLE_ACTIVE_USERS.message);
+      throw new MultipleActiveUserError(ERROR_MULTIPLE_ACTIVE_USERS.message);
     }
     const user = users[0];
     const userId = user.id;
@@ -303,7 +303,7 @@ export const logout = async (
     // レスポンスを返却
     const httpStatus = 200;
     const responseStatus = true;
-    const responseMsg = COMPLETE_LOOUT.message;
+    const responseMsg = COMPLETE_LOGOUT.message;
     basicHttpResponce(res, httpStatus, responseStatus, responseMsg);
 
     // ログを出力

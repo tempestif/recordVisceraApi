@@ -1,6 +1,6 @@
 import {
-  TOKEN_NOT_DISCREPANCY,
-  TOKEN_NOT_FOUND,
+  ERROR_TOKEN_NOT_DISCREPANCY,
+  ERROR_TOKEN_NOT_FOUND,
 } from "@/consts/responseMessages";
 import type { Request, Response, NextFunction } from "express";
 import { verify } from "jsonwebtoken";
@@ -36,7 +36,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
   if (!jwt) {
     const HttpStatus = 400;
     const responseStatus = false;
-    const responseMsg = TOKEN_NOT_FOUND.message;
+    const responseMsg = ERROR_TOKEN_NOT_FOUND.message;
     return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
   }
 
@@ -66,7 +66,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
     ) {
       const HttpStatus = 400;
       const responseStatus = false;
-      const responseMsg = TOKEN_NOT_DISCREPANCY.message;
+      const responseMsg = ERROR_TOKEN_NOT_DISCREPANCY.message;
       return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
     }
 

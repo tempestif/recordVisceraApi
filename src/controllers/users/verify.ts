@@ -3,7 +3,7 @@ import { customizedPrisma } from "@/utils/prismaClients";
 import type { Request, Response, NextFunction } from "express";
 import {
   COMPLETE_VALID_MAILADDRESS,
-  TOKEN_NOT_FOUND,
+  ERROR_TOKEN_NOT_FOUND,
 } from "@/consts/responseMessages";
 import { USER_VARIFIED } from "@/consts/dbMappings";
 import {
@@ -52,7 +52,7 @@ export const verifyMailadress = async (
     if (!user.verifyEmailHash) {
       const HttpStatus = 400;
       const responseStatus = false;
-      const responseMsg = TOKEN_NOT_FOUND.message;
+      const responseMsg = ERROR_TOKEN_NOT_FOUND.message;
       basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 
       // ログを出力

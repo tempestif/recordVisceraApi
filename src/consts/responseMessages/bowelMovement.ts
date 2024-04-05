@@ -6,11 +6,11 @@ export const READ_BOWEL_MOVEMENT = {
   message: "排便記録のリストを取得しました。",
 } as const;
 
-export const BOWEL_MOVEMENT_NOT_FOUND = {
+export const ERROR_BOWEL_MOVEMENT_NOT_FOUND = {
   message: "排便記録が見つかりません。",
 } as const;
 
-export const BOWEL_MOVEMENT_ACCESS_FORBIDDEN = {
+export const ERROR_BOWEL_MOVEMENT_ACCESS_FORBIDDEN = {
   message: "この排便記録は編集できません",
 } as const;
 

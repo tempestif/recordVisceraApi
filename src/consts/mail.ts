@@ -15,7 +15,3 @@ export const TEXT_VALID_RESET_PASS = {
   message: (url: string) =>
     `以下のURLをクリックしてください\n登録されたメールアドレスを確認します。\n${url}`,
 } as const;
-
-export const BAD_REQUEST = {
-  message: "不正なリクエストです",
-} as const;

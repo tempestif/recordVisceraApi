@@ -1,4 +1,4 @@
-import { PROFILE_NOT_FOUND } from "@/consts/responseMessages";
+import { ERROR_PROFILE_NOT_FOUND } from "@/consts/responseMessages";
 import { Prisma } from "@prisma/client";
 import { customizedPrisma } from "@/utils/prismaClients";
 import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
@@ -19,7 +19,7 @@ export const findUniqueProfileAbsoluteExist = async (
   const profile = await prismaClient.profile.findUnique({ where });
   // プロフィールが見つからなかったらDbRecordNotFoundErrorを投げる
   if (!profile) {
-    const responseMsg = PROFILE_NOT_FOUND.message;
+    const responseMsg = ERROR_PROFILE_NOT_FOUND.message;
     throw new DbRecordNotFoundError(responseMsg);
   }
 

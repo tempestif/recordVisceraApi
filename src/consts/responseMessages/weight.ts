@@ -7,11 +7,11 @@ export const READ_WEIGHT = {
   message: "体重記録のリストを取得しました。",
 } as const;
 
-export const WEIGHT_NOT_FOUND = {
+export const ERROR_WEIGHT_NOT_FOUND = {
   message: "体重記録が見つかりません。",
 } as const;
 
-export const WEIGHT_ACCESS_FORBIDDEN = {
+export const ERROR_WEIGHT_ACCESS_FORBIDDEN = {
   message: "この体重記録は編集できません",
 } as const;
 

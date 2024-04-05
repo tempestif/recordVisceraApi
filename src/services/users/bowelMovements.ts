@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { customizedPrisma } from "@/utils/prismaClients";
-import { BOWEL_MOVEMENT_NOT_FOUND } from "@/consts/responseMessages/bowelMovement";
+import { ERROR_BOWEL_MOVEMENT_NOT_FOUND } from "@/consts/responseMessages/bowelMovement";
 import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
 
 /**
@@ -21,7 +21,7 @@ export const findUniqueBowelMovementAbsoluteExist = async (
   });
   // 排便記録が無かったらDbRecordNotFoundErrorを投げる
   if (!bowelMovementData) {
-    const responseMsg = BOWEL_MOVEMENT_NOT_FOUND.message;
+    const responseMsg = ERROR_BOWEL_MOVEMENT_NOT_FOUND.message;
     throw new DbRecordNotFoundError(responseMsg);
   }
 

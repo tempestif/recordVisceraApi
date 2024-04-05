@@ -3,7 +3,7 @@ export const COMPLETE_GET_PROFILE = {
   message: "プロフィールを取得しました。",
 } as const;
 
-export const PROFILE_NOT_FOUND = {
+export const ERROR_PROFILE_NOT_FOUND = {
   message: "プロフィールが見つかりません。",
 } as const;
 

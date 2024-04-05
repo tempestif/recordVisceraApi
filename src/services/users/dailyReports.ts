@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { customizedPrisma } from "@/utils/prismaClients";
-import { DAILY_REPORT_NOT_FOUND } from "@/consts/responseMessages";
+import { ERROR_DAILY_REPORT_NOT_FOUND } from "@/consts/responseMessages";
 import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
 import {
   DynamicModelExtensionThis,
@@ -27,7 +27,7 @@ export const findUniqueDailyReportAbsoluteExist = async (
   });
   // 今日の体調が無かったらDbRecordNotFoundErrorを投げる
   if (!dailyReportData) {
-    const responseMsg = DAILY_REPORT_NOT_FOUND.message;
+    const responseMsg = ERROR_DAILY_REPORT_NOT_FOUND.message;
     throw new DbRecordNotFoundError(responseMsg);
   }
 

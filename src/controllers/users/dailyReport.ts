@@ -1,6 +1,6 @@
 import { PROCESS_FAILURE, PROCESS_SUCCESS } from "@/consts/logMessages";
 import {
-  DAILY_REPORT_ACCESS_FORBIDDEN,
+  ERROR_DAILY_REPORT_ACCESS_FORBIDDEN,
   DELETE_DAILY_REPORT,
   EDIT_DAILY_REPORT,
   READ_DAILY_REPORT,
@@ -431,7 +431,7 @@ export const editDailyReport = async (
     if (!isSelfUser) {
       const httpStatus = 403;
       const responseStatus = false;
-      const responseMsg = DAILY_REPORT_ACCESS_FORBIDDEN.message;
+      const responseMsg = ERROR_DAILY_REPORT_ACCESS_FORBIDDEN.message;
       basicHttpResponce(res, httpStatus, responseStatus, responseMsg);
 
       // ログを出力
@@ -529,7 +529,7 @@ export const deleteDailyReport = async (
     if (!isSelfUser) {
       const httpStatus = 403;
       const responseStatus = false;
-      const responseMsg = DAILY_REPORT_ACCESS_FORBIDDEN.message;
+      const responseMsg = ERROR_DAILY_REPORT_ACCESS_FORBIDDEN.message;
       basicHttpResponce(res, httpStatus, responseStatus, responseMsg);
 
       // ログを出力

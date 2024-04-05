@@ -1,5 +1,5 @@
 // メール
-export const ALREADY_USED_MAILADDLESS = {
+export const ERROR_ALREADY_USED_MAILADDLESS = {
   message: "すでにそのメールアドレスは使用されています。",
 } as const;
 

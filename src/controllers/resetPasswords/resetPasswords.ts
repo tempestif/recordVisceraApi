@@ -1,14 +1,14 @@
 import { UNSPECIFIED_USER_ID } from "@/consts/logMessages";
-import { BAD_REQUEST } from "@/consts/mail";
+import { ERROR_BAD_REQUEST } from "@/consts/responseMessages/utils";
 import {
   COMPLETE_VALID_RESET_PASS,
-  MULTIPLE_ACTIVE_USERS,
+  ERROR_MULTIPLE_ACTIVE_USERS,
   SEND_MAIL_FOR_RESET_PASS_VALID,
-  TOKEN_NOT_FOUND,
+  ERROR_TOKEN_NOT_FOUND,
 } from "@/consts/responseMessages";
 import { logResponse } from "@/utils/logger/utilLogger";
 import { errorResponseHandler } from "@/utils/errorHandle";
-import { sendMailForResetPasswordVerify } from "@/services/resetPasswords/resetPasswords";
+import { sendMailForResetPasswordVerify } from "@/services/resetPasswords/resetPasswordsServices/resetPasswords";
 import { customizedPrisma } from "@/utils/prismaClients";
 import {
   BadRequestError,
@@ -42,14 +42,14 @@ export const requestResettingPassword = async (
 
   try {
     if (!email) {
-      throw new BadRequestError(BAD_REQUEST.message);
+      throw new BadRequestError(ERROR_BAD_REQUEST.message);
     }
 
     // emailからuserを取得
     const whereByEmail = { email };
     const users = await findActivedUser(whereByEmail, customizedPrisma);
     if (users.length !== 1) {
-      throw new MultipleActiveUserError(MULTIPLE_ACTIVE_USERS.message);
+      throw new MultipleActiveUserError(ERROR_MULTIPLE_ACTIVE_USERS.message);
     }
 
     const user = users[0];
@@ -118,7 +118,7 @@ export const executeResettingPassword = async (
 
   try {
     if (!id || !token || !newPassword) {
-      throw new BadRequestError(BAD_REQUEST.message);
+      throw new BadRequestError(ERROR_BAD_REQUEST.message);
     }
     // idからユーザーを検索
     const whereByUserId = { id };
@@ -129,7 +129,7 @@ export const executeResettingPassword = async (
 
     // tokenが見つからない、または一致しない場合は400エラー
     if (!user?.passResetHash || user.passResetHash !== token) {
-      throw new TokenNotFoundError(TOKEN_NOT_FOUND.message);
+      throw new TokenNotFoundError(ERROR_TOKEN_NOT_FOUND.message);
     }
 
     await customizedPrisma.user.update({

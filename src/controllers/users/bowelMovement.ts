@@ -5,7 +5,7 @@ import {
   UNSPECIFIED_USER_ID,
 } from "@/consts/logMessages";
 import {
-  BOWEL_MOVEMENT_ACCESS_FORBIDDEN,
+  ERROR_BOWEL_MOVEMENT_ACCESS_FORBIDDEN,
   COUNT_BOWEL_MOVEMENT_PER_DAY,
   DELETE_BOWEL_MOVEMENT,
   EDIT_BOWEL_MOVEMENT,
@@ -33,7 +33,7 @@ import {
   basicHttpResponceIncludeData,
 } from "@/utils/utilResponse";
 import type { Request, Response, NextFunction } from "express";
-import { BAD_REQUEST } from "@/consts/mail";
+import { ERROR_BAD_REQUEST } from "@/consts/responseMessages/utils";
 // const logger = new CustomLogger();
 
 /**
@@ -61,7 +61,7 @@ export const registBowelMovement = async (
 
   try {
     if (!userId || !bristolStoolScale || !blood || !drainage) {
-      throw new BadRequestError(BAD_REQUEST.message);
+      throw new BadRequestError(ERROR_BAD_REQUEST.message);
     }
 
     // userIdからユーザーを取得
@@ -306,7 +306,7 @@ export const editBowelMovement = async (
     if (!isSelfUser) {
       const HttpStatus = 403;
       const responseStatus = false;
-      const responseMsg = BOWEL_MOVEMENT_ACCESS_FORBIDDEN.message;
+      const responseMsg = ERROR_BOWEL_MOVEMENT_ACCESS_FORBIDDEN.message;
       basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 
       // ログを出力
@@ -424,7 +424,7 @@ export const deleteBowelMovement = async (
     if (!isSelfUser) {
       const HttpStatus = 403;
       const responseStatus = false;
-      const responseMsg = BOWEL_MOVEMENT_ACCESS_FORBIDDEN.message;
+      const responseMsg = ERROR_BOWEL_MOVEMENT_ACCESS_FORBIDDEN.message;
       basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
 
       // ログを出力

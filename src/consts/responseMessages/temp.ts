@@ -7,11 +7,11 @@ export const READ_TEMP = {
   message: "体温記録のリストを取得しました。",
 } as const;
 
-export const TEMP_NOT_FOUND = {
+export const ERROR_TEMP_NOT_FOUND = {
   message: "体温が見つかりません。",
 } as const;
 
-export const TEMP_ACCESS_FORBIDDEN = {
+export const ERROR_TEMP_ACCESS_FORBIDDEN = {
   message: "この体温記録は編集できません",
 } as const;
 

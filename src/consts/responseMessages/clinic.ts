@@ -6,11 +6,11 @@ export const READ_CLINIC = {
   message: "通院記録のリストを取得しました。",
 } as const;
 
-export const CLINIC_NOT_FOUND = {
+export const ERROR_CLINIC_NOT_FOUND = {
   message: "通院記録が見つかりません。",
 } as const;
 
-export const CLINIC_ACCESS_FORBIDDEN = {
+export const ERROR_CLINIC_ACCESS_FORBIDDEN = {
   message: "この通院記録記録は編集できません",
 } as const;
 

@@ -7,15 +7,15 @@ export const COMPLETE_LOGIN = {
   message: "ログインが完了しました。",
 } as const;
 
-export const COMPLETE_LOOUT = {
+export const COMPLETE_LOGOUT = {
   message: "ログアウトが完了しました。",
 } as const;
 
-export const TOKEN_NOT_FOUND = {
+export const ERROR_TOKEN_NOT_FOUND = {
   message: "トークンが見つかりません。",
 } as const;
 
-export const TOKEN_NOT_DISCREPANCY = {
+export const ERROR_TOKEN_NOT_DISCREPANCY = {
   message: "トークンが一致しません。",
 } as const;
 
