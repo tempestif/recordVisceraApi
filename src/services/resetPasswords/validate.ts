@@ -1,6 +1,7 @@
 import { ERROR_MULTIPLE_ACTIVE_USERS } from "@/consts/responseMessages";
 import { ERROR_BAD_REQUEST } from "@/consts/responseMessages/messages/utils";
 import { findActivedUsers } from "@/services/users/users";
+import { castToNumberOrThrow } from "@/utils/errorHandle/validate";
 import { customizedPrisma } from "@/utils/prismaClients";
 import { body, param } from "express-validator";
 
@@ -27,11 +28,7 @@ export const validateExecute = [
     .notEmpty()
     .withMessage(ERROR_BAD_REQUEST.message)
     .custom(async (value, { req }) => {
-      const num = Number(value);
-      if (Number.isNaN(num)) {
-        throw new Error(ERROR_BAD_REQUEST.message);
-      }
-
+      const num = castToNumberOrThrow(value);
       req.id = num;
     }),
 

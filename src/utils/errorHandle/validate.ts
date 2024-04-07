@@ -1,4 +1,5 @@
 import * as responseMessages from "@/consts/responseMessages";
+import { ERROR_BAD_REQUEST } from "@/consts/responseMessages";
 import { isErrorResponseMessageType } from "@/consts/responseMessages/types";
 import { Result, ValidationError } from "express-validator";
 
@@ -29,4 +30,19 @@ export const throwValidationError = (errors: Result<ValidationError>) => {
     const error = findValidateError(errors.array()[0].msg);
     throw error();
   }
+};
+
+/**
+ * パラメータがNumberかを確認し、キャストしたものを返却する
+ * express-validatorの.custom()中に利用する想定
+ * そのため、投げるエラーはErrorインスタンスにBAD_REQUESTのメッセージを渡したもの
+ * @param value
+ * @returns
+ */
+export const castToNumberOrThrow = (value: string) => {
+  const num = Number(value);
+  if (Number.isNaN(num)) {
+    throw new Error(ERROR_BAD_REQUEST.message);
+  }
+  return num;
 };
