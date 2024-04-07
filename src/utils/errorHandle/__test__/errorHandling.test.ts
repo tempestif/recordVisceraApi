@@ -1,5 +1,3 @@
-import type { Request, Response } from "express";
-import { logError } from "@/utils/logger/utilLogger";
 import { UNEXPECTED_ERROR } from "@/consts/logMessages";
 import {
   badRequestErrorHandle,
@@ -8,18 +6,20 @@ import {
   multipleActiveUsersErrorHandle,
   tokenNotFoundErrorHandle,
 } from "@/utils/errorHandle/errorHandling";
-import { basicHttpResponce, internalServerErr } from "@/utils/utilResponse";
 import {
   BadRequestError,
   DbRecordNotFoundError,
   MultipleActiveUserError,
   TokenNotFoundError,
 } from "@/utils/errorHandle/errors";
+import { logError } from "@/utils/logger/utilLogger";
+import { basicHttpResponce, internalServerError } from "@/utils/utilResponse";
+import type { Request, Response } from "express";
 
 jest.mock("@/utils/utilResponse", () => ({
   ...jest.requireActual("@/utils/utilResponse"),
   basicHttpResponce: jest.fn(),
-  internalServerErr: jest.fn(),
+  internalServerError: jest.fn(),
 }));
 jest.mock("@/utils/logger/utilLogger", () => ({
   ...jest.requireActual("@/utils/logger/utilLogger"),
@@ -67,7 +67,7 @@ describe("internalServerErrorHandleのテスト", () => {
       funcName,
       errorMassage
     );
-    expect(internalServerErr).toHaveBeenCalledWith(mockRes, error);
+    expect(internalServerError).toHaveBeenCalledWith(mockRes, error);
   });
 
   test("Errorインスタンス以外のエラー", () => {
@@ -93,7 +93,7 @@ describe("internalServerErrorHandleのテスト", () => {
       funcName,
       UNEXPECTED_ERROR.message
     );
-    expect(internalServerErr).toHaveBeenCalledWith(mockRes, error);
+    expect(internalServerError).toHaveBeenCalledWith(mockRes, error);
   });
 });
 

@@ -2,7 +2,7 @@ import type { Response } from "express";
 /**
  * 500エラー
  */
-export const internalServerErr = (res: Response, e: any) => {
+export const internalServerError = (res: Response, e: any) => {
   // エラーの時のレスポンス
   return res.status(500).json({
     status: false,
@@ -22,7 +22,7 @@ export const basicHttpResponce = (
   res: Response,
   HttpStatus: number,
   status: boolean,
-  message: string,
+  message: string
 ) => {
   return res.status(HttpStatus).json({
     status,
@@ -44,7 +44,7 @@ export const basicHttpResponceIncludeData = (
   HttpStatus: number,
   status: boolean,
   message: string,
-  data: object,
+  data: object
 ) => {
   return res.status(HttpStatus).json({
     status,

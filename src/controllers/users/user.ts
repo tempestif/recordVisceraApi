@@ -5,7 +5,7 @@ import { compare } from "bcrypt";
 import {
   basicHttpResponce,
   basicHttpResponceIncludeData,
-  internalServerErr,
+  internalServerError,
 } from "@/utils/utilResponse";
 import {
   COMPLETE_GET_PROFILE,
@@ -47,7 +47,7 @@ export const sendMailTest = async (
     });
   } catch (e) {
     // エラーの時のレスポンス
-    internalServerErr(res, e);
+    internalServerError(res, e);
   }
 };
 

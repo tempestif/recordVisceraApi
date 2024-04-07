@@ -7,7 +7,7 @@ import {
   afterEach,
 } from "@jest/globals";
 import { User } from "@prisma/client";
-import * as bcryptService from "@/utils/bcrypt";
+import * as bcryptService from "@/utils/hash";
 
 // テスト用PrismaClient作成
 const jestPrismaClient = jestPrisma.client;

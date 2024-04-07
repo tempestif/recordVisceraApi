@@ -13,7 +13,7 @@ import {
   findUniqueUserAbsoluteExist,
 } from "@/services/users/users";
 import { USER_LOGIN_STATUS } from "@/consts/dbMappings";
-import * as bcryptService from "@/utils/bcrypt";
+import * as bcryptService from "@/utils/hash";
 
 // テスト用PrismaClient作成
 const jestPrismaClient = jestPrisma.client;

@@ -9,8 +9,9 @@ import {
   MultipleActiveUserError,
   TokenNotFoundError,
 } from "@/utils/errorHandle/errors";
-import { basicHttpResponce, internalServerErr } from "@/utils/utilResponse";
+import { basicHttpResponce, internalServerError } from "@/utils/utilResponse";
 import type { Request, Response } from "express";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 /**
  * インターナルサーバーエラー
@@ -32,7 +33,7 @@ export const internalServerErrorHandle = (
   const responseMsg = e instanceof Error ? e.message : UNEXPECTED_ERROR.message;
 
   logError(userId, req, HttpStatus, funcName, responseMsg);
-  internalServerErr(res, e);
+  internalServerError(res, e);
 };
 
 /**
@@ -44,7 +45,7 @@ export const internalServerErrorHandle = (
  * @param funcName
  */
 export const dbRecordNotFoundErrorHandle = (
-  e: DbRecordNotFoundError,
+  e: DbRecordNotFoundError | PrismaClientKnownRequestError,
   userId: number | UNSPECIFIED_USER_ID_TYPE,
   req: Request,
   res: Response,

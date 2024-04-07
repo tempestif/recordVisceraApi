@@ -1,4 +1,5 @@
 import { genSaltSync, hashSync } from "bcrypt";
+import { randomBytes } from "crypto";
 
 /**
  * パスワードをbcryptでhash化
@@ -14,4 +15,13 @@ export const createHashedPass = (password: string) => {
   const hashedPassword = hashSync(password, salt);
 
   return hashedPassword;
+};
+
+/**
+ * ハッシュを生成
+ * 32桁, hex
+ * @returns
+ */
+export const createHash = () => {
+  return randomBytes(32).toString("hex");
 };

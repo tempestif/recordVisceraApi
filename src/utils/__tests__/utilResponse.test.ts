@@ -2,7 +2,7 @@ import { Response } from "express";
 import {
   basicHttpResponce,
   basicHttpResponceIncludeData,
-  internalServerErr,
+  internalServerError,
 } from "@/utils/utilResponse";
 
 const mockRes: Partial<Response> = {
@@ -20,7 +20,7 @@ describe("internalServerErrのテスト", () => {
   });
 
   test("正常", () => {
-    internalServerErr(mockRes as Response, "e");
+    internalServerError(mockRes as Response, "e");
 
     expect(mockRes.status).toHaveBeenCalledWith(500);
     const resStatus = (mockRes.status as jest.Mock).mock.results[0].value;

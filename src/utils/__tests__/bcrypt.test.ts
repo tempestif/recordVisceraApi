@@ -1,5 +1,5 @@
 import { compareSync } from "bcrypt";
-import { createHashedPass } from "@/utils/bcrypt";
+import { createHashedPass } from "@/utils/hash";
 
 describe("createHashedPassの単体テスト", () => {
   beforeEach(() => {
