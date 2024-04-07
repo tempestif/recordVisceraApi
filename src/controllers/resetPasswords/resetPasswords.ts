@@ -26,7 +26,7 @@ export const prepareResettingPassword = async (
   }
 
   // bodyを取得
-  const body = req.body as prepareService.ValidatedPrepareBody;
+  const body = req.body as prepareService.ValidatedBodyType;
 
   // 認証トークン作成
   const passResetHash = prepareService.createPassResetHash();
@@ -75,7 +75,7 @@ export const executeResettingPassword = async (
   }
 
   // bodyを取得
-  const body = req.body as executeService.ValidatedExecuteBody;
+  const body = req.body as executeService.ValidatedBodyType;
 
   // 新パスワード書き込み
   try {

@@ -25,7 +25,7 @@ const CURRENT_FUNCTION_NAME = "executeResettingPassword";
  * バリデート済みのリクエストボディの型
  * パスワード再設定の実行
  */
-export type ValidatedExecuteBody = {
+export type ValidatedBodyType = {
   id: number;
   token: string;
   newPassword: string;

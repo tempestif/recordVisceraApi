@@ -27,7 +27,7 @@ const CURRENT_FUNCTION_NAME = "prepareResettingPassword";
  * バリデート済みのリクエストボディの型
  * パスワード再設定のリクエスト
  */
-export type ValidatedPrepareBody = {
+export type ValidatedBodyType = {
   email: string;
   userId: number;
 };
