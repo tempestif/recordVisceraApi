@@ -1,8 +1,8 @@
+import { USER_LOGIN_STATUS } from "@/consts/dbMappings";
 import { ERROR_USER_NOT_FOUND } from "@/consts/responseMessages";
+import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
 import { customizedPrisma } from "@/utils/prismaClients";
 import { Prisma } from "@prisma/client";
-import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
-import { USER_LOGIN_STATUS } from "@/consts/dbMappings";
 
 /**
  * DBより、ユーザーの存在確認、取得を行う。
@@ -33,7 +33,7 @@ export const findUniqueUserAbsoluteExist = async (
  * @param where
  * @returns
  */
-export const findActivedUser = async (
+export const findActivedUsers = async (
   where: Prisma.UserWhereInput,
   prismaClient: typeof customizedPrisma
 ) => {

@@ -1,19 +1,19 @@
+import { USER_LOGIN_STATUS } from "@/consts/dbMappings";
 import {
+  findActivedUsers,
+  findUniqueUserAbsoluteExist,
+} from "@/services/users/users";
+import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
+import * as bcryptService from "@/utils/hash";
+import {
+  afterEach,
+  beforeEach,
   describe,
   expect,
   jest,
   test,
-  beforeEach,
-  afterEach,
 } from "@jest/globals";
 import { User } from "@prisma/client";
-import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
-import {
-  findActivedUser,
-  findUniqueUserAbsoluteExist,
-} from "@/services/users/users";
-import { USER_LOGIN_STATUS } from "@/consts/dbMappings";
-import * as bcryptService from "@/utils/hash";
 
 // テスト用PrismaClient作成
 const jestPrismaClient = jestPrisma.client;
@@ -171,7 +171,7 @@ describe("findActivedUserの単体テスト", () => {
     ];
 
     // テスト実行
-    const result = await findActivedUser({}, jestPrismaClient);
+    const result = await findActivedUsers({}, jestPrismaClient);
     expect(result).toEqual(expectUsers);
   });
 
@@ -198,14 +198,14 @@ describe("findActivedUserの単体テスト", () => {
     });
 
     // テスト実行
-    await expect(findActivedUser({ id: 9 }, jestPrismaClient)).rejects.toThrow(
+    await expect(findActivedUsers({ id: 9 }, jestPrismaClient)).rejects.toThrow(
       new DbRecordNotFoundError("ユーザーが見つかりません。")
     );
   });
 
   test("ユーザーが存在しない場合、DbRecordNotFoundErrorを投げる", async () => {
     // テスト実行
-    await expect(findActivedUser({ id: 1 }, jestPrismaClient)).rejects.toThrow(
+    await expect(findActivedUsers({ id: 1 }, jestPrismaClient)).rejects.toThrow(
       new DbRecordNotFoundError("ユーザーが見つかりません。")
     );
   });

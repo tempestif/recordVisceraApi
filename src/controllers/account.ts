@@ -1,33 +1,33 @@
 import { USER_LOGIN_STATUS } from "@/consts/dbMappings";
 import {
-  UNSPECIFIED_USER_ID,
   PROCESS_FAILURE,
   PROCESS_SUCCESS,
+  UNSPECIFIED_USER_ID,
 } from "@/consts/logMessages";
 import {
-  ERROR_ALREADY_USED_MAILADDLESS,
-  SEND_MAIL_FOR_USER_VALID,
-  WRONG_LOGIN_INFO,
   COMPLETE_LOGIN,
   COMPLETE_LOGOUT,
+  ERROR_ALREADY_USED_MAILADDLESS,
   ERROR_MULTIPLE_ACTIVE_USERS,
+  SEND_MAIL_FOR_USER_VALID,
+  WRONG_LOGIN_INFO,
 } from "@/consts/responseMessages";
+import { sendMailForEmailVerify } from "@/services/accountService";
+import { findActivedUsers } from "@/services/users/users";
+import { errorResponseHandler } from "@/utils/errorHandle";
+import { MultipleActiveUserError } from "@/utils/errorHandle/errors";
+import { generateAuthToken } from "@/utils/jwt";
+import { CustomLogger } from "@/utils/logger/loggerClass";
 import {
   LoggingObjType,
   logResponse,
   maskConfInfoInReqBody,
 } from "@/utils/logger/utilLogger";
-import { errorResponseHandler } from "@/utils/errorHandle";
-import { generateAuthToken } from "@/utils/jwt";
 import { customizedPrisma } from "@/utils/prismaClients";
-import { MultipleActiveUserError } from "@/utils/errorHandle/errors";
-import { findActivedUser } from "@/services/users/users";
 import { basicHttpResponce } from "@/utils/utilResponse";
 import { compare } from "bcrypt";
 import { randomBytes } from "crypto";
-import { type Request, type Response, type NextFunction } from "express";
-import { CustomLogger } from "@/utils/logger/loggerClass";
-import { sendMailForEmailVerify } from "@/services/accountService";
+import { type NextFunction, type Request, type Response } from "express";
 const logger = new CustomLogger();
 /**
  * 認証前アカウントを作成し、認証メールを送信する
@@ -150,7 +150,7 @@ export const login = async (
   try {
     // emailが一致するユーザーを取得
     const whereByEmail = { email };
-    const users = await findActivedUser(whereByEmail, customizedPrisma);
+    const users = await findActivedUsers(whereByEmail, customizedPrisma);
 
     // 同じemailのユーザーが複数取れたら500エラー
     // サーバー内部の問題は500で返すらしい

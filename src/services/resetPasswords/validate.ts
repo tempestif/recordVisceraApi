@@ -1,6 +1,6 @@
 import { ERROR_MULTIPLE_ACTIVE_USERS } from "@/consts/responseMessages";
 import { ERROR_BAD_REQUEST } from "@/consts/responseMessages/messages/utils";
-import { findActivedUser } from "@/services/users/users";
+import { findActivedUsers } from "@/services/users/users";
 import { customizedPrisma } from "@/utils/prismaClients";
 import { body, param } from "express-validator";
 
@@ -12,7 +12,7 @@ export const validatePrepare = [
     .isEmail()
     .withMessage(ERROR_BAD_REQUEST.message)
     .custom(async (value, { req }) => {
-      const users = await findActivedUser({ email: value }, customizedPrisma);
+      const users = await findActivedUsers({ email: value }, customizedPrisma);
       if (users.length !== 1) {
         throw new Error(ERROR_MULTIPLE_ACTIVE_USERS.message);
       }
