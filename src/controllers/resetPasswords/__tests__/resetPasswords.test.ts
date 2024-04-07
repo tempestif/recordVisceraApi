@@ -1,267 +1,227 @@
-import { Request, Response } from "express";
 import {
   executeResettingPassword,
-  requestResettingPassword,
+  prepareResettingPassword,
 } from "@/controllers/resetPasswords/resetPasswords";
+import * as executeService from "@/services/resetPasswords/endpoints/execute";
+import * as prepareService from "@/services/resetPasswords/endpoints/prepare";
 import {
-  BadRequestError,
-  MultipleActiveUserError,
+  DbRecordNotFoundError,
   TokenNotFoundError,
 } from "@/utils/errorHandle/errors";
-import {
-  findActivedUser,
-  findUniqueUserAbsoluteExist,
-} from "@/services/users/users";
-import { customizedPrisma } from "@/utils/prismaClients";
-import { randomBytes } from "crypto";
-import { logResponse } from "@/utils/logger/utilLogger";
-import { basicHttpResponce } from "@/utils/utilResponse";
-import { UNSPECIFIED_USER_ID } from "@/consts/logMessages";
-import { sendMailForResetPasswordVerify } from "@/services/resetPasswords/resetPasswordsServices/resetPasswords";
-import { errorResponseHandler } from "@/utils/errorHandle";
+import { throwValidationError } from "@/utils/errorHandle/validate";
+import { Prisma } from "@prisma/client";
+import { Request, Response } from "express";
+import { validationResult } from "express-validator";
 
-jest.mock("@/services/users/users", () => ({
-  ...jest.requireActual("@/services/users/users"),
-  findActivedUser: jest.fn().mockImplementation(() => undefined),
-  findUniqueUserAbsoluteExist: jest.fn().mockImplementation(() => undefined),
+jest.mock("express-validator", () => ({
+  ...jest.requireActual("express-validator"),
+  validationResult: jest.fn().mockReturnValue("mock-validationResult"),
 }));
-jest.mock("crypto", () => ({
-  randomBytes: jest.fn().mockImplementation(() => ({
-    toString: jest.fn().mockImplementation(() => "mock-hash"),
+jest.mock("@/utils/errorHandle/validate", () => ({
+  ...jest.requireActual("@/utils/errorHandle/validate"),
+  throwValidationError: jest.fn(),
+}));
+jest.mock("@/services/resetPasswords/endpoints/prepare", () => ({
+  ...jest.requireActual("@/services/resetPasswords/endpoints/prepare"),
+  createPassResetHash: jest.fn().mockImplementation(() => "mock-hash"),
+  setPassResetHash: jest.fn().mockImplementation(() => ({
+    email: "mock-email",
+    name: "mock-name",
+    password: "mock-password",
+    verifyEmailHash: null,
+    passResetHash: "mock-hash",
+    verified: 1,
+    loginStatus: 1,
+    id: 1,
+    createdAt: new Date("2022-10-11 11:00"),
+    updatedAt: new Date("2022-10-11 11:00"),
   })),
+  sendVerifyMail: jest.fn(),
+  sendResponse: jest.fn(),
+  validationErrorHandle: jest.fn(),
+  setPassResetHashErrorHandle: jest.fn(),
+  sendVerifyMailErrorHandle: jest.fn(),
 }));
-jest.mock("@/utils/prismaClients", () => ({
-  customizedPrisma: {
-    user: {
-      update: jest.fn().mockImplementation(() => ({
-        name: "mock-name",
-        email: "mock@email",
-        password: "mock-password",
-        verifyEmailHash: null,
-        passResetHash: "mock-hash",
-        verified: 1,
-        loginStatus: 1,
-        id: 1,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })),
-    },
-  },
-}));
-jest.mock("@/utils/utilResponse", () => ({
-  ...jest.requireActual("@/utils/utilResponse"),
-  basicHttpResponce: jest.fn(),
-}));
-jest.mock("@/utils/logger/utilLogger", () => ({
-  ...jest.requireActual("@/utils/logger/utilLogger"),
-  logResponse: jest.fn(),
-}));
-jest.mock("@/services/resetPasswords/resetPasswords", () => ({
-  ...jest.requireActual("@/services/resetPasswords/resetPasswords"),
-  sendMailForResetPasswordVerify: jest.fn(),
-}));
-jest.mock("@/utils/errorHandle", () => ({
-  ...jest.requireActual("@/utils/errorHandle"),
-  errorResponseHandler: jest.fn(),
+
+jest.mock("@/services/resetPasswords/endpoints/execute", () => ({
+  ...jest.requireActual("@/services/resetPasswords/endpoints/execute"),
+  updatePassword: jest.fn(),
+  sendResponse: jest.fn(),
+  validationErrorHandle: jest.fn(),
+  updatePasswordErrorHandle: jest.fn(),
 }));
 
 describe("requestResettingPasswordのテスト", () => {
-  let mockReq: Partial<Request>;
+  const mockReq: Partial<Request> = {
+    ip: "mock-ip",
+    method: "mock-method",
+    path: "mock-path",
+    body: {
+      userId: 1,
+    },
+  };
   const mockRes: Partial<Response> = {};
   const next = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockReq = {
-      ip: "mock-ip",
-      method: "mock-method",
-      path: "mock-path",
-      body: {},
-    };
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
-  test("正常", async () => {
-    // mock化
-    const email = "mock@email";
-    (findActivedUser as jest.Mock).mockImplementation(() => [
-      {
-        name: "mock-name",
-        email,
-        password: "mock-password",
-        verifyEmailHash: null,
-        passResetHash: null,
-        verified: 1,
-        loginStatus: 1,
-        id: 1,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ]);
-    mockReq = {
-      ip: "mock-ip",
-      method: "mock-method",
-      path: "mock-path",
-      body: {
-        email,
-      },
-    };
-
+  test("正常に動作", async () => {
     // テスト対象実行
-    await requestResettingPassword(
+    await prepareResettingPassword(
       mockReq as Request,
       mockRes as Response,
       next
     );
 
-    // 確認
-    expect(findActivedUser).toHaveBeenCalledWith({ email }, customizedPrisma);
+    expect(validationResult).toHaveBeenCalledWith(mockReq);
+    expect(throwValidationError).toHaveBeenCalledWith("mock-validationResult");
+    expect(prepareService.createPassResetHash).toHaveBeenCalled();
+    await expect(prepareService.setPassResetHash).toHaveBeenCalledWith(
+      1,
+      "mock-hash"
+    );
+    await expect(prepareService.sendVerifyMail).toHaveBeenCalledWith({
+      email: "mock-email",
+      name: "mock-name",
+      password: "mock-password",
+      verifyEmailHash: null,
+      passResetHash: "mock-hash",
+      verified: 1,
+      loginStatus: 1,
+      id: 1,
+      createdAt: new Date("2022-10-11 11:00"),
+      updatedAt: new Date("2022-10-11 11:00"),
+    });
+    expect(prepareService.sendResponse).toHaveBeenCalledWith(mockReq, mockRes);
+  });
 
-    expect(randomBytes).toHaveBeenCalledWith(32);
-
-    const randomBytesInstance = (randomBytes as jest.Mock).mock.results[0]
-      .value;
-    expect(randomBytesInstance.toString).toHaveBeenCalledWith("hex");
-
-    const customizedPrismaUserUpdateInstance = customizedPrisma.user
-      .update as jest.Mock;
-    expect(customizedPrismaUserUpdateInstance).toHaveBeenCalledWith({
-      where: {
-        id: 1,
-      },
-      data: {
-        passResetHash: "mock-hash",
-      },
+  test("バリデーションエラーがあるとき、validationErrorHandleを実行", async () => {
+    (throwValidationError as jest.Mock).mockImplementationOnce(() => {
+      throw new DbRecordNotFoundError("message");
     });
 
-    expect(sendMailForResetPasswordVerify).toHaveBeenCalledWith(
-      email,
-      `${process.env.BASE_URL}/reset-password/1/execute/mock-hash`
-    );
-
-    const HttpStatus = 201;
-    const responseStatus = true;
-    const responseMsg = "パスワードリセットのためのメールが送信されました。";
-    const funcName = "requestResettingPassword";
-    expect(basicHttpResponce).toHaveBeenCalledWith(
-      mockRes,
-      HttpStatus,
-      responseStatus,
-      responseMsg
-    );
-
-    expect(logResponse).toHaveBeenCalledWith(
-      UNSPECIFIED_USER_ID.message,
-      mockReq,
-      HttpStatus,
-      responseMsg,
-      funcName
-    );
-  });
-  test("emailがない", async () => {
-    mockReq = {
-      ip: "mock-ip",
-      method: "mock-method",
-      path: "mock-path",
-      body: {},
-    };
-
     // テスト対象実行
-    await requestResettingPassword(
+    await prepareResettingPassword(
       mockReq as Request,
       mockRes as Response,
       next
     );
 
-    // 確認
-    expect(errorResponseHandler).toHaveBeenCalledWith(
-      new BadRequestError("不正なリクエストです"),
-      "unspecified",
+    expect(validationResult).toHaveBeenCalledWith(mockReq);
+    expect(throwValidationError).toHaveBeenCalledWith("mock-validationResult");
+    expect(prepareService.validationErrorHandle).toHaveBeenCalledWith(
+      new DbRecordNotFoundError("message"),
       mockReq,
-      mockRes,
-      "requestResettingPassword"
+      mockRes
     );
   });
-  test("userが取得できない", async () => {
-    // mock化
-    const email = "mock@email";
-    (findActivedUser as jest.Mock).mockImplementation(() => []);
-    mockReq = {
-      ip: "mock-ip",
-      method: "mock-method",
-      path: "mock-path",
-      body: {
-        email,
-      },
+
+  test("setPassResetHashがエラーだったらsetPassResetHashErrorHandleを実行", async () => {
+    const knownErrorParams = {
+      code: "mock-code",
+      clientVersion: "mock-version",
+      batchRequestIdx: 1,
     };
+    (prepareService.setPassResetHash as jest.Mock).mockImplementationOnce(
+      () => {
+        throw new Prisma.PrismaClientKnownRequestError(
+          "message",
+          knownErrorParams
+        );
+      }
+    );
 
     // テスト対象実行
-    await requestResettingPassword(
+    await prepareResettingPassword(
       mockReq as Request,
       mockRes as Response,
       next
     );
 
-    // 確認
-    expect(errorResponseHandler).toHaveBeenCalledWith(
-      new MultipleActiveUserError("登録済みユーザーが複数います"),
-      "unspecified",
+    expect(validationResult).toHaveBeenCalledWith(mockReq);
+    expect(throwValidationError).toHaveBeenCalledWith("mock-validationResult");
+    expect(prepareService.createPassResetHash).toHaveBeenCalled();
+    await expect(prepareService.setPassResetHash).toHaveBeenCalledWith(
+      1,
+      "mock-hash"
+    );
+    expect(prepareService.setPassResetHashErrorHandle).toHaveBeenCalledWith(
+      new Prisma.PrismaClientKnownRequestError("message", knownErrorParams),
       mockReq,
       mockRes,
-      "requestResettingPassword"
+      1
+    );
+  });
+
+  test("sendVerifyMailがエラーだったらsendVerifyMailErrorHandleを実行", async () => {
+    (prepareService.sendVerifyMail as jest.Mock).mockImplementationOnce(() => {
+      throw new Error("message");
+    });
+
+    // テスト対象実行
+    await prepareResettingPassword(
+      mockReq as Request,
+      mockRes as Response,
+      next
+    );
+
+    expect(validationResult).toHaveBeenCalledWith(mockReq);
+    expect(throwValidationError).toHaveBeenCalledWith("mock-validationResult");
+    expect(prepareService.createPassResetHash).toHaveBeenCalled();
+    await expect(prepareService.setPassResetHash).toHaveBeenCalledWith(
+      1,
+      "mock-hash"
+    );
+    await expect(prepareService.sendVerifyMail).toHaveBeenCalledWith({
+      email: "mock-email",
+      name: "mock-name",
+      password: "mock-password",
+      verifyEmailHash: null,
+      passResetHash: "mock-hash",
+      verified: 1,
+      loginStatus: 1,
+      id: 1,
+      createdAt: new Date("2022-10-11 11:00"),
+      updatedAt: new Date("2022-10-11 11:00"),
+    });
+    expect(prepareService.sendVerifyMailErrorHandle).toHaveBeenCalledWith(
+      new Error("message"),
+      mockReq,
+      mockRes,
+      1
     );
   });
 });
 
 describe("executeResettingPasswordのテスト", () => {
-  let mockReq: Partial<Request>;
+  const mockReq: Partial<Request> = {
+    ip: "mock-ip",
+    method: "mock-method",
+    path: "mock-path",
+    body: {
+      id: 1,
+      token: "mock-token",
+      newPassword: "mock-password",
+    },
+  };
   const mockRes: Partial<Response> = {};
   const next = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockReq = {
-      ip: "mock-ip",
-      method: "mock-method",
-      path: "mock-path",
-      body: {},
-    };
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
-  test("正常", async () => {
-    // mock化
-    const token = "mock-token";
-    const newPassword = "mock-newPassword";
-    (findUniqueUserAbsoluteExist as jest.Mock).mockImplementation(() => ({
-      name: "mock-name",
-      email: "mock@email",
-      password: "mock-password",
-      verifyEmailHash: null,
-      passResetHash: token,
-      verified: 1,
-      loginStatus: 1,
-      id: 1,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }));
-    mockReq = {
-      ip: "mock-ip",
-      method: "mock-method",
-      path: "mock-path",
-      body: {
-        id: "1",
-        token,
-        newPassword,
-      },
-    };
-
+  test("正常に動作", async () => {
     // テスト対象実行
     await executeResettingPassword(
       mockReq as Request,
@@ -269,68 +229,41 @@ describe("executeResettingPasswordのテスト", () => {
       next
     );
 
-    // 確認
-    expect(findUniqueUserAbsoluteExist).toHaveBeenCalledWith(
-      { id: 1 },
-      customizedPrisma
+    expect(validationResult).toHaveBeenCalledWith(mockReq);
+    expect(throwValidationError).toHaveBeenCalledWith("mock-validationResult");
+    expect(executeService.updatePassword).toHaveBeenCalledWith(
+      1,
+      "mock-token",
+      "mock-password"
     );
+    expect(executeService.sendResponse).toHaveBeenCalledWith(mockReq, mockRes);
+  });
 
-    const customizedPrismaUserUpdateInstance = customizedPrisma.user
-      .update as jest.Mock;
-    expect(customizedPrismaUserUpdateInstance).toHaveBeenCalledWith({
-      where: {
-        id: 1,
-      },
-      data: {
-        passResetHash: "",
-        password: newPassword,
-      },
+  test("バリデーションエラーがあるとき、validationErrorHandleを実行", async () => {
+    (throwValidationError as jest.Mock).mockImplementationOnce(() => {
+      throw new DbRecordNotFoundError("message");
     });
 
-    const HttpStatus = 200;
-    const responseStatus = true;
-    const responseMsg = "パスワードのリセットが完了しました。";
-    const funcName = "executeResettingPassword";
-    expect(basicHttpResponce).toHaveBeenCalledWith(
-      mockRes,
-      HttpStatus,
-      responseStatus,
-      responseMsg
+    // テスト対象実行
+    await executeResettingPassword(
+      mockReq as Request,
+      mockRes as Response,
+      next
     );
 
-    expect(logResponse).toHaveBeenCalledWith(
-      "unspecified",
+    expect(validationResult).toHaveBeenCalledWith(mockReq);
+    expect(throwValidationError).toHaveBeenCalledWith("mock-validationResult");
+    expect(executeService.validationErrorHandle).toHaveBeenCalledWith(
+      new DbRecordNotFoundError("message"),
       mockReq,
-      HttpStatus,
-      responseMsg,
-      funcName
+      mockRes
     );
   });
-  test("idがない", async () => {
-    // mock化
-    const token = "mock-token";
-    const newPassword = "mock-newPassword";
-    (findUniqueUserAbsoluteExist as jest.Mock).mockImplementation(() => ({
-      name: "mock-name",
-      email: "mock@email",
-      password: "mock-password",
-      verifyEmailHash: null,
-      passResetHash: token,
-      verified: 1,
-      loginStatus: 1,
-      id: 1,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }));
-    mockReq = {
-      ip: "mock-ip",
-      method: "mock-method",
-      path: "mock-path",
-      body: {
-        token,
-        newPassword,
-      },
-    };
+
+  test("updatePasswordがエラーだったらupdatePasswordErrorHandleを実行", async () => {
+    (executeService.updatePassword as jest.Mock).mockImplementationOnce(() => {
+      throw new TokenNotFoundError("message");
+    });
 
     // テスト対象実行
     await executeResettingPassword(
@@ -339,217 +272,18 @@ describe("executeResettingPasswordのテスト", () => {
       next
     );
 
-    // 確認
-    expect(errorResponseHandler).toHaveBeenCalledWith(
-      new BadRequestError("不正なリクエストです"),
-      "unspecified",
+    expect(validationResult).toHaveBeenCalledWith(mockReq);
+    expect(throwValidationError).toHaveBeenCalledWith("mock-validationResult");
+    expect(executeService.updatePassword).toHaveBeenCalledWith(
+      1,
+      "mock-token",
+      "mock-password"
+    );
+    expect(executeService.updatePasswordErrorHandle).toHaveBeenCalledWith(
+      new TokenNotFoundError("message"),
       mockReq,
       mockRes,
-      "executeResettingPassword"
-    );
-  });
-  test("tokenがない", async () => {
-    // mock化
-    const token = "mock-token";
-    const newPassword = "mock-newPassword";
-    (findUniqueUserAbsoluteExist as jest.Mock).mockImplementation(() => ({
-      name: "mock-name",
-      email: "mock@email",
-      password: "mock-password",
-      verifyEmailHash: null,
-      passResetHash: token,
-      verified: 1,
-      loginStatus: 1,
-      id: 1,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }));
-    mockReq = {
-      ip: "mock-ip",
-      method: "mock-method",
-      path: "mock-path",
-      body: {
-        id: "1",
-        newPassword,
-      },
-    };
-
-    // テスト対象実行
-    await executeResettingPassword(
-      mockReq as Request,
-      mockRes as Response,
-      next
-    );
-
-    // 確認
-    expect(errorResponseHandler).toHaveBeenCalledWith(
-      new BadRequestError("不正なリクエストです"),
-      "unspecified",
-      mockReq,
-      mockRes,
-      "executeResettingPassword"
-    );
-  });
-  test("newPasswordがない", async () => {
-    // mock化
-    const token = "mock-token";
-    const newPassword = "mock-newPassword";
-    (findUniqueUserAbsoluteExist as jest.Mock).mockImplementation(() => ({
-      name: "mock-name",
-      email: "mock@email",
-      password: "mock-password",
-      verifyEmailHash: null,
-      passResetHash: token,
-      verified: 1,
-      loginStatus: 1,
-      id: 1,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }));
-    mockReq = {
-      ip: "mock-ip",
-      method: "mock-method",
-      path: "mock-path",
-      body: {
-        id: "1",
-        token,
-      },
-    };
-
-    // テスト対象実行
-    await executeResettingPassword(
-      mockReq as Request,
-      mockRes as Response,
-      next
-    );
-
-    // 確認
-    expect(errorResponseHandler).toHaveBeenCalledWith(
-      new BadRequestError("不正なリクエストです"),
-      "unspecified",
-      mockReq,
-      mockRes,
-      "executeResettingPassword"
-    );
-  });
-  test("userがない", async () => {
-    // mock化
-    const token = "mock-token";
-    const newPassword = "mock-newPassword";
-    (findUniqueUserAbsoluteExist as jest.Mock).mockImplementation(
-      () => undefined
-    );
-    mockReq = {
-      ip: "mock-ip",
-      method: "mock-method",
-      path: "mock-path",
-      body: {
-        id: "1",
-        token,
-        newPassword,
-      },
-    };
-
-    // テスト対象実行
-    await executeResettingPassword(
-      mockReq as Request,
-      mockRes as Response,
-      next
-    );
-
-    // 確認
-    expect(errorResponseHandler).toHaveBeenCalledWith(
-      new TokenNotFoundError("トークンが見つかりません。"),
-      "unspecified",
-      mockReq,
-      mockRes,
-      "executeResettingPassword"
-    );
-  });
-  test("userのpassResetHashがない", async () => {
-    // mock化
-    const token = "mock-token";
-    const newPassword = "mock-newPassword";
-    (findUniqueUserAbsoluteExist as jest.Mock).mockImplementation(() => ({
-      name: "mock-name",
-      email: "mock@email",
-      password: "mock-password",
-      verifyEmailHash: null,
-      passResetHash: "",
-      verified: 1,
-      loginStatus: 1,
-      id: 1,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }));
-    mockReq = {
-      ip: "mock-ip",
-      method: "mock-method",
-      path: "mock-path",
-      body: {
-        id: "1",
-        token,
-        newPassword,
-      },
-    };
-
-    // テスト対象実行
-    await executeResettingPassword(
-      mockReq as Request,
-      mockRes as Response,
-      next
-    );
-
-    // 確認
-    expect(errorResponseHandler).toHaveBeenCalledWith(
-      new TokenNotFoundError("トークンが見つかりません。"),
-      "unspecified",
-      mockReq,
-      mockRes,
-      "executeResettingPassword"
-    );
-  });
-  test("passResetHashとtokenが一致しない", async () => {
-    // mock化
-    const token = "mock-token";
-    const newPassword = "mock-newPassword";
-    (findUniqueUserAbsoluteExist as jest.Mock).mockImplementation(() => ({
-      name: "mock-name",
-      email: "mock@email",
-      password: "mock-password",
-      verifyEmailHash: null,
-      passResetHash: "unmachedToken",
-      verified: 1,
-      loginStatus: 1,
-      id: 1,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }));
-    mockReq = {
-      ip: "mock-ip",
-      method: "mock-method",
-      path: "mock-path",
-      body: {
-        id: "1",
-        token,
-        newPassword,
-      },
-    };
-
-    // テスト対象実行
-    await executeResettingPassword(
-      mockReq as Request,
-      mockRes as Response,
-      next
-    );
-
-    // 確認
-    expect(errorResponseHandler).toHaveBeenCalledWith(
-      new TokenNotFoundError("トークンが見つかりません。"),
-      "unspecified",
-      mockReq,
-      mockRes,
-      "executeResettingPassword"
+      1
     );
   });
 });

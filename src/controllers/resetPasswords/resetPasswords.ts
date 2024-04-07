@@ -1,27 +1,9 @@
-import { UNSPECIFIED_USER_ID } from "@/consts/logMessages";
-import { ERROR_BAD_REQUEST } from "@/consts/responseMessages/utils";
-import {
-  COMPLETE_VALID_RESET_PASS,
-  ERROR_MULTIPLE_ACTIVE_USERS,
-  SEND_MAIL_FOR_RESET_PASS_VALID,
-  ERROR_TOKEN_NOT_FOUND,
-} from "@/consts/responseMessages";
-import { logResponse } from "@/utils/logger/utilLogger";
-import { errorResponseHandler } from "@/utils/errorHandle";
-import { sendMailForResetPasswordVerify } from "@/services/resetPasswords/resetPasswordsServices/resetPasswords";
-import { customizedPrisma } from "@/utils/prismaClients";
-import {
-  BadRequestError,
-  MultipleActiveUserError,
-  TokenNotFoundError,
-} from "@/utils/errorHandle/errors";
-import {
-  findActivedUser,
-  findUniqueUserAbsoluteExist,
-} from "@/services/users/users";
-import { basicHttpResponce } from "@/utils/utilResponse";
-import { randomBytes } from "crypto";
-import type { Request, Response, NextFunction } from "express";
+import * as executeService from "@/services/resetPasswords/endpoints/execute";
+import * as prepareService from "@/services/resetPasswords/endpoints/prepare";
+import { throwValidationError } from "@/utils/errorHandle/validate";
+import { Prisma } from "@prisma/client";
+import type { NextFunction, Request, Response } from "express";
+import { validationResult } from "express-validator";
 
 /**
  * パスワード再設定のリクエストを行う
@@ -30,71 +12,45 @@ import type { Request, Response, NextFunction } from "express";
  * @param res
  * @param next
  */
-export const requestResettingPassword = async (
+export const prepareResettingPassword = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const { email } = req.body;
-
-  // logのために関数名を取得
-  const currentFuncName = requestResettingPassword.name;
-
+  // バリデーション結果を評価
+  const errors = validationResult(req);
   try {
-    if (!email) {
-      throw new BadRequestError(ERROR_BAD_REQUEST.message);
-    }
-
-    // emailからuserを取得
-    const whereByEmail = { email };
-    const users = await findActivedUser(whereByEmail, customizedPrisma);
-    if (users.length !== 1) {
-      throw new MultipleActiveUserError(ERROR_MULTIPLE_ACTIVE_USERS.message);
-    }
-
-    const user = users[0];
-
-    // 認証トークン作成
-    const passResetHash = randomBytes(32).toString("hex");
-
-    // DBに保存
-    const newUser = await customizedPrisma.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        passResetHash,
-      },
-    });
-
-    // メール送信
-    // TODO: メールにはフロント(クライアント)のURLを載せたい。これはAPIのURI。
-    const verifyUrl = `${process.env.BASE_URL}/reset-password/${newUser.id}/execute/${newUser.passResetHash}`;
-    await sendMailForResetPasswordVerify(email, verifyUrl);
-
-    // レスポンスを返却
-    const HttpStatus = 201;
-    const responseStatus = true;
-    const responseMsg = SEND_MAIL_FOR_RESET_PASS_VALID.message;
-    basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
-
-    // ログを出力
-    logResponse(
-      UNSPECIFIED_USER_ID.message,
-      req,
-      HttpStatus,
-      responseMsg,
-      currentFuncName
-    );
+    throwValidationError(errors);
   } catch (e) {
-    errorResponseHandler(
-      e,
-      UNSPECIFIED_USER_ID.message,
-      req,
-      res,
-      currentFuncName
-    );
+    prepareService.validationErrorHandle(e, req, res);
   }
+
+  // bodyを取得
+  const body = req.body as prepareService.ValidatedPrepareBody;
+
+  // 認証トークン作成
+  const passResetHash = prepareService.createPassResetHash();
+
+  let newUser: Prisma.$UserPayload["scalars"] | null = null;
+
+  // ハッシュをDBに保存
+  try {
+    newUser = await prepareService.setPassResetHash(body.userId, passResetHash);
+  } catch (e) {
+    prepareService.setPassResetHashErrorHandle(e, req, res, body.userId);
+  }
+
+  // ハッシュ付きメールを送信
+  try {
+    if (newUser) {
+      await prepareService.sendVerifyMail(newUser);
+    }
+  } catch (e) {
+    prepareService.sendVerifyMailErrorHandle(e, req, res, body.userId);
+  }
+
+  // レスポンスを返却
+  prepareService.sendResponse(req, res);
 };
 
 /**
@@ -110,58 +66,24 @@ export const executeResettingPassword = async (
   res: Response,
   next: NextFunction
 ) => {
-  const id = Number(req.body.id);
-  const { token, newPassword } = req.body;
-
-  // logのために関数名を取得
-  const currentFuncName = executeResettingPassword.name;
-
+  // バリデーション結果を評価
+  const errors = validationResult(req);
   try {
-    if (!id || !token || !newPassword) {
-      throw new BadRequestError(ERROR_BAD_REQUEST.message);
-    }
-    // idからユーザーを検索
-    const whereByUserId = { id };
-    const user = await findUniqueUserAbsoluteExist(
-      whereByUserId,
-      customizedPrisma
-    );
-
-    // tokenが見つからない、または一致しない場合は400エラー
-    if (!user?.passResetHash || user.passResetHash !== token) {
-      throw new TokenNotFoundError(ERROR_TOKEN_NOT_FOUND.message);
-    }
-
-    await customizedPrisma.user.update({
-      where: whereByUserId,
-      data: {
-        passResetHash: "",
-        password: newPassword,
-      },
-    });
-
-    // レスポンス
-    const HttpStatus = 200;
-    const responseStatus = true;
-    const responseMsg = COMPLETE_VALID_RESET_PASS.message;
-    basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
-
-    // ログを出力
-    logResponse(
-      UNSPECIFIED_USER_ID.message,
-      req,
-      HttpStatus,
-      responseMsg,
-      currentFuncName
-    );
+    throwValidationError(errors);
   } catch (e) {
-    // エラーの時のレスポンス
-    errorResponseHandler(
-      e,
-      UNSPECIFIED_USER_ID.message,
-      req,
-      res,
-      currentFuncName
-    );
+    executeService.validationErrorHandle(e, req, res);
   }
+
+  // bodyを取得
+  const body = req.body as executeService.ValidatedExecuteBody;
+
+  // 新パスワード書き込み
+  try {
+    await executeService.updatePassword(body.id, body.token, body.newPassword);
+  } catch (e) {
+    executeService.updatePasswordErrorHandle(e, req, res, body.id);
+  }
+
+  // レスポンスを返却
+  executeService.sendResponse(req, res);
 };

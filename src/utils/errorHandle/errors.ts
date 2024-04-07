@@ -93,6 +93,26 @@ export class TokenNotFoundError extends Error {
 }
 
 /**
+ * 認証トークンが不正
+ */
+export class TokenForbiddenError extends Error {
+  constructor(...args: any[]) {
+    super(...args);
+
+    Object.defineProperty(this, "name", {
+      configurable: true,
+      enumerable: false,
+      value: this.constructor.name,
+      writable: true,
+    });
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, TokenForbiddenError);
+    }
+  }
+}
+
+/**
  * 不正なリクエストを受け取った
  */
 export class BadRequestError extends Error {
@@ -108,6 +128,26 @@ export class BadRequestError extends Error {
 
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, BadRequestError);
+    }
+  }
+}
+
+/**
+ * 権限がない
+ */
+export class AccessForbiddenError extends Error {
+  constructor(...args: any[]) {
+    super(...args);
+
+    Object.defineProperty(this, "name", {
+      configurable: true,
+      enumerable: false,
+      value: this.constructor.name,
+      writable: true,
+    });
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, AccessForbiddenError);
     }
   }
 }
