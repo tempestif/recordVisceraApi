@@ -46,3 +46,18 @@ export const castToNumberOrThrow = (value: string) => {
   }
   return num;
 };
+
+/**
+ * パラメータがDateかを確認し、キャストしたものを返却する
+ * express-validatorの.custom()中に利用する想定
+ * そのため、投げるエラーはErrorインスタンスにBAD_REQUESTのメッセージを渡したもの
+ * @param value
+ * @returns
+ */
+export const castToDateOrThrow = (value: string) => {
+  const date = new Date(value);
+  if (isNaN(date.getTime())) {
+    throw new Error(ERROR_BAD_REQUEST.message);
+  }
+  return date;
+};

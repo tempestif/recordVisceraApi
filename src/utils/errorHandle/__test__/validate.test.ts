@@ -5,6 +5,7 @@ import {
 import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
 import * as validateUtils from "@/utils/errorHandle/validate";
 import {
+  castToDateOrThrow,
   castToNumberOrThrow,
   throwValidationError,
 } from "@/utils/errorHandle/validate";
@@ -25,7 +26,7 @@ describe("findValidateErrorのテスト", () => {
   });
 });
 
-describe("throwValidationErrorのエラー", () => {
+describe("throwValidationErrorのテスト", () => {
   let spyFindValidateError: jest.SpyInstance<() => Error, [message: string]>;
 
   beforeEach(() => {
@@ -71,7 +72,7 @@ describe("throwValidationErrorのエラー", () => {
   });
 });
 
-describe("throwValidationErrorのテスト", () => {
+describe("castToNumberOrThrowのテスト", () => {
   test("数字の文字列を渡すとキャストされて返ってくる", () => {
     const result = castToNumberOrThrow("10");
 
@@ -81,6 +82,22 @@ describe("throwValidationErrorのテスト", () => {
   test("数字以外の文字列を渡すとエラーが投げられる", () => {
     const test = () => {
       castToNumberOrThrow("notNumber");
+    };
+
+    expect(test).toThrow(new Error(ERROR_BAD_REQUEST.message));
+  });
+});
+
+describe("castToDateOrThrowのテスト", () => {
+  test("Dateに変換できる文字列を渡すとキャストされて返ってくる", () => {
+    const result = castToDateOrThrow("2022-10-10 11:00");
+
+    expect(result).toEqual(new Date("2022-10-10 11:00"));
+  });
+
+  test("Date以外の文字列を渡すとエラーが投げられる", () => {
+    const test = () => {
+      castToDateOrThrow("notDate");
     };
 
     expect(test).toThrow(new Error(ERROR_BAD_REQUEST.message));
