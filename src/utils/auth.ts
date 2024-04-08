@@ -1,19 +1,19 @@
-import {
-  ERROR_TOKEN_NOT_DISCREPANCY,
-  ERROR_TOKEN_NOT_FOUND,
-} from "@/consts/responseMessages";
-import type { Request, Response, NextFunction } from "express";
-import { verify } from "jsonwebtoken";
-import type { JwtPayload } from "jsonwebtoken";
-import { basicHttpResponce } from "./utilResponse";
-import { findUniqueUserAbsoluteExist } from "@/services/users/users";
 import { USER_LOGIN_STATUS } from "@/consts/dbMappings";
-import { customizedPrisma } from "@/utils/prismaClients";
-import { errorResponseHandler } from "@/utils/errorHandle";
 import {
   UNSPECIFIED_USER_ID,
   UNSPECIFIED_USER_ID_TYPE,
 } from "@/consts/logMessages";
+import {
+  ERROR_TOKEN_NOT_DISCREPANCY,
+  ERROR_TOKEN_NOT_FOUND,
+} from "@/consts/responseMessages";
+import { findUniqueUserAbsoluteExist } from "@/services/users/users";
+import { errorResponseHandler } from "@/utils/errorHandle";
+import { customizedPrisma } from "@/utils/prismaClients";
+import type { NextFunction, Request, Response } from "express";
+import type { JwtPayload } from "jsonwebtoken";
+import { verify } from "jsonwebtoken";
+import { basicHttpResponce } from "./utilResponse";
 
 /**
  * トークン認証
@@ -71,6 +71,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
     }
 
     // reqのbodyにuserIdを追加
+    // FIXME: req.localsに入れるようにする。その他の部分についても。
     req.body.userId = decoded.id;
     next();
   } catch (e) {
