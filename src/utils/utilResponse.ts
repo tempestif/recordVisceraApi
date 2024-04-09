@@ -30,6 +30,11 @@ export const basicHttpResponce = (
   });
 };
 
+export type BasicResponceType = {
+  status: boolean;
+  message: string;
+};
+
 /**
  * データを返す必要のあるレスポンスを作成する
  * @param res
