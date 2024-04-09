@@ -1,5 +1,7 @@
 import {
   createPassResetHash,
+  getUserIdErrorHandle,
+  getUserIdOrThrow,
   sendResponse,
   sendVerifyMail,
   sendVerifyMailErrorHandle,
@@ -7,6 +9,7 @@ import {
   setPassResetHashErrorHandle,
   validationErrorHandle,
 } from "@/services/resetPasswords/endpoints/prepare";
+import { findActivedUsers } from "@/services/users/users";
 import {
   badRequestErrorHandle,
   dbRecordNotFoundErrorHandle,
@@ -33,6 +36,12 @@ jest.mock("@/utils/errorHandle/errorHandling", () => ({
   multipleActiveUsersErrorHandle: jest.fn(),
   dbRecordNotFoundErrorHandle: jest.fn(),
   internalServerErrorHandle: jest.fn(),
+}));
+
+// NOTE: 多分path変わるので注意
+jest.mock("@/services/users/users", () => ({
+  ...jest.requireActual("@/services/users/users"),
+  findActivedUsers: jest.fn(),
 }));
 
 jest.mock("@/utils/hash", () => ({
@@ -138,6 +147,129 @@ describe("validationErrorHandleのテスト", () => {
   });
 });
 
+describe("getUserIdOrThrowのテスト", () => {
+  test("userがひとつだけ取得出来たらidが返却される", () => {
+    // usersが1個返る
+    (findActivedUsers as jest.Mock).mockImplementationOnce(() => [
+      {
+        id: 1,
+        name: "mock-name",
+        email: "mock@email",
+        password: "mock-password",
+        verifyEmailHash: null,
+        passResetHash: "mock-hash",
+        verified: 1,
+        loginStatus: 1,
+        createdAt: new Date("2022-10-20 11:10"),
+        updatedAt: new Date("2022-10-20 11:10"),
+      },
+    ]);
+
+    const userId = getUserIdOrThrow("mock-email");
+
+    expect(userId).toEqual(1);
+  });
+
+  test("userが複数取得出来たらMultipleActiveUserErrorが投げられる", () => {
+    (findActivedUsers as jest.Mock).mockImplementationOnce(() => [
+      {
+        id: 90,
+        name: "mock-name",
+        email: "mock@email",
+        password: "mock-password",
+        verifyEmailHash: null,
+        passResetHash: "mock-hash",
+        verified: 1,
+        loginStatus: 1,
+        createdAt: new Date("2022-10-20 11:10"),
+        updatedAt: new Date("2022-10-20 11:10"),
+      },
+      {
+        id: 91,
+        name: "mock-name",
+        email: "mock@email",
+        password: "mock-password",
+        verifyEmailHash: null,
+        passResetHash: "mock-hash",
+        verified: 1,
+        loginStatus: 1,
+        createdAt: new Date("2022-10-20 11:10"),
+        updatedAt: new Date("2022-10-20 11:10"),
+      },
+    ]);
+
+    const test = () => {
+      getUserIdOrThrow("mock-email");
+    };
+
+    expect(test).toThrow(
+      new MultipleActiveUserError("登録済みユーザーが複数います")
+    );
+  });
+
+  test("findActivedUsersが投げたエラーをそのまま投げる", () => {
+    (findActivedUsers as jest.Mock).mockImplementationOnce(() => {
+      throw new DbRecordNotFoundError("ユーザーが見つかりません。");
+    });
+
+    const test = () => {
+      getUserIdOrThrow("mock-email");
+    };
+
+    expect(test).toThrow(
+      new DbRecordNotFoundError("ユーザーが見つかりません。")
+    );
+  });
+});
+
+describe("getUserIdErrorHandleのテスト", () => {
+  const mockReq: Partial<Request> = {};
+  const mockRes: Partial<Response> = {};
+  test("MultipleActiveUserErrorを受けたらmultipleActiveUsersErrorHandleを実行する", () => {
+    try {
+      new MultipleActiveUserError("message");
+    } catch (e) {
+      getUserIdErrorHandle(e, mockReq as Request, mockRes as Response);
+    }
+
+    expect(multipleActiveUsersErrorHandle).toHaveBeenCalledWith(
+      new MultipleActiveUserError("message"),
+      "unspecified",
+      mockReq as Request,
+      mockRes as Response,
+      "prepareResettingPassword"
+    );
+  });
+
+  test("DbRecordNotFoundErrorを受けたらdbRecordNotFoundErrorHandleを実行する", () => {
+    try {
+      new DbRecordNotFoundError("message");
+    } catch (e) {
+      getUserIdErrorHandle(e, mockReq as Request, mockRes as Response);
+    }
+
+    expect(dbRecordNotFoundErrorHandle).toHaveBeenCalledWith(
+      new DbRecordNotFoundError("message"),
+      "unspecified",
+      mockReq as Request,
+      mockRes as Response,
+      "prepareResettingPassword"
+    );
+  });
+
+  test("それ以外のエラーを受けたら再度throwされる", () => {
+    const test = () => {
+      try {
+        new Error("message");
+      } catch (e) {
+        getUserIdErrorHandle(e, mockReq as Request, mockRes as Response);
+      }
+    };
+
+    expect(test).toThrow(new Error("message"));
+  });
+});
+
 describe("createPassResetHashのテスト", () => {
   test("createHashが実行されている", () => {
     // テスト対象実行
@@ -177,7 +309,7 @@ describe("setPassResetHashのテスト", () => {
     });
   });
 
-  test("updateがエラーを投げたエラーがthrowされる", async () => {
+  test("updateが投げたエラーがそのままthrowされる", async () => {
     // throwされかを確認したいのでwrapする
     const test = async () => {
       await setPassResetHash(5, "mock-hash");

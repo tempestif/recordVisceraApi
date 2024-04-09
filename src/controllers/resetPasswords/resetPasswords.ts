@@ -2,7 +2,7 @@ import * as executeService from "@/services/resetPasswords/endpoints/execute";
 import * as prepareService from "@/services/resetPasswords/endpoints/prepare";
 import { throwValidationError } from "@/utils/errorHandle/validate";
 import { Prisma } from "@prisma/client";
-import type { NextFunction, Request, Response } from "express";
+import type { NextFunction, Response } from "express";
 import { validationResult } from "express-validator";
 
 /**
@@ -13,7 +13,7 @@ import { validationResult } from "express-validator";
  * @param next
  */
 export const prepareResettingPassword = async (
-  req: Request,
+  req: prepareService.VerifiedRequesetType,
   res: Response,
   next: NextFunction
 ) => {
@@ -26,27 +26,34 @@ export const prepareResettingPassword = async (
   }
 
   // bodyを取得
-  const body = req.body as prepareService.ValidatedBodyType;
+  const body = req.body;
+
+  let userId: number | null = null;
+  try {
+    userId = await prepareService.getUserIdOrThrow(body.email);
+  } catch (e) {
+    prepareService.getUserIdErrorHandle(e, req, res);
+    return;
+  }
 
   // 認証トークン作成
   const passResetHash = prepareService.createPassResetHash();
 
-  let newUser: Prisma.$UserPayload["scalars"] | null = null;
-
   // ハッシュをDBに保存
+  let newUser: Prisma.$UserPayload["scalars"] | null = null;
   try {
-    newUser = await prepareService.setPassResetHash(body.userId, passResetHash);
+    newUser = await prepareService.setPassResetHash(userId, passResetHash);
   } catch (e) {
-    prepareService.setPassResetHashErrorHandle(e, req, res, body.userId);
+    prepareService.setPassResetHashErrorHandle(e, req, res, userId);
+    return;
   }
 
   // ハッシュ付きメールを送信
   try {
-    if (newUser) {
-      await prepareService.sendVerifyMail(newUser);
-    }
+    await prepareService.sendVerifyMail(newUser);
   } catch (e) {
-    prepareService.sendVerifyMailErrorHandle(e, req, res, body.userId);
+    prepareService.sendVerifyMailErrorHandle(e, req, res, userId);
+    return;
   }
 
   // レスポンスを返却
@@ -62,7 +69,7 @@ export const prepareResettingPassword = async (
  * @param next
  */
 export const executeResettingPassword = async (
-  req: Request,
+  req: executeService.VerifiedRequesetType,
   res: Response,
   next: NextFunction
 ) => {
@@ -75,13 +82,18 @@ export const executeResettingPassword = async (
   }
 
   // bodyを取得
-  const body = req.body as executeService.ValidatedBodyType;
+  const body = req.body;
+  const params = req.params;
 
   // 新パスワード書き込み
   try {
-    await executeService.updatePassword(body.id, body.token, body.newPassword);
+    await executeService.updatePassword(
+      Number(params.id),
+      params.token,
+      body.newPassword
+    );
   } catch (e) {
-    executeService.updatePasswordErrorHandle(e, req, res, body.id);
+    executeService.updatePasswordErrorHandle(e, req, res, params.id);
   }
 
   // レスポンスを返却

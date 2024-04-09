@@ -14,22 +14,33 @@ import {
 } from "@/utils/errorHandle/errors";
 import { logResponse } from "@/utils/logger/utilLogger";
 import { customizedPrisma } from "@/utils/prismaClients";
-import { basicHttpResponce } from "@/utils/utilResponse";
+import { AnyRequest } from "@/utils/utilRequest";
+import { BasicResponceType, basicHttpResponce } from "@/utils/utilResponse";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { Request, Response } from "express";
 
-// logのために関数名を取得
+// logのために関数名を定義
 const CURRENT_FUNCTION_NAME = "executeResettingPassword";
 
-/**
- * バリデート済みのリクエストボディの型
- * パスワード再設定の実行
- */
-export type ValidatedBodyType = {
+// バリデーション通過後のパラメータの型を作成する
+type VerifiedParamsType = {
   id: number;
   token: string;
+};
+type VerifiedResBodyType = BasicResponceType;
+type VerifiedReqBodyType = {
   newPassword: string;
 };
+type VerifiedReqQueryType = undefined;
+type VerifiedReqLocalsType = Record<string, null>;
+
+export type VerifiedRequesetType = Request<
+  VerifiedParamsType,
+  VerifiedResBodyType,
+  VerifiedReqBodyType,
+  VerifiedReqQueryType,
+  VerifiedReqLocalsType
+>;
 
 /**
  * バリデーションエラー時のエラーハンドル
@@ -39,7 +50,7 @@ export type ValidatedBodyType = {
  */
 export const validationErrorHandle = (
   e: unknown,
-  req: Request,
+  req: AnyRequest,
   res: Response
 ) => {
   if (e instanceof BadRequestError) {
@@ -90,7 +101,7 @@ export const updatePassword = async (
  */
 export const updatePasswordErrorHandle = (
   e: unknown,
-  req: Request,
+  req: AnyRequest,
   res: Response,
   userId: number
 ) => {
@@ -109,7 +120,7 @@ export const updatePasswordErrorHandle = (
  * @param res
  * @param CURRENT_FUNCTION_NAME
  */
-export const sendResponse = (req: Request, res: Response) => {
+export const sendResponse = (req: AnyRequest, res: Response) => {
   // レスポンスを返却
   const httpStatus = 200;
   const responseStatus = true;

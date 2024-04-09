@@ -1,6 +1,10 @@
 import { UNSPECIFIED_USER_ID } from "@/consts/logMessages";
 import { TEXT_VALID_RESET_PASS, TITLE_VALID_RESET_PASS } from "@/consts/mail";
-import { SEND_MAIL_FOR_RESET_PASS_VALID } from "@/consts/responseMessages";
+import {
+  ERROR_MULTIPLE_ACTIVE_USERS,
+  SEND_MAIL_FOR_RESET_PASS_VALID,
+} from "@/consts/responseMessages";
+import { findActivedUsers } from "@/services/users/users";
 import {
   badRequestErrorHandle,
   dbRecordNotFoundErrorHandle,
@@ -9,13 +13,15 @@ import {
 } from "@/utils/errorHandle/errorHandling";
 import {
   BadRequestError,
+  DbRecordNotFoundError,
   MultipleActiveUserError,
 } from "@/utils/errorHandle/errors";
 import { createHash } from "@/utils/hash";
 import { logResponse } from "@/utils/logger/utilLogger";
 import { sendMail } from "@/utils/nodemailer";
 import { customizedPrisma } from "@/utils/prismaClients";
-import { basicHttpResponce } from "@/utils/utilResponse";
+import { AnyRequest } from "@/utils/utilRequest";
+import { BasicResponceType, basicHttpResponce } from "@/utils/utilResponse";
 import { Prisma } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { Request, Response } from "express";
@@ -23,14 +29,24 @@ import { Request, Response } from "express";
 // logのために関数名を取得
 const CURRENT_FUNCTION_NAME = "prepareResettingPassword";
 
-/**
- * バリデート済みのリクエストボディの型
- * パスワード再設定のリクエスト
- */
-export type ValidatedBodyType = {
+// バリデーション通過後のパラメータの型を作成する
+type VerifiedParamsType = undefined;
+type VerifiedResBodyType = BasicResponceType;
+type VerifiedReqBodyType = {
   email: string;
+};
+type VerifiedReqQueryType = undefined;
+type VerifiedReqLocalsType = {
   userId: number;
 };
+
+export type VerifiedRequesetType = Request<
+  VerifiedParamsType,
+  VerifiedResBodyType,
+  VerifiedReqBodyType,
+  VerifiedReqQueryType,
+  VerifiedReqLocalsType
+>;
 
 /**
  * バリデーションエラー時のエラーハンドル
@@ -40,7 +56,7 @@ export type ValidatedBodyType = {
  */
 export const validationErrorHandle = (
   e: unknown,
-  req: Request,
+  req: AnyRequest,
   res: Response
 ) => {
   if (e instanceof BadRequestError) {
@@ -53,6 +69,53 @@ export const validationErrorHandle = (
     );
   } else if (e instanceof MultipleActiveUserError) {
     multipleActiveUsersErrorHandle(
+      e,
+      UNSPECIFIED_USER_ID.message,
+      req,
+      res,
+      CURRENT_FUNCTION_NAME
+    );
+  } else {
+    throw e;
+  }
+};
+
+/**
+ * emailに紐づくuserがあるかを確認し、そのuserIdを返却する
+ * userがなかったらエラーを投げる
+ * @param email
+ */
+export const getUserIdOrThrow = async (email: string) => {
+  const users = await findActivedUsers({ email }, customizedPrisma);
+  if (users.length > 1) {
+    throw new MultipleActiveUserError(ERROR_MULTIPLE_ACTIVE_USERS.message);
+  }
+
+  return users[0].id;
+};
+
+/**
+ * ユーザーID取得時のエラーハンドル
+ * @param e
+ * @param req
+ * @param res
+ * @param userId
+ */
+export const getUserIdErrorHandle = (
+  e: unknown,
+  req: AnyRequest,
+  res: Response
+) => {
+  if (e instanceof MultipleActiveUserError) {
+    multipleActiveUsersErrorHandle(
+      e,
+      UNSPECIFIED_USER_ID.message,
+      req,
+      res,
+      CURRENT_FUNCTION_NAME
+    );
+  } else if (e instanceof DbRecordNotFoundError) {
+    dbRecordNotFoundErrorHandle(
       e,
       UNSPECIFIED_USER_ID.message,
       req,
@@ -100,7 +163,7 @@ export const setPassResetHash = async (id: number, passResetHash: string) => {
  */
 export const setPassResetHashErrorHandle = (
   e: unknown,
-  req: Request,
+  req: AnyRequest,
   res: Response,
   userId: number
 ) => {
@@ -118,6 +181,7 @@ export const setPassResetHashErrorHandle = (
  */
 export const sendVerifyMail = async (user: Prisma.$UserPayload["scalars"]) => {
   // TODO: メールにはフロント(クライアント)のURLを載せたい。これはAPIのURI。
+  // NOTE: idとhashをパスワードにbodyに詰めて、メール送信APIを作ってもいいような気がする
   const verifyUrl = `${process.env.BASE_URL}/reset-password/${user.id}/execute/${user.passResetHash}`;
 
   // 件名
@@ -138,7 +202,7 @@ export const sendVerifyMail = async (user: Prisma.$UserPayload["scalars"]) => {
  */
 export const sendVerifyMailErrorHandle = (
   e: unknown,
-  req: Request,
+  req: AnyRequest,
   res: Response,
   userId: number
 ) => {
@@ -156,7 +220,7 @@ export const sendVerifyMailErrorHandle = (
  * @param req
  * @param res
  */
-export const sendResponse = (req: Request, res: Response) => {
+export const sendResponse = (req: AnyRequest, res: Response) => {
   // レスポンスを返却
   const httpStatus = 201;
   const responseStatus = true;
