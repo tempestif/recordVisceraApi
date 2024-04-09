@@ -87,7 +87,7 @@ export class TokenNotFoundError extends Error {
     });
 
     if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, MultipleActiveUserError);
+      Error.captureStackTrace(this, TokenNotFoundError);
     }
   }
 }
