@@ -23,6 +23,7 @@ export const prepareResettingPassword = async (
     throwValidationError(errors);
   } catch (e) {
     prepareService.validationErrorHandle(e, req, res);
+    return;
   }
 
   // bodyを取得
@@ -79,6 +80,7 @@ export const executeResettingPassword = async (
     throwValidationError(errors);
   } catch (e) {
     executeService.validationErrorHandle(e, req, res);
+    return;
   }
 
   // bodyを取得
@@ -94,6 +96,7 @@ export const executeResettingPassword = async (
     );
   } catch (e) {
     executeService.updatePasswordErrorHandle(e, req, res, params.id);
+    return;
   }
 
   // レスポンスを返却

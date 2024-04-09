@@ -32,14 +32,12 @@ type VerifiedReqBodyType = {
   newPassword: string;
 };
 type VerifiedReqQueryType = undefined;
-type VerifiedReqLocalsType = Record<string, null>;
 
 export type VerifiedRequesetType = Request<
   VerifiedParamsType,
   VerifiedResBodyType,
   VerifiedReqBodyType,
-  VerifiedReqQueryType,
-  VerifiedReqLocalsType
+  VerifiedReqQueryType
 >;
 
 /**

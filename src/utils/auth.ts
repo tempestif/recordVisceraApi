@@ -4,11 +4,12 @@ import {
   UNSPECIFIED_USER_ID_TYPE,
 } from "@/consts/logMessages";
 import {
-  ERROR_TOKEN_NOT_DISCREPANCY,
   ERROR_TOKEN_NOT_FOUND,
+  ERROR_USER_NOT_FOUND,
 } from "@/consts/responseMessages";
 import { findUniqueUserAbsoluteExist } from "@/services/users/users";
 import { errorResponseHandler } from "@/utils/errorHandle";
+import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
 import { customizedPrisma } from "@/utils/prismaClients";
 import type { NextFunction, Request, Response } from "express";
 import type { JwtPayload } from "jsonwebtoken";
@@ -64,15 +65,11 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
       user.loginStatus === USER_LOGIN_STATUS.logout ||
       user.loginStatus === USER_LOGIN_STATUS.deactived
     ) {
-      const HttpStatus = 400;
-      const responseStatus = false;
-      const responseMsg = ERROR_TOKEN_NOT_DISCREPANCY.message;
-      return basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
+      throw new DbRecordNotFoundError(ERROR_USER_NOT_FOUND.message);
     }
 
-    // reqのbodyにuserIdを追加
-    // FIXME: req.localsに入れるようにする。その他の部分についても。
-    req.body.userId = decoded.id;
+    // resのLocalsに保持
+    res.locals.userId = userId;
     next();
   } catch (e) {
     errorResponseHandler(e, userId, req, res, funcName);
