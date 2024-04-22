@@ -33,6 +33,7 @@ export const findUniqueUserAbsoluteExist = async (
  * @param where
  * @returns
  */
+// FIXME: userが0のときにエラーを投げることが伝わらない。
 export const findActivedUsers = async (
   where: Prisma.UserWhereInput,
   prismaClient: typeof customizedPrisma

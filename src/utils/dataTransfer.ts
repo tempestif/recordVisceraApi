@@ -36,23 +36,30 @@ export const createFilterForPrisma = (filterOptions: FilterOptionsType) => {
  * @param sort paramsから渡されたsort
  * @returns
  */
-export const createSortsForPrisma = (sort: string | undefined) => {
-  // NOTE: 引数の文字列のチェックはどうする？
+export const createSortsForPrisma = <
+  FieldName extends string,
+  MinFieldName extends string,
+>(
+  sorts: (FieldName | MinFieldName)[] | undefined,
+) => {
+  // sortに何も指定が無いなら何も指定しない(=空のオブジェクトでPrisma実行)
+  if (!sorts) return {};
+
   // 指定されたソートの内容をprismaに渡せるように成型
-  const sorts: { [key: string]: string }[] = [];
-  sort?.split(",").forEach((s) => {
-    if (s[0] === "-") {
-      const property = s.slice(1);
-      sorts.push({
+  const orderBy: { [key: string]: "desc" | "asc" }[] = [];
+  sorts.forEach((sort) => {
+    if (sort.startsWith("-")) {
+      const property = sort.slice(1);
+      orderBy.push({
         [property]: "desc",
       });
-    } else if (s) {
-      sorts.push({
-        [s]: "asc",
+    } else {
+      orderBy.push({
+        [sort]: "asc",
       });
     }
   });
-  return sorts;
+  return orderBy;
 };
 
 /**
@@ -61,12 +68,15 @@ export const createSortsForPrisma = (sort: string | undefined) => {
  * @param fields 必要なフィールド
  * @returns
  */
-export const createSelectForPrisma = (fields: string | undefined) => {
+export const createSelectForPrisma = <FieldName extends string>(
+  fields: FieldName[] | undefined,
+) => {
+  // sortに何も指定が無いなら何も指定しない(=空のオブジェクトでPrisma実行)
+  if (!fields) return {};
+
   // 指定されたフィールドを抽出
-
   const select: { [key: string]: true } = {};
-
-  fields?.split(",").forEach((field) => {
+  fields.forEach((field) => {
     if (field) {
       select[field] = true;
     }

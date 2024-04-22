@@ -1,10 +1,10 @@
-import type { Request, Response } from "express";
-import { customizedPrisma } from "@/utils/prismaClients";
-import { logResponse } from "@/utils/logger/utilLogger";
-import { basicHttpResponce } from "@/utils/utilResponse";
 import { registUser } from "@/controllers/account";
-import { randomBytes } from "crypto";
 import { sendMailForEmailVerify } from "@/services/accountService";
+import { logResponse } from "@/utils/logger/utilLogger";
+import { customizedPrisma } from "@/utils/prismaClients";
+import { basicHttpResponce } from "@/utils/utilResponse";
+import { randomBytes } from "crypto";
+import type { Request, Response } from "express";
 
 jest.mock("@/utils/utilResponse", () => ({
   ...jest.requireActual("@/utils/utilResponse"),
@@ -20,8 +20,6 @@ jest.mock("@/utils/prismaClients", () => ({
       findMany: jest.fn().mockImplementation(() => []),
       create: jest.fn().mockImplementation(() => ({
         id: 10,
-        day: new Date("2023-10-13T17:40:33.000Z"),
-        time: new Date("2023-10-13T17:40:33.000Z"),
         email: "testmail@test",
         password: "password",
         name: "hoge",
@@ -109,7 +107,7 @@ describe("registUserのテスト", () => {
 
     expect(sendMailForEmailVerify).toHaveBeenCalledWith(
       "testmail@test",
-      `${process.env.BASE_URL}/users/10/verify/mock-hash`
+      `${process.env.BASE_URL}/users/10/verify/mock-hash`,
     );
 
     const httpStatus = 201;
@@ -119,7 +117,7 @@ describe("registUserのテスト", () => {
       mockRes,
       httpStatus,
       responseStatus,
-      responseMsg
+      responseMsg,
     );
 
     expect(logResponse).toHaveBeenCalledWith(
@@ -127,7 +125,7 @@ describe("registUserのテスト", () => {
       mockReq,
       httpStatus,
       responseMsg,
-      "registUser"
+      "registUser",
     );
   });
 });

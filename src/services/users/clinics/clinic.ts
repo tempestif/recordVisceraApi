@@ -17,14 +17,13 @@ type CheckupType = {
 export const createClinicReport = async (
   userId: number,
   date: Date,
-  checkups: CheckupType
+  checkups: CheckupType,
 ) => {
   // clinic_ReportをCheckup付で作り、そのcheckupIdから各検査を追加していく
   const newReport = await customizedPrisma.clinic_Report.create({
     data: {
       userId,
-      day: date,
-      time: date,
+      date: date,
     },
     include: {
       Checkup: true,

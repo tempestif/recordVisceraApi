@@ -1,13 +1,13 @@
-import { Prisma } from "@prisma/client";
-import { customizedPrisma } from "@/utils/prismaClients";
 import { ERROR_DAILY_REPORT_NOT_FOUND } from "@/consts/responseMessages";
 import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
+import { transformNameTableToModel } from "@/utils/format";
+import { customizedPrisma } from "@/utils/prismaClients";
+import { Prisma } from "@prisma/client";
 import {
-  DynamicModelExtensionThis,
   Args_2,
   DefaultArgs,
+  DynamicModelExtensionThis,
 } from "@prisma/client/runtime/library";
-import { transformNameTableToModel } from "@/utils/format";
 
 /**
  * DBより、今日の体調の存在確認、取得を行う。
@@ -19,7 +19,7 @@ import { transformNameTableToModel } from "@/utils/format";
  */
 export const findUniqueDailyReportAbsoluteExist = async (
   where: Prisma.Daily_ReportWhereUniqueInput,
-  prismaClient: typeof customizedPrisma
+  prismaClient: typeof customizedPrisma,
 ) => {
   // idから今日の体調を取得
   const dailyReportData = await prismaClient.daily_Report.findUnique({
@@ -57,7 +57,7 @@ export type RecordDataType = {
 export const createDailyReport = async (
   userId: number,
   date: Date,
-  recordData: RecordDataType
+  recordData: RecordDataType,
 ) => {
   // TODO: try-catchを実装する。
   // 今日の体調テーブルを作成
@@ -65,7 +65,6 @@ export const createDailyReport = async (
     data: {
       userId,
       day: date,
-      time: date,
     },
   });
   const dailyReportId = dailyReport.id;
@@ -76,7 +75,7 @@ export const createDailyReport = async (
     await createDailyReportRecordsTable(
       customizedPrisma.daily_report_Temp,
       dailyReportId,
-      { result: recordData.temp }
+      { result: recordData.temp },
     );
   }
   // 体重
@@ -84,7 +83,7 @@ export const createDailyReport = async (
     await createDailyReportRecordsTable(
       customizedPrisma.daily_report_Weight,
       dailyReportId,
-      { result: recordData.weight }
+      { result: recordData.weight },
     );
   }
   // 腹痛
@@ -92,7 +91,7 @@ export const createDailyReport = async (
     await createDailyReportRecordsTable(
       customizedPrisma.daily_report_Stomachache,
       dailyReportId,
-      { stomachache_Scale_TypesId: recordData.stomachach }
+      { stomachache_Scale_TypesId: recordData.stomachach },
     );
   }
   // 体調
@@ -100,7 +99,7 @@ export const createDailyReport = async (
     await createDailyReportRecordsTable(
       customizedPrisma.daily_report_Condition,
       dailyReportId,
-      { condition_Scale_TypesId: recordData.condition }
+      { condition_Scale_TypesId: recordData.condition },
     );
   }
   // 関節痛の有無
@@ -108,7 +107,7 @@ export const createDailyReport = async (
     await createDailyReportRecordsTable(
       customizedPrisma.daily_report_Arthritis,
       dailyReportId,
-      { result: recordData.arthritis }
+      { result: recordData.arthritis },
     );
   }
   // 皮膚病変の有無
@@ -116,7 +115,7 @@ export const createDailyReport = async (
     await createDailyReportRecordsTable(
       customizedPrisma.daily_report_Skin_Lesions,
       dailyReportId,
-      { result: recordData.skinLesitions }
+      { result: recordData.skinLesitions },
     );
   }
   // 眼病変の有無
@@ -124,7 +123,7 @@ export const createDailyReport = async (
     await createDailyReportRecordsTable(
       customizedPrisma.daily_report_Ocular_Lesitions,
       dailyReportId,
-      { result: recordData.ocularLesitions }
+      { result: recordData.ocularLesitions },
     );
   }
   // 肛門病変の有無
@@ -135,7 +134,7 @@ export const createDailyReport = async (
       {
         fistula: recordData.anirectalLesitions,
         others: recordData.anirectalOtherLesitions,
-      }
+      },
     );
   }
   // 腹部腫瘤の有無
@@ -143,7 +142,7 @@ export const createDailyReport = async (
     await createDailyReportRecordsTable(
       customizedPrisma.daily_report_Abdominal,
       dailyReportId,
-      { abdominal_Scale_TypesId: recordData.abdominal }
+      { abdominal_Scale_TypesId: recordData.abdominal },
     );
   }
 
@@ -187,7 +186,7 @@ const createDailyReportRecordsTable = async (
     DefaultArgs
   >,
   dailyReportId: number,
-  data: any
+  data: any,
 ) => {
   await prismaTable.create({
     data: {
@@ -200,7 +199,7 @@ const createDailyReportRecordsTable = async (
 export const updateDailyReport = async (
   dailyReportId: number,
   date: string,
-  recordData: RecordDataType
+  recordData: RecordDataType,
 ) => {
   const { include, data } = createUpdateData(date, recordData);
   const whereByDailyReportId = { id: dailyReportId };
@@ -259,7 +258,6 @@ const createUpdateData = (date: string, recordData: RecordDataType) => {
   const include: Prisma.Daily_ReportInclude = {};
   if (date) {
     data.day = new Date(date);
-    data.time = new Date(date);
   }
   if (recordData.temp) {
     data.Daily_report_Temp = {

@@ -1,10 +1,10 @@
+import { registDailyReport } from "@/controllers/users/dailyReport";
 import { createDailyReport } from "@/services/users/dailyReports";
 import { findUniqueUserAbsoluteExist } from "@/services/users/users";
-import type { Request, Response } from "express";
-import { customizedPrisma } from "@/utils/prismaClients";
 import { logResponse } from "@/utils/logger/utilLogger";
+import { customizedPrisma } from "@/utils/prismaClients";
 import { basicHttpResponceIncludeData } from "@/utils/utilResponse";
-import { registDailyReport } from "@/controllers/users/dailyReport";
+import type { Request, Response } from "express";
 jest.mock("@/services/users/users", () => ({
   ...jest.requireActual("@/services/users/users"),
   findUniqueUserAbsoluteExist: jest.fn(),
@@ -23,7 +23,6 @@ jest.mock("@/services/users/dailyReports", () => ({
     id: 1,
     note: "mock-note",
     day: new Date("2023-10-13T17:40:33.000Z"),
-    time: new Date("2023-10-13T17:40:33.000Z"),
     temp: "36.5",
     weight: "50.5",
     stomachach: "1",
@@ -86,7 +85,7 @@ describe("registDailyReportのテスト", () => {
     // 確認
     expect(findUniqueUserAbsoluteExist).toHaveBeenCalledWith(
       { id: 10 },
-      customizedPrisma
+      customizedPrisma,
     );
 
     expect(createDailyReport).toHaveBeenCalledWith(
@@ -103,7 +102,7 @@ describe("registDailyReportのテスト", () => {
         anirectalLesitions: "1",
         anirectalOtherLesitions: "1",
         abdominal: "1",
-      }
+      },
     );
 
     const httpStatus = 200;
@@ -118,7 +117,6 @@ describe("registDailyReportのテスト", () => {
         id: 1,
         note: "mock-note",
         day: new Date("2023-10-13T17:40:33.000Z"),
-        time: new Date("2023-10-13T17:40:33.000Z"),
         temp: "36.5",
         weight: "50.5",
         stomachach: "1",
@@ -132,7 +130,7 @@ describe("registDailyReportのテスト", () => {
         userId: 10,
         createdAt: new Date("2023-11-01T07:01:13.000Z"),
         updatedAt: new Date("2023-11-11T07:01:13.000Z"),
-      }
+      },
     );
 
     expect(logResponse).toHaveBeenCalledWith(
@@ -140,7 +138,7 @@ describe("registDailyReportのテスト", () => {
       mockReq,
       httpStatus,
       responseMsg,
-      "registDailyReport"
+      "registDailyReport",
     );
   });
 });

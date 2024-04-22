@@ -4,26 +4,26 @@ import {
   READ_CLINIC,
   RECORD_CLINIC,
 } from "@/consts/responseMessages/messages/clinic";
-import { CustomLogger } from "@/utils/logger/loggerClass";
-import {
-  LoggingObjType,
-  maskConfInfoInReqBody,
-} from "@/utils/logger/utilLogger";
+import { createClinicReport } from "@/services/users/clinics/clinic";
 import {
   createFilterForPrisma,
   createSortsForPrisma,
 } from "@/utils/dataTransfer";
 import { errorResponseHandler } from "@/utils/errorHandle/index";
+import { CustomLogger } from "@/utils/logger/loggerClass";
+import {
+  LoggingObjType,
+  maskConfInfoInReqBody,
+} from "@/utils/logger/utilLogger";
 import { customizedPrisma } from "@/utils/prismaClients";
-import { createClinicReport } from "@/services/users/clinics/clinic";
 import { basicHttpResponceIncludeData } from "@/utils/utilResponse";
-import type { Request, Response, NextFunction } from "express";
+import type { NextFunction, Request, Response } from "express";
 const logger = new CustomLogger();
 
 export const registClinicReport = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   // logのために関数名を取得
   const currentFuncName = registClinicReport.name;
@@ -53,7 +53,7 @@ export const registClinicReport = async (
 
     // userId、日付で同日の記録がないことを確認
     const whereByReportIdentifier = {
-      report_identifier: { userId, day: dateForDb, time: dateForDb },
+      report_identifier: { userId, date: dateForDb },
     };
     await customizedPrisma.clinic_Report.findUnique({
       where: whereByReportIdentifier,
@@ -78,7 +78,7 @@ export const registClinicReport = async (
       HttpStatus,
       responseStatus,
       responseMsg,
-      clinicReport
+      clinicReport,
     );
 
     // ログを出力
@@ -106,7 +106,7 @@ export const registClinicReport = async (
 export const readClinicReport = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   // logのために関数名を取得
   const currentFuncName = readClinicReport.name;
@@ -170,7 +170,7 @@ export const readClinicReport = async (
     const clinicReports = await customizedPrisma.clinic_Report.findMany({
       where: {
         userId,
-        day: dateForDb,
+        date: dateForDb,
         ...filter,
       },
       orderBy: sorts,

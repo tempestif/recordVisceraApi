@@ -1,14 +1,14 @@
+import { findUniqueBowelMovementAbsoluteExist } from "@/services/users/bowelMovements";
+import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
 import {
+  afterEach,
+  beforeEach,
   describe,
   expect,
   jest,
   test,
-  beforeEach,
-  afterEach,
 } from "@jest/globals";
 import { Bowel_Movement, User } from "@prisma/client";
-import { findUniqueBowelMovementAbsoluteExist } from "@/services/users/bowelMovements";
-import { DbRecordNotFoundError } from "@/utils/errorHandle/errors";
 
 // テスト用PrismaClient作成
 const jestPrismaClient = jestPrisma.client;
@@ -40,7 +40,7 @@ describe("findUniqueBowelMovementAbsoluteExistの単体テスト", () => {
       id: 9,
       userId: 2,
       day: new Date("2022-12-20T00:00:00.000Z"),
-      time: new Date("1970-01-01T09:50:00.000Z"),
+      date: new Date("1970-01-01T09:50:00.000Z"),
       bristolStoolScale: 3,
       blood: 0,
       drainage: 1,
@@ -60,7 +60,7 @@ describe("findUniqueBowelMovementAbsoluteExistの単体テスト", () => {
     // テスト実行
     const result = await findUniqueBowelMovementAbsoluteExist(
       { id: 9 },
-      jestPrismaClient
+      jestPrismaClient,
     );
     expect(result).toEqual(mockBowelMovement);
   });
@@ -68,7 +68,7 @@ describe("findUniqueBowelMovementAbsoluteExistの単体テスト", () => {
   test("排便記録が存在しない場合、DbRecordNotFoundErrorを投げる", async () => {
     // テスト実行
     await expect(
-      findUniqueBowelMovementAbsoluteExist({ id: 9 }, jestPrismaClient)
+      findUniqueBowelMovementAbsoluteExist({ id: 9 }, jestPrismaClient),
     ).rejects.toThrow(new DbRecordNotFoundError("排便記録が見つかりません。"));
   });
 });

@@ -35,7 +35,7 @@ model User {
   // ログインステータス
   loginStatus          Int                    @default(0)
   // 紐づけ
-  Bowel_Movement        Bowel_Movement[]
+  Bowel_Movement       Bowel_Movement[]
   Profile              Profile?
   User_Medical_History User_Medical_History?
   User_Setting         User_Setting?
@@ -101,8 +101,9 @@ model User_Setting {
 // 便の状態
 model Bowel_Movement {
   // 日時
+  date                 DateTime
+  // 日別の集計のためにdayを追加
   day                  DateTime            @db.Date
-  time                 DateTime            @db.Time
   // 便の状態
   Bristol_Stool_Scales Bristol_Stool_Scale @relation(fields: [bristolStoolScale], references: [id])
   bristolStoolScale    Int
@@ -133,9 +134,8 @@ model Bristol_Stool_Scale {
 
 // 今日の体調
 model Daily_Report {
-  // 日時
+  // 日
   day                              DateTime                          @db.Date
-  time                             DateTime                          @db.Time
   // 体温
   Daily_report_Temp                Daily_report_Temp?
   // 体重
@@ -161,7 +161,6 @@ model Daily_Report {
   createdAt                        DateTime                          @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt                        DateTime                          @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
-  // userIdとday, timeでユニークブロックを作成する
   @@unique([userId, day], name: "dailyReportUnique")
   @@map("daily_report")
 }
@@ -330,8 +329,7 @@ model Abdominal_Scale_Types {
 // 通院記録
 model Clinic_Report {
   // 日時
-  day         DateTime     @db.Date
-  time        DateTime     @db.Time
+  date        DateTime
   // 検査予定/結果
   Checkup     Checkup?
   // 通院ノート
@@ -343,8 +341,8 @@ model Clinic_Report {
   createdAt   DateTime     @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt   DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
+  @@unique(fields: [userId, date], name: "report_identifier")
   @@map("clinic_report")
-  @@unique(fields: [userId, day, time], name: "report_identifier")
 }
 
 // 検査予定/結果
@@ -527,8 +525,7 @@ model Medication_Timing_Types {
 // ユーザー服薬記録
 model Medication_Result {
   // 日時
-  day                  DateTime             @db.Date
-  time                 DateTime             @db.Time
+  date                 DateTime
   // 薬剤
   Medication_Info_User Medication_Info_User @relation(fields: [medicationInfoId], references: [id])
   medicationInfoId     Int

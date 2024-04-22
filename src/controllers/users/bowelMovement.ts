@@ -1,40 +1,13 @@
-import { DEFAULT_DATA_INFO } from "@/consts/dbMappings";
-import {
-  PROCESS_FAILURE,
-  PROCESS_SUCCESS,
-  UNSPECIFIED_USER_ID,
-} from "@/consts/logMessages";
-import {
-  ERROR_BOWEL_MOVEMENT_ACCESS_FORBIDDEN,
-  COUNT_BOWEL_MOVEMENT_PER_DAY,
-  DELETE_BOWEL_MOVEMENT,
-  EDIT_BOWEL_MOVEMENT,
-  READ_BOWEL_MOVEMENT,
-  RECORD_BOWEL_MOVEMENT,
-} from "@/consts/responseMessages/messages/bowelMovement";
-import {
-  LoggingObjType,
-  logResponse,
-  maskConfInfoInReqBody,
-} from "@/utils/logger/utilLogger";
-import {
-  FilterOptionsType,
-  createFilterForPrisma,
-  createSelectForPrisma,
-  createSortsForPrisma,
-} from "@/utils/dataTransfer";
-import { errorResponseHandler } from "@/utils/errorHandle";
-import { customizedPrisma } from "@/utils/prismaClients";
-import { BadRequestError } from "@/utils/errorHandle/errors";
-import { findUniqueUserAbsoluteExist } from "@/services/users/users";
-import { findUniqueBowelMovementAbsoluteExist } from "@/services/users/bowelMovements";
-import {
-  basicHttpResponce,
-  basicHttpResponceIncludeData,
-} from "@/utils/utilResponse";
-import type { Request, Response, NextFunction } from "express";
-import { ERROR_BAD_REQUEST } from "@/consts/responseMessages/messages/utils";
-// const logger = new CustomLogger();
+import type { NextFunction } from "express";
+
+import * as count from "@/services/users/bowelMovements/endpoints/count";
+import * as del from "@/services/users/bowelMovements/endpoints/delete";
+import * as edit from "@/services/users/bowelMovements/endpoints/edit";
+import * as read from "@/services/users/bowelMovements/endpoints/read";
+import * as regist from "@/services/users/bowelMovements/endpoints/regist";
+import { throwValidationError } from "@/utils/errorHandle/validate";
+import { Prisma } from "@prisma/client";
+import { validationResult } from "express-validator";
 
 /**
  * 新たな排便記録を作成する
@@ -45,75 +18,40 @@ import { ERROR_BAD_REQUEST } from "@/consts/responseMessages/messages/utils";
  * @returns
  */
 export const registBowelMovement = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
+  req: regist.VerifiedRequesetType,
+  res: regist.VerifiedResponseType,
+  next: NextFunction,
 ) => {
-  const userId = Number(req.body.userId);
-  const bristolStoolScale = Number(req.body.bristolStoolScale);
-  const blood = Number(req.body.blood);
-  const drainage = Number(req.body.drainage);
-  const { note, date } = req.body;
-
-  // logのために関数名を取得
-  const currentFuncName = registBowelMovement.name;
-  // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
-
+  // バリデーション結果を評価
+  const errors = validationResult(req);
   try {
-    if (!userId || !bristolStoolScale || !blood || !drainage) {
-      throw new BadRequestError(ERROR_BAD_REQUEST.message);
-    }
-
-    // userIdからユーザーを取得
-    const whereByUserId = { id: userId };
-    await findUniqueUserAbsoluteExist(whereByUserId, customizedPrisma);
-
-    // dateをDate型に変換
-    let dateForDb;
-    if (!date) {
-      // dateが指定なしの場合、現在日時を入力
-      dateForDb = new Date();
-    } else {
-      // dateが指定されていた場合、指定のdate
-      dateForDb = new Date(date);
-    }
-
-    // 排便記録を追加
-    const bowelMovementData = await customizedPrisma.bowel_Movement.create({
-      data: {
-        userId,
-        day: dateForDb,
-        time: dateForDb,
-        blood,
-        drainage,
-        note,
-        bristolStoolScale,
-      },
-    });
-
-    // レスポンスを返却
-    const httpStatus = 200;
-    const responseStatus = true;
-    const responseMsg = RECORD_BOWEL_MOVEMENT.message;
-    basicHttpResponceIncludeData(
-      res,
-      httpStatus,
-      responseStatus,
-      responseMsg,
-      bowelMovementData
-    );
-
-    // ログを出力
-    logResponse(userId, req, httpStatus, responseMsg, currentFuncName);
+    throwValidationError(errors);
   } catch (e) {
-    errorResponseHandler(
-      e,
-      !userId ? UNSPECIFIED_USER_ID.message : userId,
-      req,
-      res,
-      currentFuncName
-    );
+    regist.validationErrorHandle(e, req, res);
+    return;
   }
+
+  const userId = res.locals.userId;
+  const body = req.body;
+
+  // 排便記録を追加
+  let bowelMovementData: Prisma.$Bowel_MovementPayload["scalars"] | null = null;
+  try {
+    const { blood, drainage, note, bristolStoolScale, date: bodyDate } = body;
+    const insertData = {
+      date: bodyDate ?? new Date(),
+      blood,
+      drainage,
+      note,
+      bristolStoolScale,
+    };
+    bowelMovementData = await regist.createBowelMovement(userId, insertData);
+  } catch (e) {
+    regist.createBowelMovementErrorHandle(e, req, res, userId);
+    return;
+  }
+
+  regist.sendResponse(userId, req, res, bowelMovementData);
 };
 
 /**
@@ -129,144 +67,46 @@ export const registBowelMovement = async (
  * @param next
  */
 export const readBowelMovements = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
+  req: read.VerifiedRequestType,
+  res: read.VerifiedResponseType,
+  next: NextFunction,
 ) => {
-  // logのために関数名を取得
-  const currentFuncName = readBowelMovements.name;
-  // クエリのデータを扱いやすくするための型を定義
-  type Query = {
-    sort: string | undefined;
-    fields: string | undefined;
-    limit: string | undefined;
-    offset: string | undefined;
-  };
-  // フィルター以外の条件を取得
-  const { sort, fields, limit, offset } = req.query as Query;
-
-  // bodyからuserIdを取得
-  const userId = Number(req.body.userId);
-
-  // 指定されたソートの内容をprismaに渡せるように成型
-  const sorts = createSortsForPrisma(sort);
-  // 指定されたフィールドのみ取得するように設定
-  const select = createSelectForPrisma(fields);
-
-  //  クエリで指定されたフィルターの内容を連想配列にまとめる
-  const {
-    id,
-    date,
-    blood,
-    drainage,
-    note,
-    bristolStoolScale,
-    createdAt,
-    updatedAt,
-  } = req.query;
-  const filterOptions: FilterOptionsType = {
-    id: {
-      data: id,
-      constructor: (i) => Number(i),
-    },
-    day: {
-      data: date,
-      constructor: (i) => new Date(i),
-    },
-    time: {
-      data: date,
-      constructor: (i) => new Date(i),
-    },
-    blood: {
-      data: blood,
-      constructor: (i) => Number(i),
-    },
-    drainage: {
-      data: drainage,
-      constructor: (i) => Number(i),
-    },
-    note: {
-      data: note,
-      constructor: (i) => String(i),
-    },
-    bristolStoolScale: {
-      data: bristolStoolScale,
-      constructor: (i) => Number(i),
-    },
-    createdAt: {
-      data: createdAt,
-      constructor: (i) => new Date(i),
-    },
-    updatedAt: {
-      data: updatedAt,
-      constructor: (i) => new Date(i),
-    },
-  };
-  // 指定されたフィールドのみのオブジェクトを作成
-  const filter = createFilterForPrisma(filterOptions);
-
+  // バリデーション結果を評価
+  const errors = validationResult(req);
   try {
-    // userの有無を確認
-    const where = { id: userId };
-    findUniqueUserAbsoluteExist(where, customizedPrisma);
-
-    // 排便記録を取得
-    const bowelMovents = await customizedPrisma.bowel_Movement.findMany({
-      orderBy: sorts,
-      where: {
-        userId,
-        ...filter,
-      },
-      skip: offset ? Number(offset) : DEFAULT_DATA_INFO.offset,
-      take: limit ? Number(limit) : DEFAULT_DATA_INFO.limit,
-      select,
-    });
-
-    // NOTE: ひとまずもう一度全検索でallCountを取る。もっといい方法を考える。
-    const allCount = await customizedPrisma.bowel_Movement.count({
-      where: { userId },
-    });
-
-    // レスポンス
-    const HttpStatus = 200;
-    const responseStatus = true;
-    const responseMsg = READ_BOWEL_MOVEMENT.message;
-    res.status(HttpStatus).json({
-      status: responseStatus,
-      message: responseMsg,
-      allCount: allCount,
-      count: bowelMovents.length,
-      sort: sort ?? "",
-      fields: fields ?? "",
-      limit: limit ?? "",
-      offset: offset ?? "",
-      filter: {
-        id: id ?? "",
-        date: date ?? "",
-        blood: blood ?? "",
-        drainage: drainage ?? "",
-        note: note ?? "",
-        bristolStoolScale: bristolStoolScale ?? "",
-        createdAt: createdAt ?? "",
-        updatedAt: updatedAt ?? "",
-      },
-      bowelMovements: bowelMovents,
-    });
-
-    // ログを出力
-    const logBody: LoggingObjType = {
-      userId,
-      ipAddress: req.ip,
-      method: req.method,
-      path: req.originalUrl,
-      body: maskConfInfoInReqBody(req).body,
-      status: String(HttpStatus),
-      responseMsg,
-    };
-    // logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
+    throwValidationError(errors);
   } catch (e) {
-    errorResponseHandler(e, userId, req, res, currentFuncName);
+    read.validationErrorHandle(e, req, res);
+    return;
   }
+
+  // userIdを取得
+  const userId = res.locals.userId;
+
+  // クエリ取得
+  const query = req.query;
+
+  // bowelMovements取得
+  let bowelMovements:
+    | Prisma.TypeMap["model"]["Bowel_Movement"]["operations"]["findMany"]["result"]
+    | null = null;
+  try {
+    bowelMovements = await read.getBowelMovements(userId, query);
+  } catch (e) {
+    read.getBowelMovementsErrorHandle(e, userId, req, res);
+    return;
+  }
+
+  // 全体数をカウント
+  let allCount: number | null = null;
+  try {
+    allCount = await read.getAllCount(userId);
+  } catch (e) {
+    read.getAllCountErrorHandle(e, userId, req, res);
+    return;
+  }
+
+  read.sendResponse(req, res, bowelMovements, allCount);
 };
 
 /**
@@ -280,111 +120,36 @@ export const readBowelMovements = async (
  * @param next
  */
 export const editBowelMovement = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
+  req: edit.VerifiedRequestType,
+  res: edit.VerifiedResponseType,
+  next: NextFunction,
 ) => {
-  const id = Number(req.params.id);
-  const { userId, date, blood, drainage, note, bristolStoolScale } = req.body;
-
-  // logのために関数名を取得
-  const currentFuncName = editBowelMovement.name;
-
-  // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
-
+  // バリデーション結果を評価
+  const errors = validationResult(req);
   try {
-    // idから排便記録を取得
-    const whereByBowelMovementId = { id };
-    const bowelMoventData = await findUniqueBowelMovementAbsoluteExist(
-      whereByBowelMovementId,
-      customizedPrisma
-    );
-
-    // 指定した体温記録がユーザー本人のものか確認
-    const isSelfUser = bowelMoventData.userId === userId;
-    // ユーザー本人のものではない場合、403を返す
-    if (!isSelfUser) {
-      const HttpStatus = 403;
-      const responseStatus = false;
-      const responseMsg = ERROR_BOWEL_MOVEMENT_ACCESS_FORBIDDEN.message;
-      basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
-
-      // ログを出力
-      const logBody: LoggingObjType = {
-        userId,
-        ipAddress: req.ip,
-        method: req.method,
-        path: req.originalUrl,
-        body: maskConfInfoInReqBody(req).body,
-        status: String(HttpStatus),
-        responseMsg,
-      };
-      // logger.error(
-      //     PROCESS_FAILURE.message(editBowelMovement.name),
-      //     logBody
-      // );
-
-      return;
-    }
-
-    // 編集するdataを成型
-    // NOTE: Prisma.$Bowel_MovementPayload['scalars']; これ使えるかも
-    // TODO: どれが必須であるべきか要検討。blood,drainage, bristolStoolScaleも必須じゃないのでは？
-    type BowelMovementData = {
-      blood: number;
-      drainage: number;
-      bristolStoolScale: number;
-      note?: string;
-      day?: Date;
-      time?: Date;
-    };
-    const data: BowelMovementData = {
-      blood,
-      drainage,
-      bristolStoolScale,
-    };
-    // dateが設定されているときのみdataに追加
-    if (date) {
-      data.day = new Date(date);
-      data.time = new Date(date);
-    }
-    // noteが設定されているときのみ追加
-    if (note) {
-      data.note = note;
-    }
-
-    // 排便記録を編集
-    const newBowelMovement = await customizedPrisma.bowel_Movement.update({
-      where: { id },
-      data: data,
-    });
-
-    // レスポンスを返却
-    const HttpStatus = 200;
-    const responseStatus = true;
-    const responseMsg = EDIT_BOWEL_MOVEMENT.message;
-    basicHttpResponceIncludeData(
-      res,
-      HttpStatus,
-      responseStatus,
-      responseMsg,
-      newBowelMovement
-    );
-
-    // ログを出力
-    const logBody: LoggingObjType = {
-      userId,
-      ipAddress: req.ip,
-      method: req.method,
-      path: req.originalUrl,
-      body: maskConfInfoInReqBody(req).body,
-      status: String(HttpStatus),
-      responseMsg,
-    };
-    // logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
+    throwValidationError(errors);
   } catch (e) {
-    errorResponseHandler(e, userId, req, res, currentFuncName);
+    edit.validationErrorHandle(e, req, res);
+    return;
   }
+
+  // リクエストパラメータの取得
+  const id = req.params.id;
+  const userId = res.locals.userId;
+  const body = req.body;
+
+  // 排便記録を更新する
+  let newBowelMovement:
+    | Prisma.TypeMap["model"]["Bowel_Movement"]["operations"]["update"]["result"]
+    | null = null;
+  try {
+    newBowelMovement = await edit.updateBowelMovement(id, userId, body);
+  } catch (e) {
+    edit.updateBowelMovementErrorHandle(e, userId, req, res);
+    return;
+  }
+
+  edit.sendResponse(userId, req, res, newBowelMovement);
 };
 
 /**
@@ -398,149 +163,67 @@ export const editBowelMovement = async (
  * @returns
  */
 export const deleteBowelMovement = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
+  req: del.VerifiedRequestType,
+  res: del.VerifiedResponseType,
+  next: NextFunction,
 ) => {
-  const id = Number(req.params.id);
-  const { userId } = req.body;
-
-  // logのために関数名を取得
-  const currentFuncName = deleteBowelMovement.name;
-
-  // TODO: バリデーション バリデーションエラーは詳細にエラーを返す
-
+  // バリデーション結果を評価
+  const errors = validationResult(req);
   try {
-    // idから排便記録を取得
-    const whereByBowelMoventId = { id };
-    const bowelMoventData = await findUniqueBowelMovementAbsoluteExist(
-      whereByBowelMoventId,
-      customizedPrisma
-    );
-
-    // 指定した排便記録がユーザー本人のものか確認
-    const isSelfUser = bowelMoventData.userId === userId;
-    // ユーザー本人のものではない場合、403を返す
-    if (!isSelfUser) {
-      const HttpStatus = 403;
-      const responseStatus = false;
-      const responseMsg = ERROR_BOWEL_MOVEMENT_ACCESS_FORBIDDEN.message;
-      basicHttpResponce(res, HttpStatus, responseStatus, responseMsg);
-
-      // ログを出力
-      const logBody: LoggingObjType = {
-        userId,
-        ipAddress: req.ip,
-        method: req.method,
-        path: req.originalUrl,
-        body: maskConfInfoInReqBody(req).body,
-        status: String(HttpStatus),
-        responseMsg,
-      };
-      // logger.error(PROCESS_FAILURE.message(currentFuncName), logBody);
-
-      return;
-    }
-
-    // 排便記録を削除
-    const newBowelMovement = await customizedPrisma.bowel_Movement.delete({
-      where: { id },
-    });
-
-    // レスポンスを返却
-    const HttpStatus = 200;
-    const responseStatus = true;
-    const responseMsg = DELETE_BOWEL_MOVEMENT.message;
-    basicHttpResponceIncludeData(
-      res,
-      HttpStatus,
-      responseStatus,
-      responseMsg,
-      newBowelMovement
-    );
-
-    // ログを出力
-    const logBody: LoggingObjType = {
-      userId,
-      ipAddress: req.ip,
-      method: req.method,
-      path: req.originalUrl,
-      body: maskConfInfoInReqBody(req).body,
-      status: String(HttpStatus),
-      responseMsg,
-    };
-    // logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
+    throwValidationError(errors);
   } catch (e) {
-    errorResponseHandler(e, userId, req, res, currentFuncName);
+    del.validationErrorHandle(e, req, res);
+    return;
   }
+
+  // リクエストパラメータの取得
+  const id = req.params.id;
+  const userId = res.locals.userId;
+
+  let deletedBowelMovement:
+    | Prisma.TypeMap["model"]["Bowel_Movement"]["operations"]["delete"]["result"]
+    | null = null;
+  try {
+    deletedBowelMovement = await del.deleteBowelMovement(id, userId);
+  } catch (e) {
+    del.deleteBowelMovementErrorHandle(e, userId, req, res);
+    return;
+  }
+
+  del.sendResponse(userId, req, res, deletedBowelMovement);
 };
 
+/**
+ * 日毎の排便回数を返却する
+ * @param req
+ * @param res
+ * @param next
+ * @returns
+ */
 export const countBowelMovementsPerDay = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
+  req: count.VerifiedRequestType,
+  res: count.VerifiedResponseType,
+  next: NextFunction,
 ) => {
-  const { userId } = req.body;
-
-  // logのために関数名を取得
-  const currentFuncName = countBowelMovementsPerDay.name;
-
-  // クエリのデータを扱いやすくするための型を定義
-  type Query = {
-    limit: string | undefined;
-    offset: string | undefined;
-  };
-  const { limit, offset } = req.query as Query;
-
+  // バリデーション結果を評価
+  const errors = validationResult(req);
   try {
-    // userIdからユーザーの存在を確認
-    const whereByUserId = { id: userId };
-    await findUniqueUserAbsoluteExist(whereByUserId, customizedPrisma);
-
-    // groupBy()で日付毎にカウント。
-    const groupBowelMovements = await customizedPrisma.bowel_Movement.groupBy({
-      by: ["day"],
-      where: {
-        userId,
-      },
-      _count: {
-        _all: true,
-      },
-    });
-
-    // クエリがなかったらデフォルト値を利用
-    const offsetNum = offset ? Number(offset) : DEFAULT_DATA_INFO.offset;
-    const limitNum = limit ? Number(limit) : DEFAULT_DATA_INFO.limit;
-
-    // クエリの範囲のみ切り出し
-    const start = offsetNum;
-    const end = start + limitNum;
-    const slicedGroupBowelMovements = groupBowelMovements.slice(start, end);
-
-    // レスポンスを返却
-    const HttpStatus = 200;
-    const responseStatus = true;
-    const responseMsg = COUNT_BOWEL_MOVEMENT_PER_DAY.message;
-    res.status(HttpStatus).json({
-      status: responseStatus,
-      message: responseMsg,
-      allCount: groupBowelMovements.length,
-      count: slicedGroupBowelMovements.length,
-      data: slicedGroupBowelMovements,
-    });
-
-    // ログを出力
-    const logBody: LoggingObjType = {
-      userId,
-      ipAddress: req.ip,
-      method: req.method,
-      path: req.originalUrl,
-      body: maskConfInfoInReqBody(req).body,
-      status: String(HttpStatus),
-      responseMsg,
-    };
-    // logger.log(PROCESS_SUCCESS.message(currentFuncName), logBody);
+    throwValidationError(errors);
   } catch (e) {
-    errorResponseHandler(e, userId, req, res, currentFuncName);
+    count.validationErrorHandle(e, req, res);
+    return;
   }
+
+  const userId = res.locals.userId;
+
+  // 日毎に排便記録をカウント
+  let dailyBowelMovementsCount: count.DailyBowelMovementsCounts | null = null;
+  try {
+    dailyBowelMovementsCount = await count.countDailyBowelMovements(userId);
+  } catch (e) {
+    count.countDailyBowelMovementsErrorHandle(e, userId, req, res);
+    return;
+  }
+
+  count.sendResponse(userId, req, res, dailyBowelMovementsCount);
 };

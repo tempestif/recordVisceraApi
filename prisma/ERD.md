@@ -45,8 +45,8 @@ erDiagram
   
 
   "bowel_movements" {
+    DateTime date 
     DateTime day 
-    DateTime time 
     Int bristolStoolScale 
     Int blood 
     Int drainage 
@@ -66,7 +66,6 @@ erDiagram
 
   "daily_report" {
     DateTime day 
-    DateTime time 
     Int id "🗝️"
     Int userId 
     DateTime createdAt 
@@ -178,8 +177,7 @@ erDiagram
   
 
   "clinic_report" {
-    DateTime day 
-    DateTime time 
+    DateTime date 
     Int id "🗝️"
     Int userId 
     DateTime createdAt 
@@ -290,8 +288,7 @@ erDiagram
   
 
   "medication_result" {
-    DateTime day 
-    DateTime time 
+    DateTime date 
     Int medicationInfoId 
     Int id "🗝️"
     Int userId 

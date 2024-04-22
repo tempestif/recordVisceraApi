@@ -1,14 +1,14 @@
-import { Request, Response } from "express";
 import { registBowelMovement } from "@/controllers/users/bowelMovement";
+import { findUniqueUserAbsoluteExist } from "@/services/users/users";
+import { errorResponseHandler } from "@/utils/errorHandle";
 import {
   BadRequestError,
   DbRecordNotFoundError,
 } from "@/utils/errorHandle/errors";
-import { findUniqueUserAbsoluteExist } from "@/services/users/users";
+import { logResponse } from "@/utils/logger/utilLogger";
 import { customizedPrisma } from "@/utils/prismaClients";
 import { basicHttpResponceIncludeData } from "@/utils/utilResponse";
-import { logResponse } from "@/utils/logger/utilLogger";
-import { errorResponseHandler } from "@/utils/errorHandle";
+import { Request, Response } from "express";
 
 jest.mock("@/services/users/users", () => ({
   ...jest.requireActual("@/services/users/users"),
@@ -28,8 +28,8 @@ jest.mock("@/utils/prismaClients", () => ({
       create: jest.fn().mockImplementation(() => ({
         id: 1,
         note: "mock-note",
+        date: new Date("2023-10-13T17:40:33.000Z"),
         day: new Date("2023-10-13T17:40:33.000Z"),
-        time: new Date("2023-10-13T17:40:33.000Z"),
         blood: 1,
         drainage: 1,
         bristolStoolScale: 1,
@@ -85,7 +85,7 @@ describe("registBowelMovementのテスト", () => {
     // 確認
     expect(findUniqueUserAbsoluteExist).toHaveBeenCalledWith(
       { id: 10 },
-      customizedPrisma
+      customizedPrisma,
     );
 
     const customizedPrismaBowelMovementCreateInstance = customizedPrisma
@@ -94,7 +94,7 @@ describe("registBowelMovementのテスト", () => {
       data: {
         userId: 10,
         day: new Date("2023-10-13T17:40:33.000Z"),
-        time: new Date("2023-10-13T17:40:33.000Z"),
+        date: new Date("2023-10-13T17:40:33.000Z"),
         blood: 1,
         drainage: 1,
         note: "mock-note",
@@ -114,14 +114,14 @@ describe("registBowelMovementのテスト", () => {
         id: 1,
         note: "mock-note",
         day: new Date("2023-10-13T17:40:33.000Z"),
-        time: new Date("2023-10-13T17:40:33.000Z"),
+        date: new Date("2023-10-13T17:40:33.000Z"),
         blood: 1,
         drainage: 1,
         bristolStoolScale: 1,
         userId: 10,
         createdAt: new Date("2023-11-01T07:01:13.000Z"),
         updatedAt: new Date("2023-11-11T07:01:13.000Z"),
-      }
+      },
     );
 
     expect(logResponse).toHaveBeenCalledWith(
@@ -129,7 +129,7 @@ describe("registBowelMovementのテスト", () => {
       mockReq,
       httpStatus,
       responseMsg,
-      "registBowelMovement"
+      "registBowelMovement",
     );
   });
   test("userIdがない", async () => {
@@ -155,7 +155,7 @@ describe("registBowelMovementのテスト", () => {
       "unspecified",
       mockReq,
       mockRes,
-      "registBowelMovement"
+      "registBowelMovement",
     );
   });
   test("bristolStoolScaleがない", async () => {
@@ -181,7 +181,7 @@ describe("registBowelMovementのテスト", () => {
       10,
       mockReq,
       mockRes,
-      "registBowelMovement"
+      "registBowelMovement",
     );
   });
   test("bloodがない", async () => {
@@ -207,7 +207,7 @@ describe("registBowelMovementのテスト", () => {
       10,
       mockReq,
       mockRes,
-      "registBowelMovement"
+      "registBowelMovement",
     );
   });
   test("drainageがない", async () => {
@@ -233,7 +233,7 @@ describe("registBowelMovementのテスト", () => {
       10,
       mockReq,
       mockRes,
-      "registBowelMovement"
+      "registBowelMovement",
     );
   });
   test("findUniqueUserAbsoluteExistがエラーを投げる", async () => {
@@ -265,7 +265,7 @@ describe("registBowelMovementのテスト", () => {
       10,
       mockReq,
       mockRes,
-      "registBowelMovement"
+      "registBowelMovement",
     );
   });
 });
