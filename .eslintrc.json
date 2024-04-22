@@ -7,6 +7,7 @@
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended",
     "prettier"
   ],
   "parser": "@typescript-eslint/parser",
@@ -14,16 +15,20 @@
     "sourceType": "module",
     "project": "./tsconfig.json"
   },
-  "plugins": ["@typescript-eslint"],
+  "plugins": ["@typescript-eslint", "prettier"],
   "rules": {
     // お好みで設定ください
+    "prettier/prettier": [
+      "error",
+      { "endOfLine": "auto", "tabWidth": 2, "useTabs": false }
+    ],
+    "indent": "off",
     "@typescript-eslint/no-explicit-any": 1,
     "@typescript-eslint/no-non-null-assertion": 1,
     "@typescript-eslint/no-unused-vars": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/ban-ts-comment": "off",
     "no-console": "warn",
-    "indent": ["error", 2, { "SwitchCase": 1 }],
     "quotes": ["error", "double"],
     "semi": ["error", "always"],
     "eqeqeq": "error",
