@@ -47,7 +47,7 @@ export const registBowelMovement = async (
     };
     bowelMovementData = await regist.createBowelMovement(userId, insertData);
   } catch (e) {
-    regist.createBowelMovementErrorHandle(e, req, res, userId);
+    regist.createBowelMovementErrorHandle(e, userId, req, res);
     return;
   }
 
@@ -106,7 +106,7 @@ export const readBowelMovements = async (
     return;
   }
 
-  read.sendResponse(req, res, bowelMovements, allCount);
+  read.sendResponse(userId, req, res, bowelMovements, allCount);
 };
 
 /**
