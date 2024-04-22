@@ -1,10 +1,9 @@
 import { Request } from "express";
 
-export type QueryType = string | undefined;
-export type BasedQuery = {
-  sort: QueryType;
-  fields: QueryType;
-  limit: QueryType;
-  offset: QueryType;
+export type QueryTypeBasedOnReadRequest<T extends string, U extends string> = {
+  fields: T[] | undefined;
+  sorts: U[] | undefined;
+  limit: number | undefined;
+  offset: number | undefined;
 };
 export type AnyRequest = Request<any, any, any, any>;

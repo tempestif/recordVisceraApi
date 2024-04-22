@@ -13,13 +13,12 @@ import {
   TokenNotFoundError,
 } from "@/utils/errorHandle/errors";
 import { logError } from "@/utils/logger/utilLogger";
-import { basicHttpResponce, internalServerError } from "@/utils/utilResponse";
+import { basicHttpResponce } from "@/utils/utilResponse";
 import type { Request, Response } from "express";
 
 jest.mock("@/utils/utilResponse", () => ({
   ...jest.requireActual("@/utils/utilResponse"),
   basicHttpResponce: jest.fn(),
-  internalServerError: jest.fn(),
 }));
 jest.mock("@/utils/logger/utilLogger", () => ({
   ...jest.requireActual("@/utils/logger/utilLogger"),
@@ -45,8 +44,7 @@ describe("internalServerErrorHandleのテスト", () => {
 
   test("Errorインスタンスの処理", () => {
     // mockの用意
-    const errorMassage = "Error instance";
-    const error = new Error(errorMassage);
+    const error = new Error("Error instance");
     const mockUserId = 10;
     const funcName = "internalServerErrorHandleのテスト";
 
@@ -56,18 +54,23 @@ describe("internalServerErrorHandleのテスト", () => {
       mockUserId,
       mockReq as Request,
       mockRes as Response,
-      funcName
+      funcName,
     );
 
-    const HttpStatus = 500;
+    const httpStatus = 500;
     expect(logError).toHaveBeenCalledWith(
       mockUserId,
       mockReq,
-      HttpStatus,
+      httpStatus,
       funcName,
-      errorMassage
+      "Error instance",
     );
-    expect(internalServerError).toHaveBeenCalledWith(mockRes, error);
+    expect(basicHttpResponce).toHaveBeenCalledWith(
+      mockRes as Response,
+      httpStatus,
+      false,
+      "Error instance",
+    );
   });
 
   test("Errorインスタンス以外のエラー", () => {
@@ -82,18 +85,23 @@ describe("internalServerErrorHandleのテスト", () => {
       mockUserId,
       mockReq as Request,
       mockRes as Response,
-      funcName
+      funcName,
     );
 
-    const HttpStatus = 500;
+    const httpStatus = 500;
     expect(logError).toHaveBeenCalledWith(
       mockUserId,
       mockReq,
-      HttpStatus,
+      httpStatus,
       funcName,
-      UNEXPECTED_ERROR.message
+      UNEXPECTED_ERROR.message,
     );
-    expect(internalServerError).toHaveBeenCalledWith(mockRes, error);
+    expect(basicHttpResponce).toHaveBeenCalledWith(
+      mockRes as Response,
+      httpStatus,
+      false,
+      "unexpected error",
+    );
   });
 });
 
@@ -129,7 +137,7 @@ describe("dbRecordNotFoundErrorHandleのテスト", () => {
       userId,
       mockReq as Request,
       mockRes as Response,
-      funcName
+      funcName,
     );
 
     expect(logError).toHaveBeenCalledWith(
@@ -137,13 +145,13 @@ describe("dbRecordNotFoundErrorHandleのテスト", () => {
       mockReq,
       HttpStatus,
       funcName,
-      errorMassage
+      errorMassage,
     );
     expect(basicHttpResponce).toHaveBeenCalledWith(
       mockRes,
       HttpStatus,
       responseStatus,
-      errorMassage
+      errorMassage,
     );
   });
 });
@@ -180,7 +188,7 @@ describe("multipleActiveUsersErrorHandleのテスト", () => {
       userId,
       mockReq as Request,
       mockRes as Response,
-      funcName
+      funcName,
     );
 
     expect(logError).toHaveBeenCalledWith(
@@ -188,13 +196,13 @@ describe("multipleActiveUsersErrorHandleのテスト", () => {
       mockReq,
       HttpStatus,
       funcName,
-      errorMassage
+      errorMassage,
     );
     expect(basicHttpResponce).toHaveBeenCalledWith(
       mockRes,
       HttpStatus,
       responseStatus,
-      errorMassage
+      errorMassage,
     );
   });
 });
@@ -231,7 +239,7 @@ describe("tokenNotFoundErrorHandleのテスト", () => {
       userId,
       mockReq as Request,
       mockRes as Response,
-      funcName
+      funcName,
     );
 
     expect(logError).toHaveBeenCalledWith(
@@ -239,13 +247,13 @@ describe("tokenNotFoundErrorHandleのテスト", () => {
       mockReq,
       HttpStatus,
       funcName,
-      errorMassage
+      errorMassage,
     );
     expect(basicHttpResponce).toHaveBeenCalledWith(
       mockRes,
       HttpStatus,
       responseStatus,
-      errorMassage
+      errorMassage,
     );
   });
 });
@@ -280,7 +288,7 @@ describe("badRequestErrorHandleのテスト", () => {
       userId,
       mockReq as Request,
       mockRes as Response,
-      funcName
+      funcName,
     );
 
     const HttpStatus = 400;
@@ -291,13 +299,13 @@ describe("badRequestErrorHandleのテスト", () => {
       mockReq,
       HttpStatus,
       funcName,
-      errorMassage
+      errorMassage,
     );
     expect(basicHttpResponce).toHaveBeenCalledWith(
       mockRes,
       HttpStatus,
       responseStatus,
-      errorMassage
+      errorMassage,
     );
   });
 });

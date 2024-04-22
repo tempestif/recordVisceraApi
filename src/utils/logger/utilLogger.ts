@@ -3,8 +3,8 @@ import {
   PROCESS_SUCCESS,
   UNSPECIFIED_USER_ID_TYPE,
 } from "@/consts/logMessages";
-import { Request } from "express";
 import { CustomLogger } from "@/utils/logger/loggerClass";
+import { Request } from "express";
 
 export type LoggingObjType = {
   userId: number | UNSPECIFIED_USER_ID_TYPE;
@@ -56,7 +56,7 @@ export const logError = (
   req: Request,
   httpStatus: number,
   responseMsg: string,
-  funcName: string
+  funcName: string,
 ) => {
   const logger = new CustomLogger();
   const logBody: LoggingObjType = {
@@ -76,7 +76,7 @@ export const logResponse = (
   req: Request,
   httpStatus: number,
   responseMsg: string,
-  funcName: string
+  funcName: string,
 ) => {
   const logger = new CustomLogger();
   const logBody: LoggingObjType = {
