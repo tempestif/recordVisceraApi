@@ -1,5 +1,6 @@
 import { ERROR_BAD_REQUEST } from "@/consts/responseMessages";
 import { castToDateOrThrow } from "@/utils/errorHandle/validate";
+import { validateFields, validateSorts } from "@/utils/utilRequest";
 import { Prisma } from "@prisma/client";
 import { body, param, query } from "express-validator";
 
@@ -46,38 +47,14 @@ const scalarFields = Object.values(Prisma.Bowel_MovementScalarFieldEnum);
 export const read = [
   query("fields").custom((value: string, { req }) => {
     if (!value || !req.query) return;
-
-    // valueをカンマで分割
-    const splitedValue = new Set(value.split(","));
-
-    // valueが有効な値のリストに含まれているか確認
-    scalarFields.forEach((receptible) => {
-      if (!splitedValue.has(receptible)) {
-        throw new Error(ERROR_BAD_REQUEST.message);
-      }
-    });
-
-    req.query.fields = [...splitedValue];
+    const splitedValue = validateFields(value, scalarFields);
+    req.query.fields = splitedValue;
   }),
 
   query("sorts").custom((value: string, { req }) => {
     if (!value || !req.query) return;
-
-    // valueをカンマで分割
-    const splitedValue = new Set(value.split(","));
-
-    // valueが有効な値のリストに含まれているか確認
-    const receptibleReadParams = scalarFields.flatMap((field) => [
-      field,
-      `-${field}`,
-    ]);
-    receptibleReadParams.forEach((receptible) => {
-      if (!splitedValue.has(receptible)) {
-        throw new Error(ERROR_BAD_REQUEST.message);
-      }
-    });
-
-    req.query.sorts = [...splitedValue];
+    const splitedValue = validateSorts(value, scalarFields);
+    req.query.sorts = splitedValue;
   }),
   query("limit").isNumeric().withMessage(ERROR_BAD_REQUEST.message).toInt(),
   query("offset").isNumeric().withMessage(ERROR_BAD_REQUEST.message).toInt(),
