@@ -1,8 +1,8 @@
 import {
-  registDailyReport,
-  readDailyReport,
-  editDailyReport,
   deleteDailyReport,
+  editDailyReport,
+  readDailyReport,
+  registDailyReport,
 } from "@/controllers/users/dailyReport";
 import { auth } from "@/utils/auth";
 import express from "express";

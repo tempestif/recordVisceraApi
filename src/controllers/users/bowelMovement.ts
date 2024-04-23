@@ -1,4 +1,4 @@
-import type { NextFunction } from "express";
+import type { NextFunction, Request } from "express";
 
 import * as count from "@/services/users/bowelMovements/endpoints/count";
 import * as del from "@/services/users/bowelMovements/endpoints/delete";
@@ -18,7 +18,7 @@ import { validationResult } from "express-validator";
  * @returns
  */
 export const registBowelMovement = async (
-  req: regist.VerifiedRequesetType,
+  req: Request,
   res: regist.VerifiedResponseType,
   next: NextFunction,
 ) => {
@@ -30,9 +30,10 @@ export const registBowelMovement = async (
     regist.validationErrorHandle(e, req, res);
     return;
   }
+  const VerifiedRequest = req as unknown as regist.VerifiedRequestType;
 
   const userId = res.locals.userId;
-  const body = req.body;
+  const body = VerifiedRequest.body;
 
   // 排便記録を追加
   let bowelMovementData: Prisma.$Bowel_MovementPayload["scalars"] | null = null;
@@ -47,11 +48,11 @@ export const registBowelMovement = async (
     };
     bowelMovementData = await regist.createBowelMovement(userId, insertData);
   } catch (e) {
-    regist.createBowelMovementErrorHandle(e, userId, req, res);
+    regist.createBowelMovementErrorHandle(e, userId, VerifiedRequest, res);
     return;
   }
 
-  regist.sendResponse(userId, req, res, bowelMovementData);
+  regist.sendResponse(userId, VerifiedRequest, res, bowelMovementData);
 };
 
 /**
@@ -67,7 +68,7 @@ export const registBowelMovement = async (
  * @param next
  */
 export const readBowelMovements = async (
-  req: read.VerifiedRequestType,
+  req: Request,
   res: read.VerifiedResponseType,
   next: NextFunction,
 ) => {
@@ -79,12 +80,13 @@ export const readBowelMovements = async (
     read.validationErrorHandle(e, req, res);
     return;
   }
+  const VerifiedRequest = req as unknown as read.VerifiedRequestType;
 
   // userIdを取得
   const userId = res.locals.userId;
 
   // クエリ取得
-  const query = req.query;
+  const query = VerifiedRequest.query;
 
   // bowelMovements取得
   let bowelMovements:
@@ -93,7 +95,7 @@ export const readBowelMovements = async (
   try {
     bowelMovements = await read.getBowelMovements(userId, query);
   } catch (e) {
-    read.getBowelMovementsErrorHandle(e, userId, req, res);
+    read.getBowelMovementsErrorHandle(e, userId, VerifiedRequest, res);
     return;
   }
 
@@ -120,7 +122,7 @@ export const readBowelMovements = async (
  * @param next
  */
 export const editBowelMovement = async (
-  req: edit.VerifiedRequestType,
+  req: Request,
   res: edit.VerifiedResponseType,
   next: NextFunction,
 ) => {
@@ -132,11 +134,12 @@ export const editBowelMovement = async (
     edit.validationErrorHandle(e, req, res);
     return;
   }
+  const VerifiedRequest = req as unknown as edit.VerifiedRequestType;
 
   // リクエストパラメータの取得
-  const id = req.params.id;
+  const id = VerifiedRequest.params.id;
   const userId = res.locals.userId;
-  const body = req.body;
+  const body = VerifiedRequest.body;
 
   // 排便記録を更新する
   let newBowelMovement:
@@ -145,11 +148,11 @@ export const editBowelMovement = async (
   try {
     newBowelMovement = await edit.updateBowelMovement(id, userId, body);
   } catch (e) {
-    edit.updateBowelMovementErrorHandle(e, userId, req, res);
+    edit.updateBowelMovementErrorHandle(e, userId, VerifiedRequest, res);
     return;
   }
 
-  edit.sendResponse(userId, req, res, newBowelMovement);
+  edit.sendResponse(userId, VerifiedRequest, res, newBowelMovement);
 };
 
 /**
@@ -163,7 +166,7 @@ export const editBowelMovement = async (
  * @returns
  */
 export const deleteBowelMovement = async (
-  req: del.VerifiedRequestType,
+  req: Request,
   res: del.VerifiedResponseType,
   next: NextFunction,
 ) => {
@@ -175,9 +178,10 @@ export const deleteBowelMovement = async (
     del.validationErrorHandle(e, req, res);
     return;
   }
+  const VerifiedRequest = req as unknown as del.VerifiedRequestType;
 
   // リクエストパラメータの取得
-  const id = req.params.id;
+  const id = VerifiedRequest.params.id;
   const userId = res.locals.userId;
 
   let deletedBowelMovement:
@@ -186,11 +190,11 @@ export const deleteBowelMovement = async (
   try {
     deletedBowelMovement = await del.deleteBowelMovement(id, userId);
   } catch (e) {
-    del.deleteBowelMovementErrorHandle(e, userId, req, res);
+    del.deleteBowelMovementErrorHandle(e, userId, VerifiedRequest, res);
     return;
   }
 
-  del.sendResponse(userId, req, res, deletedBowelMovement);
+  del.sendResponse(userId, VerifiedRequest, res, deletedBowelMovement);
 };
 
 /**
@@ -201,7 +205,7 @@ export const deleteBowelMovement = async (
  * @returns
  */
 export const countBowelMovementsPerDay = async (
-  req: count.VerifiedRequestType,
+  req: Request,
   res: count.VerifiedResponseType,
   next: NextFunction,
 ) => {
@@ -213,6 +217,7 @@ export const countBowelMovementsPerDay = async (
     count.validationErrorHandle(e, req, res);
     return;
   }
+  const VerifiedRequest = req as unknown as count.VerifiedRequestType;
 
   const userId = res.locals.userId;
 
@@ -221,9 +226,9 @@ export const countBowelMovementsPerDay = async (
   try {
     dailyBowelMovementsCount = await count.countDailyBowelMovements(userId);
   } catch (e) {
-    count.countDailyBowelMovementsErrorHandle(e, userId, req, res);
+    count.countDailyBowelMovementsErrorHandle(e, userId, VerifiedRequest, res);
     return;
   }
 
-  count.sendResponse(userId, req, res, dailyBowelMovementsCount);
+  count.sendResponse(userId, VerifiedRequest, res, dailyBowelMovementsCount);
 };

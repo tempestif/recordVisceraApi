@@ -2,8 +2,8 @@ import { ERROR_BAD_REQUEST } from "@/consts/responseMessages";
 import { castToDateOrThrow } from "@/utils/errorHandle/validate";
 import { Prisma } from "@prisma/client";
 import { body, param, query } from "express-validator";
-/** regist */
-export const bowelMovementRegist = [
+
+export const regist = [
   body("userId")
     .notEmpty()
     .withMessage(ERROR_BAD_REQUEST.message)
@@ -41,9 +41,9 @@ export const bowelMovementRegist = [
       }
     }),
 ];
-/** read */
+
 const scalarFields = Object.values(Prisma.Bowel_MovementScalarFieldEnum);
-export const bowelMovementRead = [
+export const read = [
   query("fields").custom((value: string, { req }) => {
     if (!value || !req.query) return;
 
@@ -128,8 +128,8 @@ export const bowelMovementRead = [
       }
     }),
 ];
-/** edit */
-export const bowelMovementEdit = [
+
+export const edit = [
   param("id").isNumeric().withMessage(ERROR_BAD_REQUEST.message).toInt(),
 
   body("date")
@@ -150,7 +150,11 @@ export const bowelMovementEdit = [
     .withMessage(ERROR_BAD_REQUEST.message)
     .toInt(),
 ];
-/** delete */
-export const bowelMovementDelete = [
+
+export const del = [
+  param("id").isNumeric().withMessage(ERROR_BAD_REQUEST.message).toInt(),
+];
+
+export const count = [
   param("id").isNumeric().withMessage(ERROR_BAD_REQUEST.message).toInt(),
 ];

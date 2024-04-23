@@ -37,7 +37,7 @@ type VerifiedLocalsType = {
   userId: number;
 };
 
-export type VerifiedRequesetType = Request<
+export type VerifiedRequestType = Request<
   VerifiedParamsType,
   VerifiedResBodyType,
   VerifiedReqBodyType,
