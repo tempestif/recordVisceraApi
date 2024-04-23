@@ -25,7 +25,6 @@ type VerifiedResBodyType = BasicResponceType & {
   data: Prisma.$Bowel_MovementPayload["scalars"];
 };
 type VerifiedReqBodyType = {
-  userId: number;
   bristolStoolScale: number;
   blood: number;
   drainage: number;
