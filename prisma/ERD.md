@@ -73,7 +73,7 @@ erDiagram
     }
   
 
-  "daily_report_temp" {
+  "temp" {
     Float result "❓"
     Int id "🗝️"
     Int dailyReportId 
@@ -82,7 +82,7 @@ erDiagram
     }
   
 
-  "daily_report_weight" {
+  "weight" {
     Float result "❓"
     Int id "🗝️"
     Int dailyReportId 
@@ -91,7 +91,7 @@ erDiagram
     }
   
 
-  "daily_report_stomachache" {
+  "stomachache" {
     Int stomachache_Scale_TypesId 
     Int id "🗝️"
     Int dailyReportId 
@@ -107,7 +107,7 @@ erDiagram
     }
   
 
-  "daily_report_condition" {
+  "condition" {
     Int condition_Scale_TypesId 
     Int id "🗝️"
     Int dailyReportId 
@@ -123,7 +123,7 @@ erDiagram
     }
   
 
-  "daily_report_arthritis" {
+  "arthritis" {
     Int result "❓"
     Int id "🗝️"
     Int dailyReportId 
@@ -132,7 +132,7 @@ erDiagram
     }
   
 
-  "daily_report_skin_lesions" {
+  "skin_lesions" {
     Int result "❓"
     Int id "🗝️"
     Int dailyReportId 
@@ -160,7 +160,7 @@ erDiagram
     }
   
 
-  "daily_report_abdominal" {
+  "abdominal" {
     Int abdominal_Scale_TypesId 
     Int id "🗝️"
     Int dailyReportId 
@@ -311,31 +311,31 @@ erDiagram
     "bowel_movements" o|--|| "bristol_stool_scales" : "Bristol_Stool_Scales"
     "bowel_movements" o|--|| "users" : "User"
     "bristol_stool_scales" o{--}o "bowel_movements" : "Bowel_Movement"
-    "daily_report" o{--}o "daily_report_temp" : "Daily_report_Temp"
-    "daily_report" o{--}o "daily_report_weight" : "Daily_report_Weight"
-    "daily_report" o{--}o "daily_report_stomachache" : "Daily_report_Stomachache"
-    "daily_report" o{--}o "daily_report_condition" : "Daily_report_Condition"
-    "daily_report" o{--}o "daily_report_arthritis" : "Daily_report_Arthritis"
-    "daily_report" o{--}o "daily_report_skin_lesions" : "Daily_report_Skin_Lesions"
-    "daily_report" o{--}o "daily_report_ocular_lesions" : "Daily_report_Ocular_Lesitions"
-    "daily_report" o{--}o "daily_report_anorectal_lesions" : "Daily_report_Anorectal_Lesitions"
-    "daily_report" o{--}o "daily_report_abdominal" : "Daily_report_Abdominal"
+    "daily_report" o{--}o "temp" : "Temp"
+    "daily_report" o{--}o "weight" : "Weight"
+    "daily_report" o{--}o "stomachache" : "Stomachache"
+    "daily_report" o{--}o "condition" : "Condition"
+    "daily_report" o{--}o "arthritis" : "Arthritis"
+    "daily_report" o{--}o "skin_lesions" : "Skin_Lesions"
+    "daily_report" o{--}o "daily_report_ocular_lesions" : "Ocular_Lesitions"
+    "daily_report" o{--}o "daily_report_anorectal_lesions" : "Anorectal_Lesitions"
+    "daily_report" o{--}o "abdominal" : "Abdominal"
     "daily_report" o|--|| "users" : "User"
-    "daily_report_temp" o|--|| "daily_report" : "Daily_Report"
-    "daily_report_weight" o|--|| "daily_report" : "Daily_Report"
-    "daily_report_stomachache" o|--|| "stomachache_scale_types" : "Stomachache_Scale_Types"
-    "daily_report_stomachache" o|--|| "daily_report" : "Daily_Report"
-    "stomachache_scale_types" o{--}o "daily_report_stomachache" : "Daily_report_Stomachache"
-    "daily_report_condition" o|--|| "condition_scale_types" : "Condition_Scale_Types"
-    "daily_report_condition" o|--|| "daily_report" : "Daily_Report"
-    "condition_scale_types" o{--}o "daily_report_condition" : "Daily_report_Condition"
-    "daily_report_arthritis" o|--|| "daily_report" : "Daily_Report"
-    "daily_report_skin_lesions" o|--|| "daily_report" : "Daily_Report"
+    "temp" o|--|| "daily_report" : "Daily_Report"
+    "weight" o|--|| "daily_report" : "Daily_Report"
+    "stomachache" o|--|| "stomachache_scale_types" : "Stomachache_Scale_Types"
+    "stomachache" o|--|| "daily_report" : "Daily_Report"
+    "stomachache_scale_types" o{--}o "stomachache" : "Stomachache"
+    "condition" o|--|| "condition_scale_types" : "Condition_Scale_Types"
+    "condition" o|--|| "daily_report" : "Daily_Report"
+    "condition_scale_types" o{--}o "condition" : "Condition"
+    "arthritis" o|--|| "daily_report" : "Daily_Report"
+    "skin_lesions" o|--|| "daily_report" : "Daily_Report"
     "daily_report_ocular_lesions" o|--|| "daily_report" : "Daily_Report"
     "daily_report_anorectal_lesions" o|--|| "daily_report" : "Daily_Report"
-    "daily_report_abdominal" o|--|| "abdominal_scale_types" : "Abdominal_Scale_Types"
-    "daily_report_abdominal" o|--|| "daily_report" : "Daily_Report"
-    "abdominal_scale_types" o{--}o "daily_report_abdominal" : "Daily_report_Abdominal"
+    "abdominal" o|--|| "abdominal_scale_types" : "Abdominal_Scale_Types"
+    "abdominal" o|--|| "daily_report" : "Daily_Report"
+    "abdominal_scale_types" o{--}o "abdominal" : "Abdominal"
     "clinic_report" o{--}o "checkup" : "Checkup"
     "clinic_report" o{--}o "clinic_note" : "Clinic_Note"
     "clinic_report" o|--|| "users" : "User"

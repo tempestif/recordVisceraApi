@@ -137,23 +137,23 @@ model Daily_Report {
   // 日
   day                              DateTime                          @db.Date
   // 体温
-  Daily_report_Temp                Daily_report_Temp?
+  Temp                Temp?
   // 体重
-  Daily_report_Weight              Daily_report_Weight?
+  Weight              Weight?
   // 腹痛
-  Daily_report_Stomachache         Daily_report_Stomachache?
+  Stomachache         Stomachache?
   // 体調
-  Daily_report_Condition           Daily_report_Condition?
+  Condition           Condition?
   // 関節痛の有無
-  Daily_report_Arthritis           Daily_report_Arthritis?
+  Arthritis           Arthritis?
   // 皮膚病変の有無
-  Daily_report_Skin_Lesions        Daily_report_Skin_Lesions?
+  Skin_Lesions        Skin_Lesions?
   // 眼病変の有無
-  Daily_report_Ocular_Lesitions    Daily_report_Ocular_Lesitions?
+  Ocular_Lesitions    Ocular_Lesitions?
   // 肛門病変の有無
-  Daily_report_Anorectal_Lesitions Daily_report_Anorectal_Lesitions?
+  Anorectal_Lesitions Anorectal_Lesitions?
   // 腹部腫瘤の有無
-  Daily_report_Abdominal           Daily_report_Abdominal?
+  Abdominal           Abdominal?
   // id, ユーザー紐づけ, 作成日時, 更新日時
   id                               Int                               @id @default(autoincrement())
   User                             User                              @relation(fields: [userId], references: [id])
@@ -166,7 +166,7 @@ model Daily_Report {
 }
 
 // 体温
-model Daily_report_Temp {
+model Temp {
   // 結果
   result        Float?
   // id, 今日の体調紐づけ, 作成日時, 更新日時
@@ -176,11 +176,11 @@ model Daily_report_Temp {
   createdAt     DateTime     @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt     DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
-  @@map("daily_report_temp")
+  @@map("temp")
 }
 
 // 体重
-model Daily_report_Weight {
+model Weight {
   // 結果
   result        Float?
   // id, 今日の体調紐づけ, 作成日時, 更新日時
@@ -190,11 +190,11 @@ model Daily_report_Weight {
   createdAt     DateTime     @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt     DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
-  @@map("daily_report_weight")
+  @@map("weight")
 }
 
 // 腹痛
-model Daily_report_Stomachache {
+model Stomachache {
   // 結果
   Stomachache_Scale_Types   Stomachache_Scale_Types @relation(fields: [stomachache_Scale_TypesId], references: [id])
   stomachache_Scale_TypesId Int
@@ -205,7 +205,7 @@ model Daily_report_Stomachache {
   createdAt                 DateTime                @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt                 DateTime                @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
-  @@map("daily_report_stomachache")
+  @@map("stomachache")
 }
 
 // 腹痛スケール区分
@@ -213,13 +213,13 @@ model Stomachache_Scale_Types {
   id                       Int                        @id @default(autoincrement())
   typeName                 String                     @unique
   score                    Int
-  Daily_report_Stomachache Daily_report_Stomachache[]
+  Stomachache Stomachache[]
 
   @@map("stomachache_scale_types")
 }
 
 // 体調
-model Daily_report_Condition {
+model Condition {
   // 結果
   Condition_Scale_Types   Condition_Scale_Types @relation(fields: [condition_Scale_TypesId], references: [id])
   condition_Scale_TypesId Int
@@ -230,7 +230,7 @@ model Daily_report_Condition {
   createdAt               DateTime              @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt               DateTime              @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
-  @@map("daily_report_condition")
+  @@map("condition")
 }
 
 // 体調スケール区分
@@ -238,13 +238,13 @@ model Condition_Scale_Types {
   id                     Int                      @id @default(autoincrement())
   typeName               String                   @unique
   score                  Int
-  Daily_report_Condition Daily_report_Condition[]
+  Condition Condition[]
 
   @@map("condition_scale_types")
 }
 
 // 関節痛の有無
-model Daily_report_Arthritis {
+model Arthritis {
   // 結果
   result        Int?
   // id, 今日の体調紐づけ, 作成日時, 更新日時
@@ -254,11 +254,11 @@ model Daily_report_Arthritis {
   createdAt     DateTime     @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt     DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
-  @@map("daily_report_arthritis")
+  @@map("arthritis")
 }
 
 // 皮膚病変の有無
-model Daily_report_Skin_Lesions {
+model Skin_Lesions {
   // 結果
   result        Int?
   // id, 今日の体調紐づけ, 作成日時, 更新日時
@@ -268,11 +268,11 @@ model Daily_report_Skin_Lesions {
   createdAt     DateTime     @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt     DateTime     @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
-  @@map("daily_report_skin_lesions")
+  @@map("skin_lesions")
 }
 
 // 眼病変の有無
-model Daily_report_Ocular_Lesitions {
+model Ocular_Lesitions {
   // 結果
   result        Int?
   // id, 今日の体調紐づけ, 作成日時, 更新日時
@@ -286,7 +286,7 @@ model Daily_report_Ocular_Lesitions {
 }
 
 // 肛門病変の有無
-model Daily_report_Anorectal_Lesitions {
+model Anorectal_Lesitions {
   // 痔瘻
   fistula       Int?
   // その他の肛門病変
@@ -302,7 +302,7 @@ model Daily_report_Anorectal_Lesitions {
 }
 
 // 腹部腫瘤の有無
-model Daily_report_Abdominal {
+model Abdominal {
   // 結果
   Abdominal_Scale_Types   Abdominal_Scale_Types @relation(fields: [abdominal_Scale_TypesId], references: [id])
   abdominal_Scale_TypesId Int
@@ -313,7 +313,7 @@ model Daily_report_Abdominal {
   createdAt               DateTime              @default(dbgenerated("NOW()")) @db.DateTime
   updatedAt               DateTime              @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
-  @@map("daily_report_abdominal")
+  @@map("abdominal")
 }
 
 // 腹部腫瘤スケール区分
@@ -321,7 +321,7 @@ model Abdominal_Scale_Types {
   id                     Int                      @id @default(autoincrement())
   typeName               String                   @unique
   score                  Int
-  Daily_report_Abdominal Daily_report_Abdominal[]
+  Abdominal Abdominal[]
 
   @@map("abdominal_scale_types")
 }

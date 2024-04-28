@@ -16,4 +16,4 @@ VALUES
 INSERT INTO
     `stomachache_scale_types` (`id`, `typeName`, `score`)
 VALUES
-    (4, '高度', 3);
+    (4, '重度', 3);
