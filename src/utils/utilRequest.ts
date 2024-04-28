@@ -7,6 +7,8 @@ export type QueryTypeBasedOnReadRequest<T extends string, U extends string> = {
   limit: number | undefined;
   offset: number | undefined;
 };
+
+/** 全ての型パラメータを受け付けるRequest型 */
 export type AnyRequest = Request<any, any, any, any>;
 
 /**

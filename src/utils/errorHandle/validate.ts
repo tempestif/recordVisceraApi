@@ -1,7 +1,8 @@
 import * as responseMessages from "@/consts/responseMessages";
 import { ERROR_BAD_REQUEST } from "@/consts/responseMessages";
 import { isErrorResponseMessageType } from "@/consts/responseMessages/types";
-import { Result, ValidationError } from "express-validator";
+import { Result, ValidationError, query } from "express-validator";
+import { validateFields, validateSorts } from "../utilRequest";
 
 /**
  * express-validatorのエラーメッセージを受け取り、Errorを返却する
@@ -60,4 +61,28 @@ export const castToDateOrThrow = (value: string) => {
     throw new Error(ERROR_BAD_REQUEST.message);
   }
   return date;
+};
+
+/**
+ * readのAPIのクエリで基本的に受け取る、fields, sorts, limit, offsetのバリデーションを返却する
+ * express-validatorに渡す、配列を返却
+ * @param scalarFields
+ * @returns
+ */
+export const validateBasisReadQuery = (scalarFields: string[]) => {
+  return [
+    query("fields").custom((value: string, { req }) => {
+      if (!value || !req.query) return;
+      const splitedValue = validateFields(value, scalarFields);
+      req.query.fields = splitedValue;
+    }),
+
+    query("sorts").custom((value: string, { req }) => {
+      if (!value || !req.query) return;
+      const splitedValue = validateSorts(value, scalarFields);
+      req.query.sorts = splitedValue;
+    }),
+    query("limit").isNumeric().withMessage(ERROR_BAD_REQUEST.message).toInt(),
+    query("offset").isNumeric().withMessage(ERROR_BAD_REQUEST.message).toInt(),
+  ];
 };
