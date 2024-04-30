@@ -21,7 +21,7 @@ const CURRENT_FUNCTION_NAME = "registBowelMovement";
 
 // バリデーション通過後のパラメータの型を作成する
 type VerifiedParamsType = undefined;
-type VerifiedResBodyType = BasicResponceType & {
+export type VerifiedResBodyType = BasicResponceType & {
   data: Prisma.$Bowel_MovementPayload["scalars"];
 };
 type VerifiedReqBodyType = {
@@ -106,7 +106,7 @@ export const sendResponse = (
   userId: number,
   req: AnyRequest,
   res: Response,
-  bowelMovementData: Prisma.$Bowel_MovementPayload["scalars"],
+  bowelMovementData: VerifiedResBodyType["data"],
 ) => {
   // レスポンスを返却
   const httpStatus = 200;

@@ -30,7 +30,7 @@ type VerifiedParamsType = {
   /** 編集対象の排便記録のid */
   id: number;
 };
-type VerifiedResBodyType = BasicResponceType & {
+export type VerifiedResBodyType = BasicResponceType & {
   data: Prisma.TypeMap["model"]["Bowel_Movement"]["operations"]["update"]["result"];
 };
 type VerifiedReqBodyType = {
@@ -117,7 +117,7 @@ export const sendResponse = (
   userId: number,
   req: AnyRequest,
   res: Response,
-  newBowelMovement: Prisma.TypeMap["model"]["Bowel_Movement"]["operations"]["update"]["result"],
+  newBowelMovement: VerifiedResBodyType["data"],
 ) => {
   // レスポンスを返却
   const httpStatus = 200;

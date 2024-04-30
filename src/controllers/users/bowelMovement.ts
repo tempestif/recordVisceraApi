@@ -6,7 +6,6 @@ import * as edit from "@/services/users/bowelMovements/endpoints/edit";
 import * as read from "@/services/users/bowelMovements/endpoints/read";
 import * as regist from "@/services/users/bowelMovements/endpoints/regist";
 import { throwValidationError } from "@/utils/errorHandle/validate";
-import { Prisma } from "@prisma/client";
 import { validationResult } from "express-validator";
 
 /**
@@ -36,7 +35,7 @@ export const registBowelMovement = async (
   const body = VerifiedRequest.body;
 
   // 排便記録を追加
-  let bowelMovementData: Prisma.$Bowel_MovementPayload["scalars"] | null = null;
+  let bowelMovementData: regist.VerifiedResBodyType["data"] | null = null;
   try {
     const { blood, drainage, note, bristolStoolScale, date: bodyDate } = body;
     const insertData = {
@@ -90,7 +89,7 @@ export const readBowelMovements = async (
 
   // bowelMovements取得
   let bowelMovements:
-    | Prisma.TypeMap["model"]["Bowel_Movement"]["operations"]["findMany"]["result"]
+    | read.VerifiedResBodyType["data"]["bowelMovements"]
     | null = null;
   try {
     bowelMovements = await read.getBowelMovements(userId, query);
@@ -142,9 +141,7 @@ export const editBowelMovement = async (
   const body = VerifiedRequest.body;
 
   // 排便記録を更新する
-  let newBowelMovement:
-    | Prisma.TypeMap["model"]["Bowel_Movement"]["operations"]["update"]["result"]
-    | null = null;
+  let newBowelMovement: edit.VerifiedResBodyType["data"] | null = null;
   try {
     newBowelMovement = await edit.updateBowelMovement(id, userId, body);
   } catch (e) {
@@ -184,9 +181,7 @@ export const deleteBowelMovement = async (
   const id = VerifiedRequest.params.id;
   const userId = res.locals.userId;
 
-  let deletedBowelMovement:
-    | Prisma.TypeMap["model"]["Bowel_Movement"]["operations"]["delete"]["result"]
-    | null = null;
+  let deletedBowelMovement: del.VerifiedResBodyType["data"] | null = null;
   try {
     deletedBowelMovement = await del.deleteBowelMovement(id, userId);
   } catch (e) {

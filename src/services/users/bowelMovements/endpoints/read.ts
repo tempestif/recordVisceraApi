@@ -25,7 +25,7 @@ const CURRENT_FUNCTION_NAME = "readBowelMovements";
 
 // バリデーション通過後のパラメータの型を作成する
 type VerifiedParamsType = undefined;
-type VerifiedResBodyType = BasicResponceType & {
+export type VerifiedResBodyType = BasicResponceType & {
   data: {
     allCount: number;
     count: number;
@@ -195,7 +195,7 @@ export const sendResponse = (
   userId: number,
   req: AnyRequest,
   res: Response,
-  bowelMovements: Prisma.TypeMap["model"]["Bowel_Movement"]["operations"]["findMany"]["result"],
+  bowelMovements: VerifiedResBodyType["data"]["bowelMovements"],
   allCount: number,
 ) => {
   const httpStatus = 200;
