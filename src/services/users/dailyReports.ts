@@ -42,7 +42,7 @@ export type RecordDataType = {
   arthritis?: number;
   skinLesitions?: number;
   ocularLesitions?: number;
-  anirectalLesitions?: number;
+  anorectalLesitions?: number;
   anirectalOtherLesitions?: number;
   abdominal?: number;
 };
@@ -127,12 +127,12 @@ export const createDailyReport = async (
     );
   }
   // 肛門病変の有無
-  if (recordData.anirectalLesitions) {
+  if (recordData.anorectalLesitions) {
     await createDailyReportRecordsTable(
       customizedPrisma.daily_report_Anorectal_Lesitions,
       dailyReportId,
       {
-        fistula: recordData.anirectalLesitions,
+        fistula: recordData.anorectalLesitions,
         others: recordData.anirectalOtherLesitions,
       },
     );
@@ -154,15 +154,15 @@ export const createDailyReport = async (
         id: dailyReportId,
       },
       include: {
-        Daily_report_Temp: true,
-        Daily_report_Weight: true,
-        Daily_report_Stomachache: true,
-        Daily_report_Condition: true,
-        Daily_report_Arthritis: true,
-        Daily_report_Skin_Lesions: true,
-        Daily_report_Ocular_Lesitions: true,
-        Daily_report_Anorectal_Lesitions: true,
-        Daily_report_Abdominal: true,
+        Temp: true,
+        Weight: true,
+        Stomachache: true,
+        Condition: true,
+        Arthritis: true,
+        Skin_Lesions: true,
+        Ocular_Lesitions: true,
+        Anorectal_Lesitions: true,
+        Abdominal: true,
       },
     });
 
@@ -248,7 +248,7 @@ export const updateDailyReport = async (
  * @param arthritis
  * @param skinLesitions
  * @param ocularLesitions
- * @param anirectalLesitions
+ * @param anorectalLesitions
  * @param anirectalOtherLesitions
  * @param abdominal
  * @returns
@@ -315,10 +315,10 @@ const createUpdateData = (date: string, recordData: RecordDataType) => {
     };
     include.Daily_report_Ocular_Lesitions = true;
   }
-  if (recordData.anirectalLesitions) {
+  if (recordData.anorectalLesitions) {
     data.Daily_report_Anorectal_Lesitions = {
       update: {
-        fistula: Number(recordData.anirectalLesitions),
+        fistula: Number(recordData.anorectalLesitions),
       },
     };
     include.Daily_report_Anorectal_Lesitions = true;

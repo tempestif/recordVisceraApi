@@ -135,7 +135,7 @@ model Bristol_Stool_Scale {
 // 今日の体調
 model Daily_Report {
   // 日
-  day                              DateTime                          @db.Date
+  day                 DateTime             @db.Date
   // 体温
   Temp                Temp?
   // 体重
@@ -155,11 +155,11 @@ model Daily_Report {
   // 腹部腫瘤の有無
   Abdominal           Abdominal?
   // id, ユーザー紐づけ, 作成日時, 更新日時
-  id                               Int                               @id @default(autoincrement())
-  User                             User                              @relation(fields: [userId], references: [id])
-  userId                           Int
-  createdAt                        DateTime                          @default(dbgenerated("NOW()")) @db.DateTime
-  updatedAt                        DateTime                          @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
+  id                  Int                  @id @default(autoincrement())
+  User                User                 @relation(fields: [userId], references: [id])
+  userId              Int
+  createdAt           DateTime             @default(dbgenerated("NOW()")) @db.DateTime
+  updatedAt           DateTime             @default(dbgenerated("NOW() ON UPDATE NOW()")) @db.DateTime
 
   @@unique([userId, day], name: "dailyReportUnique")
   @@map("daily_report")
@@ -210,9 +210,9 @@ model Stomachache {
 
 // 腹痛スケール区分
 model Stomachache_Scale_Types {
-  id                       Int                        @id @default(autoincrement())
-  typeName                 String                     @unique
-  score                    Int
+  id          Int           @id @default(autoincrement())
+  typeName    String        @unique
+  score       Int
   Stomachache Stomachache[]
 
   @@map("stomachache_scale_types")
@@ -235,9 +235,9 @@ model Condition {
 
 // 体調スケール区分
 model Condition_Scale_Types {
-  id                     Int                      @id @default(autoincrement())
-  typeName               String                   @unique
-  score                  Int
+  id        Int         @id @default(autoincrement())
+  typeName  String      @unique
+  score     Int
   Condition Condition[]
 
   @@map("condition_scale_types")
@@ -318,9 +318,9 @@ model Abdominal {
 
 // 腹部腫瘤スケール区分
 model Abdominal_Scale_Types {
-  id                     Int                      @id @default(autoincrement())
-  typeName               String                   @unique
-  score                  Int
+  id        Int         @id @default(autoincrement())
+  typeName  String      @unique
+  score     Int
   Abdominal Abdominal[]
 
   @@map("abdominal_scale_types")

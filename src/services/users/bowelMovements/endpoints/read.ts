@@ -69,18 +69,6 @@ export type VerifiedResponseType = Response<
   VerifiedLocalsType
 >;
 
-// クエリで受け取りうる値
-const filters: (keyof Filters<undefined>)[] = [
-  "id",
-  "date",
-  "blood",
-  "drainage",
-  "note",
-  "bristolStoolScale",
-  "createdAt",
-  "updatedAt",
-];
-
 export const validationErrorHandle = (
   e: unknown,
   req: AnyRequest,
@@ -113,10 +101,25 @@ export const getBowelMovements = async (
     where: { id: userId },
   });
 
+  // クエリで受け取りうる値
+  const filters: (keyof Filters<undefined>)[] = [
+    "id",
+    "date",
+    "blood",
+    "drainage",
+    "note",
+    "bristolStoolScale",
+    "createdAt",
+    "updatedAt",
+  ];
+
   // whereを作成
   // userIdとクエリで指定されたパラメータの絞り込みをwhereの形式で整理
   const where = filters.reduce(
-    (prevWhere: { [key: string]: string | number | Date }, field) => {
+    (
+      prevWhere: { [key: string]: (typeof query)[keyof Filters<undefined>] },
+      field,
+    ) => {
       const filterValue = query[field];
       if (filterValue) {
         prevWhere[field] = filterValue;

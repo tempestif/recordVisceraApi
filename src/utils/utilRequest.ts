@@ -1,12 +1,16 @@
 import { ERROR_BAD_REQUEST } from "@/consts/responseMessages";
 import { Request } from "express";
 
-export type QueryTypeBasedOnReadRequest<T extends string, U extends string> = {
-  fields: T[] | undefined;
-  sorts: U[] | undefined;
+export type QueryTypeBasedOnReadRequest<
+  Fields extends string,
+  Sorts extends string,
+  Filters extends Record<string, string | number | Date | null | undefined>,
+> = {
+  fields: Fields[] | undefined;
+  sorts: Sorts[] | undefined;
   limit: number | undefined;
   offset: number | undefined;
-};
+} & Filters;
 
 /** 全ての型パラメータを受け付けるRequest型 */
 export type AnyRequest = Request<any, any, any, any>;
@@ -67,4 +71,20 @@ const checkValueIsReceptibe = (
       throw new Error(ERROR_BAD_REQUEST.message);
     }
   });
+};
+
+/**
+ * Read系のリクエストクエリで、フィルター条件以外を削除し返却する
+ * @param query
+ * @returns
+ */
+export const omitExceptFilters = <
+  Query extends QueryTypeBasedOnReadRequest<any, any, Record<string, any>>,
+>(
+  query: Query,
+) => {
+  // フィルター条件以外を取り除く
+  const { fields, sorts, limit, offset, ...filters } = query;
+
+  return filters;
 };
